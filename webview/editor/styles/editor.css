@@ -1,0 +1,39 @@
+/* PM Toolkit - Editor Styles */
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+}
+
+#editor {
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Tiptap editor styles will go here */
+.ProseMirror {
+  outline: none;
+  min-height: 100%;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
+/* Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--vscode-input-placeholderForeground);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}

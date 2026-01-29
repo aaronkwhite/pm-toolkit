@@ -1,0 +1,96 @@
+/* PM Toolkit - Kanban Board Styles */
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+}
+
+#board {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  min-height: 100vh;
+  overflow-x: auto;
+}
+
+/* Column styles */
+.kanban-column {
+  flex: 0 0 280px;
+  background: var(--vscode-sideBar-background);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 32px);
+}
+
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.column-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.column-count {
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+/* Card styles */
+.kanban-card {
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  cursor: grab;
+  display: flex;
+  gap: 8px;
+  transition: box-shadow 0.15s ease;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.kanban-card.completed .card-title {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Add card button */
+.add-card-btn {
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+  background: transparent;
+  border: 1px dashed var(--vscode-panel-border);
+  border-radius: 6px;
+  color: var(--vscode-textLink-foreground);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.add-card-btn:hover {
+  background: var(--vscode-list-hoverBackground);
+}

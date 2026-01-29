@@ -1,0 +1,167 @@
+{
+  "name": "pm-toolkit",
+  "displayName": "PM Toolkit",
+  "description": "WYSIWYG Markdown Editor and Kanban Boards for Cursor/VS Code",
+  "version": "0.1.0",
+  "publisher": "pm-toolkit",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "markdown",
+    "kanban",
+    "wysiwyg",
+    "editor",
+    "product-management"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "pmtoolkit.markdownEditor",
+        "displayName": "PM Toolkit Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "pmtoolkit.kanbanEditor",
+        "displayName": "Kanban Board",
+        "selector": [
+          {
+            "filenamePattern": "*.kanban"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "pmtoolkit.pdfViewer",
+        "displayName": "PDF Viewer",
+        "selector": [
+          {
+            "filenamePattern": "*.pdf"
+          }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "pmtoolkit.docxViewer",
+        "displayName": "Word Viewer",
+        "selector": [
+          {
+            "filenamePattern": "*.docx"
+          }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "pmtoolkit.xlsxViewer",
+        "displayName": "Excel Viewer",
+        "selector": [
+          {
+            "filenamePattern": "*.xlsx"
+          },
+          {
+            "filenamePattern": "*.xls"
+          }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "pmtoolkit.csvViewer",
+        "displayName": "CSV Viewer",
+        "selector": [
+          {
+            "filenamePattern": "*.csv"
+          },
+          {
+            "filenamePattern": "*.tsv"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "commands": [
+      {
+        "command": "pmtoolkit.newKanbanBoard",
+        "title": "New Kanban Board",
+        "category": "PM Toolkit"
+      },
+      {
+        "command": "pmtoolkit.openAsKanban",
+        "title": "Open as Kanban Board",
+        "category": "PM Toolkit"
+      },
+      {
+        "command": "pmtoolkit.openWithPMToolkit",
+        "title": "Open with PM Toolkit Editor",
+        "category": "PM Toolkit"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "pmtoolkit.openAsKanban",
+          "when": "resourceExtname == .md",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "PM Toolkit",
+      "properties": {
+        "pmtoolkit.templateFolder": {
+          "type": "string",
+          "default": "",
+          "description": "Path to folder containing template markdown files"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "npm run check-types && node esbuild.js",
+    "check-types": "tsc --noEmit",
+    "watch": "node esbuild.js --watch",
+    "package": "npm run check-types && node esbuild.js --production",
+    "vscode:prepublish": "npm run package"
+  },
+  "dependencies": {
+    "@tiptap/core": "^2.11.5",
+    "@tiptap/pm": "^2.11.5",
+    "@tiptap/starter-kit": "^2.11.5",
+    "@tiptap/extension-placeholder": "^2.11.5",
+    "@tiptap/suggestion": "^2.11.5",
+    "@tiptap/extension-table": "^2.11.5",
+    "@tiptap/extension-table-row": "^2.11.5",
+    "@tiptap/extension-table-header": "^2.11.5",
+    "@tiptap/extension-table-cell": "^2.11.5",
+    "@tiptap/extension-task-list": "^2.11.5",
+    "@tiptap/extension-task-item": "^2.11.5",
+    "@tiptap/extension-link": "^2.11.5",
+    "tiptap-markdown": "^0.8.10",
+    "@dnd-kit/dom": "^0.1.2",
+    "mermaid": "^11.4.0",
+    "papaparse": "^5.4.1",
+    "pdfjs-dist": "^4.9.155",
+    "mammoth": "^1.8.0",
+    "xlsx": "^0.18.5",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.14",
+    "@types/vscode": "^1.85.0",
+    "@types/papaparse": "^5.3.15",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.2",
+    "typescript": "^5.7.3"
+  }
+}
