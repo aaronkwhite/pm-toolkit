@@ -15,6 +15,7 @@ import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
 import { Markdown } from 'tiptap-markdown';
+import { SlashCommand } from './extensions/SlashCommand';
 
 // VS Code webview API
 interface VSCodeAPI {
@@ -80,6 +81,7 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
         transformPastedText: true,
         transformCopiedText: true,
       }),
+      SlashCommand,
     ],
     content: initialContent,
     autofocus: true,
