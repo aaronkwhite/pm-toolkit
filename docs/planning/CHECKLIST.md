@@ -1,7 +1,7 @@
 # PM Toolkit - Implementation Checklist
 
 > **Last Updated**: 2026-01-29
-> **Current Phase**: Phase 2/3 - Markdown Editor & Slash Commands (In Progress)
+> **Current Phase**: Phase 5 - File Viewers (In Progress)
 
 This checklist tracks all implementation tasks. Update status as work progresses.
 
@@ -161,58 +161,54 @@ This checklist tracks all implementation tasks. Update status as work progresses
 ## Phase 4: Kanban Board
 
 ### 4.1 Markdown Parser
-- [ ] Create parser.ts with parseMarkdown()
-- [ ] Create serializeBoard()
-- [ ] Handle ## headings as columns
-- [ ] Handle - [ ] items as cards
-- [ ] Handle indented descriptions
-- [ ] Preserve preamble content
-- [ ] Test round-trip fidelity
+- [x] Create parser.ts with parseMarkdown()
+- [x] Create serializeBoard()
+- [x] Handle ## headings as columns
+- [x] Handle - [ ] items as cards
+- [x] Handle indented descriptions
+- [x] Preserve preamble content
+- [x] Test round-trip fidelity
 
 ### 4.2 State Management
-- [ ] Create state.ts with BoardStateManager
-- [ ] Implement LOAD action
-- [ ] Implement MOVE_CARD action
-- [ ] Implement TOGGLE_CARD action
-- [ ] Implement ADD_CARD action
-- [ ] Implement DELETE_CARD action
-- [ ] Implement UPDATE_CARD action
-- [ ] Debounced sync to extension (150ms)
+- [x] Create state.ts with BoardStateManager (in parser.ts)
+- [x] Implement LOAD action
+- [x] Implement MOVE_CARD action
+- [x] Implement TOGGLE_CARD action
+- [x] Implement ADD_CARD action
+- [x] Implement DELETE_CARD action
+- [x] Implement UPDATE_CARD action
+- [x] Debounced sync to extension (150ms)
 
 ### 4.3 dnd-kit Integration
-- [ ] Install @dnd-kit/dom
-- [ ] Create dnd.ts with DragDropManager setup
-- [ ] Register sortables for cards
-- [ ] Handle drag-end events
+- [x] Install @dnd-kit/dom
+- [x] Create dnd.ts with DragDropManager setup
+- [x] Register sortables for cards
+- [x] Handle drag-end events
 - [ ] Test cross-column drag
 
 ### 4.4 UI Components
-- [ ] Create Board.ts component
-- [ ] Create Column.ts component
-- [ ] Create Card.ts component
-- [ ] Card checkbox toggle
-- [ ] Card double-click to edit
-- [ ] Card context menu (delete, archive)
-- [ ] Add task button per column
+- [x] Create Board.ts component (in ui.ts)
+- [x] Create Column.ts component (in ui.ts)
+- [x] Create Card.ts component (in ui.ts)
+- [x] Card checkbox toggle
+- [x] Card double-click to edit
+- [x] Card delete button
+- [x] Add task button per column
 
 ### 4.5 Auto-behaviors
-- [ ] Auto-complete on move to Done column
-- [ ] Auto-complete on move to Archive column
-- [ ] Hide Archive column when empty
-- [ ] Show task count per column
+- [x] Auto-complete on move to Done column
+- [x] Auto-complete on move to Archive column
+- [x] Hide Archive column when empty
+- [x] Show task count per column
 
 ### 4.6 Styling
-- [ ] Create kanban.css
-- [ ] Style with VS Code variables
-- [ ] Drag state styling
-- [ ] Edit mode styling
+- [x] Create kanban.css
+- [x] Style with VS Code variables
+- [x] Drag state styling
+- [x] Edit mode styling
 
 **Phase 4 Commit Checkpoints:**
-- [ ] `feat: kanban markdown parser`
-- [ ] `feat: kanban state management`
-- [ ] `feat: dnd-kit drag-drop integration`
-- [ ] `feat: kanban UI components`
-- [ ] `feat: kanban auto-behaviors and styling`
+- [x] `feat: Kanban board with drag-and-drop` (combined all)
 
 ---
 
@@ -442,6 +438,8 @@ This checklist tracks all implementation tasks. Update status as work progresses
 | 2026-01-29 | `c8cb07f` | feat: Phase 1 - project scaffolding and extension boilerplate |
 | 2026-01-29 | `dd24e0c` | feat: Tiptap WYSIWYG markdown editor |
 | 2026-01-29 | `e760f50` | feat: Notion-style slash command menu |
+| 2026-01-29 | `308d7c4` | docs: update checklist with Phase 2/3 progress |
+| 2026-01-29 | `d2426fb` | feat: Kanban board with drag-and-drop |
 
 ---
 
@@ -460,3 +458,8 @@ This checklist tracks all implementation tasks. Update status as work progresses
   - VS Code theme integration via CSS variables
   - Slash command menu with keyboard navigation
   - All basic block types: headings, lists, tasks, quotes, code, tables, dividers
+- Phase 4: Kanban board implementation
+  - Markdown parser for ## columns and - [ ] tasks
+  - dnd-kit/dom for drag-drop
+  - Auto-complete on Done/Archive columns
+  - Full theme integration
