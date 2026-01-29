@@ -1,4 +1,5 @@
 const esbuild = require('esbuild');
+const fs = require('fs');
 const path = require('path');
 
 const production = process.argv.includes('--production');
@@ -70,6 +71,20 @@ const webviewConfigs = [
 ];
 
 /**
+ * CSS files to copy
+ */
+const cssFiles = [
+  {
+    src: 'webview/editor/styles/editor.css',
+    dest: 'dist/webview/editor.css',
+  },
+  {
+    src: 'webview/kanban/styles/kanban.css',
+    dest: 'dist/webview/kanban.css',
+  },
+];
+
+/**
  * Create webview config with common options
  */
 function createWebviewConfig(config) {
@@ -85,11 +100,48 @@ function createWebviewConfig(config) {
   };
 }
 
+/**
+ * Copy CSS files to dist
+ */
+function copyCssFiles() {
+  // Ensure dist/webview directory exists
+  const distDir = path.join(__dirname, 'dist', 'webview');
+  if (!fs.existsSync(distDir)) {
+    fs.mkdirSync(distDir, { recursive: true });
+  }
+
+  for (const { src, dest } of cssFiles) {
+    const srcPath = path.join(__dirname, src);
+    const destPath = path.join(__dirname, dest);
+
+    if (fs.existsSync(srcPath)) {
+      let css = fs.readFileSync(srcPath, 'utf-8');
+
+      // Minify CSS in production
+      if (production) {
+        css = css
+          .replace(/\/\*[\s\S]*?\*\//g, '') // Remove comments
+          .replace(/\s+/g, ' ')              // Collapse whitespace
+          .replace(/\s*([{}:;,])\s*/g, '$1') // Remove space around symbols
+          .trim();
+      }
+
+      fs.writeFileSync(destPath, css);
+      console.log(`[css] Copied ${src} -> ${dest}`);
+    } else {
+      console.warn(`[css] Warning: ${src} not found`);
+    }
+  }
+}
+
 async function main() {
   const configs = [
     extensionConfig,
     ...webviewConfigs.map(createWebviewConfig),
   ];
+
+  // Copy CSS files
+  copyCssFiles();
 
   if (watch) {
     // Watch mode
@@ -97,6 +149,15 @@ async function main() {
       configs.map((config) => esbuild.context(config))
     );
     await Promise.all(contexts.map((ctx) => ctx.watch()));
+
+    // Also watch CSS files
+    for (const { src, dest } of cssFiles) {
+      const srcPath = path.join(__dirname, src);
+      fs.watch(srcPath, () => {
+        copyCssFiles();
+      });
+    }
+
     console.log('[watch] Watching for changes...');
   } else {
     // Single build
