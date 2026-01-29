@@ -26,6 +26,7 @@ npm-debug.log*
 # Test
 coverage/
 .nyc_output/
+test-files/
 
 # Environment
 .env
