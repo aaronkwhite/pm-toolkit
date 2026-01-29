@@ -1,7 +1,7 @@
 # PM Toolkit - Implementation Checklist
 
 > **Last Updated**: 2026-01-29
-> **Current Phase**: Phase 5 - File Viewers (In Progress)
+> **Current Phase**: Phase 6 - Templates (Next)
 
 This checklist tracks all implementation tasks. Update status as work progresses.
 
@@ -215,53 +215,48 @@ This checklist tracks all implementation tasks. Update status as work progresses
 ## Phase 5: File Viewers
 
 ### 5.1 Base Infrastructure
-- [ ] Create BaseViewerProvider.ts
-- [ ] Common toolbar CSS
-- [ ] CSP configuration helper
-- [ ] Zoom controls pattern
+- [x] Common viewer.css for all viewers
+- [x] CSP configuration in each provider
+- [x] Zoom controls pattern
 
 ### 5.2 PDF Viewer
-- [ ] Create PDFViewerProvider.ts
-- [ ] Create pdf-viewer.ts webview
-- [ ] PDF.js CDN integration
-- [ ] Page navigation
-- [ ] Zoom controls
-- [ ] Rotation controls
+- [x] Create PDFViewerProvider.ts
+- [x] Create pdf-viewer.ts webview
+- [x] PDF.js integration (bundled)
+- [x] Page navigation
+- [x] Zoom controls
+- [x] Rotation controls
 - [ ] Test with various PDFs
 
 ### 5.3 Word Viewer
-- [ ] Create DocxViewerProvider.ts
-- [ ] Create docx-viewer.ts webview
-- [ ] Mammoth.js integration
-- [ ] Style HTML output
-- [ ] Handle embedded images
+- [x] Create DocxViewerProvider.ts
+- [x] Create docx-viewer.ts webview
+- [x] Mammoth.js integration
+- [x] Style HTML output
+- [x] Handle embedded images
 - [ ] Test with various DOCX files
 
 ### 5.4 Excel Viewer
-- [ ] Create ExcelViewerProvider.ts
-- [ ] Create excel-viewer.ts webview
-- [ ] SheetJS CDN integration
-- [ ] Sheet tabs UI
-- [ ] Column/row headers
-- [ ] Cell formatting
+- [x] Create ExcelViewerProvider.ts
+- [x] Create excel-viewer.ts webview
+- [x] SheetJS integration (bundled)
+- [x] Sheet tabs UI
+- [x] Column/row headers
+- [x] Cell formatting
 - [ ] Test with various XLSX files
 
 ### 5.5 CSV Viewer
-- [ ] Create CSVViewerProvider.ts
-- [ ] Create csv-viewer.ts webview
-- [ ] Papa Parse integration
-- [ ] Auto-detect delimiter
-- [ ] Manual delimiter override
-- [ ] Header row toggle
-- [ ] Sortable columns
+- [x] Create CSVViewerProvider.ts
+- [x] Create csv-viewer.ts webview
+- [x] Papa Parse integration
+- [x] Auto-detect delimiter
+- [x] Manual delimiter override
+- [x] Header row toggle
+- [x] Sortable columns
 - [ ] Test with various CSV/TSV files
 
 **Phase 5 Commit Checkpoints:**
-- [ ] `feat: file viewer base infrastructure`
-- [ ] `feat: PDF viewer`
-- [ ] `feat: Word viewer`
-- [ ] `feat: Excel viewer`
-- [ ] `feat: CSV viewer`
+- [x] `feat: File viewers (PDF, Word, Excel, CSV)` (combined all)
 
 ---
 
@@ -440,6 +435,8 @@ This checklist tracks all implementation tasks. Update status as work progresses
 | 2026-01-29 | `e760f50` | feat: Notion-style slash command menu |
 | 2026-01-29 | `308d7c4` | docs: update checklist with Phase 2/3 progress |
 | 2026-01-29 | `d2426fb` | feat: Kanban board with drag-and-drop |
+| 2026-01-29 | `c80a55d` | docs: update checklist with Phase 4 progress |
+| 2026-01-29 | `561f5db` | feat: File viewers (PDF, Word, Excel, CSV) |
 
 ---
 
@@ -463,3 +460,8 @@ This checklist tracks all implementation tasks. Update status as work progresses
   - dnd-kit/dom for drag-drop
   - Auto-complete on Done/Archive columns
   - Full theme integration
+- Phase 5: File viewers implementation
+  - PDF viewer with PDF.js (page nav, zoom, rotation)
+  - Word viewer with Mammoth.js (DOCX to styled HTML)
+  - Excel viewer with SheetJS (sheet tabs, headers)
+  - CSV viewer with Papa Parse (sortable, delimiter options)
