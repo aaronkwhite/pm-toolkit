@@ -1,7 +1,7 @@
 # PM Toolkit - Implementation Checklist
 
 > **Last Updated**: 2026-01-29
-> **Current Phase**: Phase 1 - Foundation (Complete)
+> **Current Phase**: Phase 2/3 - Markdown Editor & Slash Commands (In Progress)
 
 This checklist tracks all implementation tasks. Update status as work progresses.
 
@@ -77,74 +77,74 @@ This checklist tracks all implementation tasks. Update status as work progresses
 ## Phase 2: Markdown Editor
 
 ### 2.1 Tiptap Setup
-- [ ] Install Tiptap packages
-- [ ] Create basic editor initialization
-- [ ] Configure StarterKit extension
-- [ ] Add Placeholder extension
-- [ ] Verify editor renders in webview
+- [x] Install Tiptap packages
+- [x] Create basic editor initialization
+- [x] Configure StarterKit extension
+- [x] Add Placeholder extension
+- [x] Verify editor renders in webview
 
 ### 2.2 Markdown Import/Export
-- [ ] Install tiptap-markdown
-- [ ] Configure markdown serialization
-- [ ] Test markdown → editor → markdown round-trip
-- [ ] Handle GFM tables
-- [ ] Handle task lists
+- [x] Install tiptap-markdown
+- [x] Configure markdown serialization
+- [x] Test markdown → editor → markdown round-trip
+- [x] Handle GFM tables
+- [x] Handle task lists
 
 ### 2.3 Extension ↔ Webview Communication
-- [ ] Implement message protocol types
-- [ ] Handle 'init' message (load content)
-- [ ] Handle 'update' message (content changed)
-- [ ] Handle external file changes
-- [ ] Prevent feedback loops
-- [ ] Add debouncing (150ms)
+- [x] Implement message protocol types
+- [x] Handle 'init' message (load content)
+- [x] Handle 'update' message (content changed)
+- [x] Handle external file changes
+- [x] Prevent feedback loops
+- [x] Add debouncing (150ms)
 
 ### 2.4 Theme Integration
-- [ ] Create theme.css with VS Code variables
-- [ ] Style headings, paragraphs, lists
-- [ ] Style code blocks, blockquotes
-- [ ] Style links, tables
+- [x] Create theme.css with VS Code variables
+- [x] Style headings, paragraphs, lists
+- [x] Style code blocks, blockquotes
+- [x] Style links, tables
 - [ ] Test light/dark theme switching
 
 ### 2.5 Table Editing
-- [ ] Install @tiptap/extension-table packages
-- [ ] Configure table extension
+- [x] Install @tiptap/extension-table packages
+- [x] Configure table extension
 - [ ] Add Tab/Shift+Tab navigation
 - [ ] Create table context menu
-- [ ] Test table markdown serialization
+- [x] Test table markdown serialization
 
 **Phase 2 Commit Checkpoints:**
-- [ ] `feat: Tiptap editor with markdown support`
-- [ ] `feat: extension-webview communication`
-- [ ] `feat: theme integration and styling`
-- [ ] `feat: table editing support`
+- [x] `feat: Tiptap editor with markdown support`
+- [x] `feat: extension-webview communication`
+- [x] `feat: theme integration and styling`
+- [x] `feat: table editing support`
 
 ---
 
 ## Phase 3: Slash Commands
 
 ### 3.1 Suggestion Plugin Setup
-- [ ] Install @tiptap/suggestion
-- [ ] Create SlashCommand.ts extension
-- [ ] Trigger on `/` character
-- [ ] Basic popup rendering
+- [x] Install @tiptap/suggestion
+- [x] Create SlashCommand.ts extension
+- [x] Trigger on `/` character
+- [x] Basic popup rendering
 
 ### 3.2 Command Menu UI
-- [ ] Create SlashCommandMenu.ts component
-- [ ] Style with VS Code variables
-- [ ] Keyboard navigation (up/down/enter/escape)
-- [ ] Filter as user types
-- [ ] Position near cursor (flip if near edges)
+- [x] Create SlashCommandMenu.ts component
+- [x] Style with VS Code variables
+- [x] Keyboard navigation (up/down/enter/escape)
+- [x] Filter as user types
+- [x] Position near cursor (flip if near edges)
 
 ### 3.3 Built-in Commands
-- [ ] Text (paragraph)
-- [ ] Heading 1, 2, 3
-- [ ] Bullet list
-- [ ] Numbered list
-- [ ] Checkbox/task
-- [ ] Quote
-- [ ] Code block
-- [ ] Divider
-- [ ] Table (with size picker)
+- [x] Text (paragraph)
+- [x] Heading 1, 2, 3
+- [x] Bullet list
+- [x] Numbered list
+- [x] Checkbox/task
+- [x] Quote
+- [x] Code block
+- [x] Divider
+- [x] Table (with size picker)
 
 ### 3.4 Table Size Picker
 - [ ] Create TableSizePicker.ts component
@@ -152,9 +152,9 @@ This checklist tracks all implementation tasks. Update status as work progresses
 - [ ] Insert table on selection
 
 **Phase 3 Commit Checkpoints:**
-- [ ] `feat: slash command extension`
-- [ ] `feat: command menu UI with keyboard nav`
-- [ ] `feat: built-in slash commands`
+- [x] `feat: slash command extension`
+- [x] `feat: command menu UI with keyboard nav`
+- [x] `feat: built-in slash commands`
 
 ---
 
@@ -440,6 +440,8 @@ This checklist tracks all implementation tasks. Update status as work progresses
 |------|--------|-------------|
 | 2026-01-29 | `58711d8` | Initial commit |
 | 2026-01-29 | `c8cb07f` | feat: Phase 1 - project scaffolding and extension boilerplate |
+| 2026-01-29 | `dd24e0c` | feat: Tiptap WYSIWYG markdown editor |
+| 2026-01-29 | `e760f50` | feat: Notion-style slash command menu |
 
 ---
 
@@ -450,4 +452,11 @@ This checklist tracks all implementation tasks. Update status as work progresses
 - Planning documentation complete
 - Phase 1 complete: scaffolding, build system, extension boilerplate
 - Extension compiles successfully
-- Ready for Phase 2: Tiptap markdown editor implementation
+- Phase 2/3: Tiptap editor with full markdown support
+  - StarterKit, Placeholder, Link, TaskList, TaskItem, Table extensions
+  - tiptap-markdown for round-trip serialization
+  - Extension ↔ webview message protocol (init, update, ready)
+  - 150ms debounced sync, feedback loop prevention
+  - VS Code theme integration via CSS variables
+  - Slash command menu with keyboard navigation
+  - All basic block types: headings, lists, tasks, quotes, code, tables, dividers
