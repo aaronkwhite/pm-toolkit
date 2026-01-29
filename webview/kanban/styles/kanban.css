@@ -1,4 +1,5 @@
 /* PM Toolkit - Kanban Board Styles */
+/* Uses VS Code CSS variables for theme integration */
 
 * {
   box-sizing: border-box;
@@ -10,8 +11,9 @@ html, body {
   height: 100%;
   background-color: var(--vscode-editor-background);
   color: var(--vscode-editor-foreground);
-  font-family: var(--vscode-font-family);
-  font-size: var(--vscode-font-size);
+  font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  font-size: var(--vscode-font-size, 14px);
+  line-height: 1.5;
 }
 
 #board {
@@ -20,12 +22,24 @@ html, body {
   padding: 16px;
   min-height: 100vh;
   overflow-x: auto;
+  align-items: flex-start;
 }
 
-/* Column styles */
+/* ===== Loading State ===== */
+
+.loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+  width: 100%;
+}
+
+/* ===== Column Styles ===== */
+
 .kanban-column {
   flex: 0 0 280px;
-  background: var(--vscode-sideBar-background);
+  background: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-panel-border);
   border-radius: 8px;
   padding: 12px;
   display: flex;
@@ -46,17 +60,26 @@ html, body {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
+  color: var(--vscode-foreground);
 }
 
 .column-count {
-  background: var(--vscode-badge-background);
-  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background, rgba(127, 127, 127, 0.2));
+  color: var(--vscode-badge-foreground, var(--vscode-foreground));
   padding: 2px 8px;
   border-radius: 10px;
   font-size: 12px;
+  font-weight: 500;
 }
 
-/* Card styles */
+.column-cards {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 100px;
+}
+
+/* ===== Card Styles ===== */
+
 .kanban-card {
   background: var(--vscode-editor-background);
   border: 1px solid var(--vscode-panel-border);
@@ -66,11 +89,18 @@ html, body {
   cursor: grab;
   display: flex;
   gap: 8px;
-  transition: box-shadow 0.15s ease;
+  align-items: flex-start;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  position: relative;
 }
 
 .kanban-card:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-color: var(--vscode-focusBorder);
+}
+
+.kanban-card:active {
+  cursor: grabbing;
 }
 
 .kanban-card.completed .card-title {
@@ -78,7 +108,149 @@ html, body {
   opacity: 0.6;
 }
 
-/* Add card button */
+/* Card Checkbox */
+.card-checkbox {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.card-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--vscode-checkbox-foreground, var(--vscode-focusBorder));
+  margin: 0;
+}
+
+/* Card Content */
+.card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--vscode-foreground);
+  word-break: break-word;
+}
+
+.card-description {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Card Edit Input */
+.card-edit-input {
+  width: 100%;
+  padding: 4px 6px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, var(--vscode-focusBorder));
+  border-radius: 3px;
+  outline: none;
+}
+
+.card-edit-input:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+/* Card Delete Button */
+.card-delete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.kanban-card:hover .card-delete {
+  opacity: 1;
+}
+
+.card-delete:hover {
+  background-color: var(--vscode-list-hoverBackground);
+  color: var(--vscode-errorForeground, #f44336);
+}
+
+/* ===== New Card Input ===== */
+
+.new-card-input {
+  cursor: default;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.new-card-input .new-card-text {
+  width: 100%;
+  padding: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, var(--vscode-focusBorder));
+  border-radius: 4px;
+  outline: none;
+}
+
+.new-card-input .new-card-text:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.new-card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.new-card-actions button {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+}
+
+.new-card-save {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.new-card-save:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.new-card-cancel {
+  background: var(--vscode-button-secondaryBackground, transparent);
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+  border: 1px solid var(--vscode-panel-border) !important;
+}
+
+.new-card-cancel:hover {
+  background: var(--vscode-button-secondaryHoverBackground, var(--vscode-list-hoverBackground));
+}
+
+/* ===== Add Card Button ===== */
+
 .add-card-btn {
   width: 100%;
   padding: 8px;
@@ -89,8 +261,59 @@ html, body {
   color: var(--vscode-textLink-foreground);
   cursor: pointer;
   font-size: 13px;
+  font-family: inherit;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .add-card-btn:hover {
   background: var(--vscode-list-hoverBackground);
+  border-color: var(--vscode-focusBorder);
+}
+
+/* ===== Drag States ===== */
+
+.kanban-card[data-dragging="true"] {
+  opacity: 0.5;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.column-cards.drop-target {
+  background: var(--vscode-list-hoverBackground);
+  border-radius: 4px;
+}
+
+/* ===== Scrollbar Styling ===== */
+
+.column-cards::-webkit-scrollbar {
+  width: 8px;
+}
+
+.column-cards::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.column-cards::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: 4px;
+}
+
+.column-cards::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+#board::-webkit-scrollbar {
+  height: 8px;
+}
+
+#board::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#board::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: 4px;
+}
+
+#board::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
 }
