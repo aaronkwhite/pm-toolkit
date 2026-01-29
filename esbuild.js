@@ -82,6 +82,10 @@ const cssFiles = [
     src: 'webview/kanban/styles/kanban.css',
     dest: 'dist/webview/kanban.css',
   },
+  {
+    src: 'webview/viewers/styles/viewer.css',
+    dest: 'dist/webview/viewer.css',
+  },
 ];
 
 /**

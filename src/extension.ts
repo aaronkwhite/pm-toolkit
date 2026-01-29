@@ -1,6 +1,12 @@
 import * as vscode from 'vscode';
 import { MarkdownEditorProvider } from './editors/MarkdownEditorProvider';
 import { KanbanEditorProvider } from './editors/KanbanEditorProvider';
+import {
+  PDFViewerProvider,
+  DocxViewerProvider,
+  ExcelViewerProvider,
+  CSVViewerProvider,
+} from './viewers';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('PM Toolkit is now active');
@@ -9,7 +15,11 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(MarkdownEditorProvider.register(context));
   context.subscriptions.push(KanbanEditorProvider.register(context));
 
-  // TODO: Register viewer providers (PDF, Word, Excel, CSV)
+  // Register viewer providers
+  context.subscriptions.push(PDFViewerProvider.register(context));
+  context.subscriptions.push(DocxViewerProvider.register(context));
+  context.subscriptions.push(ExcelViewerProvider.register(context));
+  context.subscriptions.push(CSVViewerProvider.register(context));
 
   // Register commands
   context.subscriptions.push(

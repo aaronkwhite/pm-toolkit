@@ -1,0 +1,280 @@
+/* PM Toolkit - Shared Viewer Styles */
+/* Used by PDF, Word, Excel, and CSV viewers */
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  font-size: var(--vscode-font-size, 14px);
+  overflow: hidden;
+}
+
+/* ===== Toolbar ===== */
+
+.viewer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background-color: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  border-bottom: 1px solid var(--vscode-panel-border);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.viewer-toolbar button {
+  padding: 4px 12px;
+  background-color: var(--vscode-button-secondaryBackground, transparent);
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  min-width: 32px;
+}
+
+.viewer-toolbar button:hover {
+  background-color: var(--vscode-button-secondaryHoverBackground, var(--vscode-list-hoverBackground));
+}
+
+.viewer-toolbar span {
+  font-size: 13px;
+  color: var(--vscode-foreground);
+  min-width: 60px;
+  text-align: center;
+}
+
+.viewer-toolbar select {
+  padding: 4px 8px;
+  background-color: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+  border: 1px solid var(--vscode-dropdown-border, var(--vscode-panel-border));
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.toolbar-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.toolbar-checkbox input[type="checkbox"] {
+  accent-color: var(--vscode-checkbox-foreground, var(--vscode-focusBorder));
+}
+
+/* ===== Viewer Content ===== */
+
+.viewer-content {
+  height: calc(100vh - 50px);
+  overflow: auto;
+  padding: 20px;
+}
+
+/* PDF View */
+.viewer-content canvas {
+  display: block;
+  margin: 0 auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Document View (Word) */
+.document-view {
+  display: flex;
+  justify-content: center;
+}
+
+.document-content {
+  max-width: 800px;
+  width: 100%;
+  background: var(--vscode-editor-background);
+  padding: 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  line-height: 1.6;
+}
+
+.document-content h1,
+.document-content h2,
+.document-content h3,
+.document-content h4,
+.document-content h5,
+.document-content h6 {
+  color: var(--vscode-foreground);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.document-content h1 { font-size: 2em; }
+.document-content h2 { font-size: 1.5em; }
+.document-content h3 { font-size: 1.25em; }
+
+.document-content p {
+  margin: 1em 0;
+}
+
+.document-content ul,
+.document-content ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.document-content table {
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.document-content td,
+.document-content th {
+  border: 1px solid var(--vscode-panel-border);
+  padding: 8px;
+}
+
+.document-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Spreadsheet View (Excel/CSV) */
+.spreadsheet-view {
+  padding: 0;
+}
+
+#tableContainer {
+  overflow: auto;
+  height: 100%;
+}
+
+.excel-table,
+.csv-table {
+  border-collapse: collapse;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.excel-table th,
+.excel-table td,
+.csv-table th,
+.csv-table td {
+  border: 1px solid var(--vscode-panel-border);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.excel-table th,
+.csv-table th {
+  background-color: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.1));
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.csv-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.csv-table th.sortable:hover {
+  background-color: var(--vscode-list-hoverBackground);
+}
+
+.row-header,
+.col-header {
+  background-color: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.1)) !important;
+  font-weight: 500;
+  color: var(--vscode-descriptionForeground);
+  text-align: center !important;
+  min-width: 40px;
+}
+
+.row-header {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+/* Sheet Tabs (Excel) */
+.sheet-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  max-width: 400px;
+}
+
+.sheet-tab {
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.sheet-tab:hover {
+  background-color: var(--vscode-list-hoverBackground);
+}
+
+.sheet-tab.active {
+  background-color: var(--vscode-editor-background);
+  border-color: var(--vscode-panel-border);
+  font-weight: 500;
+}
+
+/* ===== Error Message ===== */
+
+.error-message {
+  text-align: center;
+  padding: 40px;
+  color: var(--vscode-errorForeground, #f44336);
+}
+
+.error-message p:first-child {
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+/* ===== Scrollbar ===== */
+
+.viewer-content::-webkit-scrollbar,
+#tableContainer::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.viewer-content::-webkit-scrollbar-track,
+#tableContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.viewer-content::-webkit-scrollbar-thumb,
+#tableContainer::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: 5px;
+}
+
+.viewer-content::-webkit-scrollbar-thumb:hover,
+#tableContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+}
