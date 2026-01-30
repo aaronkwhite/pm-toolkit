@@ -12,10 +12,13 @@ import {
   addCard,
   updateCard,
   deleteCard,
+  updateColumnSettings,
   type KanbanBoard,
+  type ColumnSettings,
 } from './parser';
 import { KanbanDragDrop, type DragEndEvent } from './dnd';
 import { renderBoard, showAddCardInput, type UICallbacks } from './ui';
+import { hideColumnMenu } from './menu';
 
 // VS Code webview API
 interface VSCodeAPI {
@@ -65,6 +68,9 @@ function render(): void {
   const container = document.getElementById('board');
   if (!container || !board) return;
 
+  // Close any open menus before re-rendering
+  hideColumnMenu();
+
   const callbacks: UICallbacks = {
     onToggleCard: (cardId) => {
       board = toggleCard(board!, cardId);
@@ -84,9 +90,6 @@ function render(): void {
         }
       );
     },
-    onEditCard: (cardId) => {
-      // Handled in UI component via double-click
-    },
     onDeleteCard: (cardId) => {
       board = deleteCard(board!, cardId);
       render();
@@ -94,6 +97,16 @@ function render(): void {
     },
     onCardTextChange: (cardId, text) => {
       board = updateCard(board!, cardId, { text });
+      render();
+      sendUpdate();
+    },
+    onCardDescriptionChange: (cardId, description) => {
+      board = updateCard(board!, cardId, { description });
+      render();
+      sendUpdate();
+    },
+    onColumnSettingsChange: (columnId, settings) => {
+      board = updateColumnSettings(board!, columnId, settings);
       render();
       sendUpdate();
     },
@@ -160,6 +173,9 @@ function init(): void {
   vscode.postMessage({ type: 'ready' });
 }
 
+// Expose vscode API globally for use in tiptap editor (image URL conversion)
+(window as any).vscode = vscode;
+
 // Handle messages from extension
 window.addEventListener('message', (event) => {
   const message = event.data;
@@ -183,6 +199,18 @@ window.addEventListener('message', (event) => {
           isUpdatingFromExtension = false;
         }
       }
+      break;
+
+    case 'imageUrl':
+      // Dispatch custom event for image URL resolution
+      window.dispatchEvent(
+        new CustomEvent('image-url-resolved', {
+          detail: {
+            originalPath: message.payload.originalPath,
+            webviewUrl: message.payload.webviewUrl,
+          },
+        })
+      );
       break;
   }
 });

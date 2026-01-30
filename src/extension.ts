@@ -11,6 +11,40 @@ import {
 export function activate(context: vscode.ExtensionContext) {
   console.log('PM Toolkit is now active');
 
+  // Auto-save dirty kanban files on window focus to prevent Cursor diff state issues
+  context.subscriptions.push(
+    vscode.window.onDidChangeWindowState(async (e) => {
+      if (e.focused) {
+        // Save all dirty kanban files when window regains focus
+        for (const doc of vscode.workspace.textDocuments) {
+          if (doc.fileName.endsWith('.kanban') && doc.isDirty) {
+            try {
+              await doc.save();
+            } catch (err) {
+              console.error('Failed to auto-save kanban file:', err);
+            }
+          }
+        }
+      }
+    })
+  );
+
+  // Also try to save dirty kanban files when extension activates
+  (async () => {
+    for (const doc of vscode.workspace.textDocuments) {
+      if (doc.fileName.endsWith('.kanban') && doc.isDirty) {
+        try {
+          await doc.save();
+        } catch (err) {
+          // If save fails, show a warning
+          vscode.window.showWarningMessage(
+            `Kanban file "${doc.fileName}" has pending changes. Please save or discard them to open the board.`
+          );
+        }
+      }
+    }
+  })();
+
   // Register custom editor providers
   context.subscriptions.push(MarkdownEditorProvider.register(context));
   context.subscriptions.push(KanbanEditorProvider.register(context));

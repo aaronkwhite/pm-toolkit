@@ -19,10 +19,16 @@ export interface KanbanCard {
   completed: boolean;
 }
 
+export interface ColumnSettings {
+  autoComplete?: boolean;
+  showThumbnails?: boolean; // Default true - show first image as card thumbnail
+}
+
 export interface KanbanColumn {
   id: string;
   title: string;
   cards: KanbanCard[];
+  settings?: ColumnSettings;
 }
 
 export interface KanbanBoard {
@@ -35,6 +41,47 @@ export interface KanbanBoard {
  */
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
+ * Parse column title and extract settings
+ * Format: "Title [auto-complete]" or just "Title"
+ */
+function parseColumnTitle(rawTitle: string): { title: string; settings?: ColumnSettings } {
+  let title = rawTitle;
+  const settings: ColumnSettings = {};
+
+  // Parse [auto-complete]
+  if (/\[auto-complete\]/i.test(title)) {
+    settings.autoComplete = true;
+    title = title.replace(/\s*\[auto-complete\]\s*/gi, ' ').trim();
+  }
+
+  // Parse [no-thumbnails]
+  if (/\[no-thumbnails\]/i.test(title)) {
+    settings.showThumbnails = false;
+    title = title.replace(/\s*\[no-thumbnails\]\s*/gi, ' ').trim();
+  }
+
+  if (Object.keys(settings).length > 0) {
+    return { title, settings };
+  }
+
+  return { title };
+}
+
+/**
+ * Serialize column title with settings
+ */
+function serializeColumnTitle(column: KanbanColumn): string {
+  let title = column.title;
+  if (column.settings?.autoComplete) {
+    title += ' [auto-complete]';
+  }
+  if (column.settings?.showThumbnails === false) {
+    title += ' [no-thumbnails]';
+  }
+  return title;
 }
 
 /**
@@ -55,7 +102,7 @@ export function parseMarkdown(markdown: string): KanbanBoard {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Check for column heading (## Title)
+    // Check for column heading (## Title or ## Title [auto-complete])
     const columnMatch = line.match(/^##\s+(.+)$/);
     if (columnMatch) {
       // Save any pending card
@@ -65,12 +112,17 @@ export function parseMarkdown(markdown: string): KanbanBoard {
         currentCard = null;
       }
 
+      // Parse title and settings
+      const rawTitle = columnMatch[1].trim();
+      const { title, settings } = parseColumnTitle(rawTitle);
+
       // Start new column
       inPreamble = false;
       currentColumn = {
         id: generateId(),
-        title: columnMatch[1].trim(),
+        title,
         cards: [],
+        settings,
       };
       board.columns.push(currentColumn);
       continue;
@@ -145,7 +197,7 @@ export function serializeBoard(board: KanbanBoard): string {
 
   // Serialize each column
   for (const column of board.columns) {
-    lines.push(`## ${column.title}`);
+    lines.push(`## ${serializeColumnTitle(column)}`);
     lines.push('');
 
     for (const card of column.cards) {
@@ -194,9 +246,8 @@ export function moveCard(
   // Find the target column and insert the card
   const targetColumn = board.columns.find((c) => c.id === toColumnId);
   if (targetColumn) {
-    // Auto-complete if moving to Done or Archive column
-    const columnTitle = targetColumn.title.toLowerCase();
-    if (columnTitle === 'done' || columnTitle === 'archive' || columnTitle === 'completed') {
+    // Auto-complete if column has autoComplete setting enabled
+    if (targetColumn.settings?.autoComplete) {
       movedCard.completed = true;
     }
 
@@ -280,6 +331,21 @@ export function deleteCard(board: KanbanBoard, cardId: string): KanbanBoard {
       column.cards.splice(cardIndex, 1);
       break;
     }
+  }
+  return board;
+}
+
+/**
+ * Update column settings
+ */
+export function updateColumnSettings(
+  board: KanbanBoard,
+  columnId: string,
+  settings: Partial<ColumnSettings>
+): KanbanBoard {
+  const column = board.columns.find((c) => c.id === columnId);
+  if (column) {
+    column.settings = { ...column.settings, ...settings };
   }
   return board;
 }

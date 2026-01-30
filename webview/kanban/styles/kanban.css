@@ -70,6 +70,44 @@ html, body {
   border-radius: 10px;
   font-size: 12px;
   font-weight: 500;
+  margin-right: auto;
+  margin-left: 8px;
+}
+
+/* Column Menu Button (Kebab) */
+.column-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.kanban-column:hover .column-menu-btn {
+  opacity: 1;
+}
+
+.column-menu-btn:hover {
+  background: var(--vscode-list-hoverBackground);
+  color: var(--vscode-foreground);
+}
+
+.column-menu-btn:focus {
+  opacity: 1;
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+
+.column-menu-btn svg {
+  flex-shrink: 0;
 }
 
 .column-cards {
@@ -161,6 +199,30 @@ html, body {
 
 .card-edit-input:focus {
   border-color: var(--vscode-focusBorder);
+}
+
+/* Card Edit Textarea (for descriptions) */
+.card-edit-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, var(--vscode-focusBorder));
+  border-radius: 3px;
+  outline: none;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.card-edit-textarea:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.card-edit-textarea::placeholder {
+  color: var(--vscode-input-placeholderForeground);
 }
 
 /* Card Delete Button */
@@ -324,4 +386,411 @@ html, body {
 
 #board::-webkit-scrollbar-thumb:hover {
   background: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+/* ===== Column Dropdown Menu ===== */
+
+.column-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 180px;
+  background: var(--vscode-menu-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  padding: 4px 0;
+}
+
+.column-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.column-menu-item:hover {
+  background: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
+  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground));
+}
+
+.menu-item-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.menu-item-check svg {
+  color: var(--vscode-textLink-foreground);
+}
+
+.menu-item-label {
+  flex: 1;
+}
+
+/* ===== Card Modal ===== */
+
+.card-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10vh;
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.card-modal-overlay.visible {
+  opacity: 1;
+}
+
+.card-modal {
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  transform: translateY(-10px);
+  transition: transform 0.15s ease;
+}
+
+.card-modal-overlay.visible .card-modal {
+  transform: translateY(0);
+}
+
+.card-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.card-modal-close:hover {
+  background: var(--vscode-list-hoverBackground);
+  color: var(--vscode-foreground);
+}
+
+/* Title Section */
+.card-modal-title-section {
+  padding: 24px 24px 16px;
+}
+
+.card-modal-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  cursor: text;
+  padding: 4px 0;
+  border-radius: 4px;
+  transition: background-color 0.1s ease;
+}
+
+.card-modal-title:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.card-modal-title-input {
+  width: 100%;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  font-size: 20px;
+  font-weight: 600;
+  font-family: inherit;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-focusBorder);
+  border-radius: 4px;
+  outline: none;
+}
+
+/* Description Section */
+.card-modal-desc-section {
+  padding: 0 24px 24px;
+}
+
+.card-modal-description {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--vscode-foreground);
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: text;
+  padding: 8px;
+  margin: -8px;
+  border-radius: 4px;
+  transition: background-color 0.1s ease;
+}
+
+.card-modal-description:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.card-modal-description-placeholder {
+  font-size: 14px;
+  color: var(--vscode-descriptionForeground);
+  cursor: text;
+  padding: 8px;
+  margin: -8px;
+  border-radius: 4px;
+  font-style: italic;
+}
+
+.card-modal-description-placeholder:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.card-modal-description-input {
+  width: 100%;
+  min-height: 120px;
+  padding: 8px;
+  margin: -8px;
+  font-size: 14px;
+  line-height: 1.6;
+  font-family: inherit;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-focusBorder);
+  border-radius: 4px;
+  outline: none;
+  resize: none;
+}
+
+.card-modal-description-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+  font-style: italic;
+}
+
+/* Tiptap Editor in Modal */
+.card-modal-editor-container {
+  min-height: 120px;
+  border-radius: 4px;
+}
+
+.card-tiptap-editor {
+  min-height: 120px;
+  padding: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--vscode-foreground);
+  outline: none;
+}
+
+.card-tiptap-editor:focus {
+  outline: none;
+}
+
+/* Placeholder styling */
+.card-tiptap-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--vscode-input-placeholderForeground);
+  pointer-events: none;
+  height: 0;
+  font-style: italic;
+}
+
+/* Tiptap content styles */
+.card-tiptap-editor h3,
+.card-tiptap-editor h4,
+.card-tiptap-editor h5,
+.card-tiptap-editor h6 {
+  margin: 1em 0 0.5em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.card-tiptap-editor h3 { font-size: 1.1em; }
+.card-tiptap-editor h4 { font-size: 1em; }
+.card-tiptap-editor h5 { font-size: 0.95em; }
+.card-tiptap-editor h6 { font-size: 0.9em; }
+
+.card-tiptap-editor p {
+  margin: 0.5em 0;
+}
+
+.card-tiptap-editor ul,
+.card-tiptap-editor ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.card-tiptap-editor li {
+  margin: 0.25em 0;
+}
+
+.card-tiptap-editor blockquote {
+  margin: 0.5em 0;
+  padding-left: 1em;
+  border-left: 3px solid var(--vscode-textBlockQuote-border, var(--vscode-panel-border));
+  color: var(--vscode-textBlockQuote-foreground, var(--vscode-descriptionForeground));
+}
+
+.card-tiptap-editor code {
+  background: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.1));
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.9em;
+}
+
+.card-tiptap-editor pre {
+  background: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.1));
+  padding: 0.75em 1em;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+
+.card-tiptap-editor pre code {
+  background: none;
+  padding: 0;
+}
+
+.card-tiptap-editor a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: underline;
+}
+
+.card-tiptap-editor a:hover {
+  color: var(--vscode-textLink-activeForeground);
+}
+
+.card-tiptap-editor strong {
+  font-weight: 600;
+}
+
+.card-tiptap-editor em {
+  font-style: italic;
+}
+
+.card-tiptap-editor hr {
+  border: none;
+  border-top: 1px solid var(--vscode-panel-border);
+  margin: 1em 0;
+}
+
+/* Task list in Tiptap */
+.card-tiptap-editor ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.card-tiptap-editor ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.card-tiptap-editor ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.card-tiptap-editor ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+/* ===== Image Node View (from editor) ===== */
+
+.image-node-view {
+  display: inline-block;
+  position: relative;
+  padding: 4px 8px 4px 0;
+  vertical-align: bottom;
+  margin-bottom: 4px;
+}
+
+.image-node-view img {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.image-node-view img:hover {
+  opacity: 0.9;
+}
+
+.image-node-view.is-selected img,
+.image-node-view.is-editing img {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+.image-node-view.is-editing {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Markdown edit field - hidden by default, shown when editing */
+.image-markdown-edit {
+  display: none;
+  font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, Menlo, Consolas, monospace);
+  font-size: 0.85em;
+  background-color: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.1));
+  padding: 6px 10px;
+  border-radius: 4px;
+  color: var(--vscode-textLink-foreground);
+  outline: none;
+  white-space: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.image-node-view.is-editing .image-markdown-edit {
+  display: block;
+}
+
+/* ===== Card Thumbnail ===== */
+
+.card-thumbnail {
+  margin-top: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  max-height: 120px;
+}
+
+.card-thumbnail img {
+  width: 100%;
+  height: auto;
+  max-height: 120px;
+  object-fit: cover;
+  display: block;
 }

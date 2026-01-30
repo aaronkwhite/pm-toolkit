@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { HTMLBuilder } from './HTMLBuilder';
 import { ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../types';
 
@@ -29,10 +30,21 @@ export class KanbanEditorProvider implements vscode.CustomTextEditorProvider {
     webviewPanel: vscode.WebviewPanel,
     _token: vscode.CancellationToken
   ): Promise<void> {
+    // If document has unsaved changes (possibly from Cursor diff), save them first
+    if (document.isDirty) {
+      await document.save();
+    }
+
+    // Get the directory of the document for resolving relative image paths
+    const documentDir = vscode.Uri.file(path.dirname(document.uri.fsPath));
+
     webviewPanel.webview.options = {
       enableScripts: true,
       localResourceRoots: [
         vscode.Uri.joinPath(this.context.extensionUri, 'dist'),
+        documentDir,
+        // Also allow workspace folders
+        ...(vscode.workspace.workspaceFolders?.map((f) => f.uri) || []),
       ],
     };
 
@@ -44,12 +56,16 @@ export class KanbanEditorProvider implements vscode.CustomTextEditorProvider {
     let isUpdatingFromExtension = false;
 
     const updateWebview = () => {
-      if (webviewPanel.webview) {
-        const message: ExtensionToWebviewMessage = {
-          type: 'update',
-          payload: { content: document.getText() },
-        };
-        webviewPanel.webview.postMessage(message);
+      if (webviewPanel?.webview && document) {
+        try {
+          const message: ExtensionToWebviewMessage = {
+            type: 'update',
+            payload: { content: document.getText() || '' },
+          };
+          webviewPanel.webview.postMessage(message);
+        } catch (err) {
+          console.error('Failed to update kanban webview:', err);
+        }
       }
     };
 
@@ -57,20 +73,58 @@ export class KanbanEditorProvider implements vscode.CustomTextEditorProvider {
       async (message: WebviewToExtensionMessage) => {
         switch (message.type) {
           case 'ready':
-            const initMessage: ExtensionToWebviewMessage = {
-              type: 'init',
-              payload: {
-                content: document.getText(),
-                filename: document.fileName,
-              },
-            };
-            webviewPanel.webview.postMessage(initMessage);
+            try {
+              // Ensure document and webview are valid before sending
+              if (!document || !webviewPanel?.webview) {
+                console.error('Kanban: Document or webview not available');
+                return;
+              }
+              const content = document.getText() || '';
+              const initMessage: ExtensionToWebviewMessage = {
+                type: 'init',
+                payload: {
+                  content,
+                  filename: document.fileName || 'untitled.kanban',
+                },
+              };
+              webviewPanel.webview.postMessage(initMessage);
+            } catch (err) {
+              console.error('Failed to initialize kanban webview:', err);
+            }
             break;
 
           case 'update':
             // Debounce updates to avoid excessive writes
             if (!isUpdatingFromExtension) {
               this.debouncedUpdate(document, message.payload.content);
+            }
+            break;
+
+          case 'requestImageUrl':
+            // Convert relative image path to webview URL
+            try {
+              const imagePath = message.payload.path;
+              let imageUri: vscode.Uri;
+
+              if (path.isAbsolute(imagePath)) {
+                imageUri = vscode.Uri.file(imagePath);
+              } else {
+                // Resolve relative to document directory
+                imageUri = vscode.Uri.file(
+                  path.resolve(path.dirname(document.uri.fsPath), imagePath)
+                );
+              }
+
+              const webviewUrl = webviewPanel.webview.asWebviewUri(imageUri).toString();
+              webviewPanel.webview.postMessage({
+                type: 'imageUrl',
+                payload: {
+                  originalPath: imagePath,
+                  webviewUrl,
+                },
+              });
+            } catch (err) {
+              console.error('Failed to resolve image URL:', err);
             }
             break;
         }

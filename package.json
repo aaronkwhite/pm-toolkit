@@ -20,7 +20,14 @@
     "product-management"
   ],
   "main": "./dist/extension.js",
-  "activationEvents": [],
+  "activationEvents": [
+    "onCustomEditor:pmtoolkit.kanbanEditor",
+    "onCustomEditor:pmtoolkit.markdownEditor",
+    "onCustomEditor:pmtoolkit.pdfViewer",
+    "onCustomEditor:pmtoolkit.docxViewer",
+    "onCustomEditor:pmtoolkit.xlsxViewer",
+    "onCustomEditor:pmtoolkit.csvViewer"
+  ],
   "contributes": {
     "customEditors": [
       {
@@ -154,6 +161,7 @@
     "@tiptap/starter-kit": "^2.11.5",
     "@tiptap/suggestion": "^2.11.5",
     "gray-matter": "^4.0.3",
+    "lucide": "^0.469.0",
     "mammoth": "^1.8.0",
     "mermaid": "^11.4.0",
     "papaparse": "^5.4.1",
