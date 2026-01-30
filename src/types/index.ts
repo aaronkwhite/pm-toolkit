@@ -14,7 +14,8 @@ export type WebviewToExtensionMessage =
   | { type: 'ready' }
   | { type: 'update'; payload: { content: string } }
   | { type: 'requestTemplates' }
-  | { type: 'requestClipboard' };
+  | { type: 'requestClipboard' }
+  | { type: 'copyToClipboard'; payload: { text: string } };
 
 /**
  * Template definition from YAML frontmatter

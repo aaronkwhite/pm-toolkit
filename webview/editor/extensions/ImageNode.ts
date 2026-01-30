@@ -24,8 +24,8 @@ export const ImageNode = Image.extend({
         key: new PluginKey('imageMarkdownConverter'),
         props: {
           handleKeyDown(view, event) {
-            // Only trigger on space or enter
-            if (event.key !== ' ' && event.key !== 'Enter') {
+            // Only trigger on space (Enter will just create a new line with the text)
+            if (event.key !== ' ') {
               return false;
             }
 
@@ -71,10 +71,12 @@ export const ImageNode = Image.extend({
             // Insert the image
             tr.insert(matchStart, imageNode);
 
-            // If space was pressed, add a space after the image
-            if (event.key === ' ') {
-              tr.insertText(' ', matchStart + 1);
-            }
+            // Position after the image
+            const posAfterImage = matchStart + 1;
+
+            // Add a space after the image and position cursor
+            tr.insertText(' ', posAfterImage);
+            tr.setSelection(TextSelection.create(tr.doc, posAfterImage + 1));
 
             view.dispatch(tr);
 
@@ -280,10 +282,19 @@ export const ImageNode = Image.extend({
           return;
         }
 
-        // Allow Cmd+C / Ctrl+C for copy
+        // Handle Cmd+C / Ctrl+C for copy via VS Code API
         if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
+          e.preventDefault();
           e.stopPropagation();
-          // Let the browser handle copy
+
+          const sel = window.getSelection();
+          if (sel && sel.toString()) {
+            const textToCopy = sel.toString();
+            const vscodeApi = (window as any).vscode;
+            if (vscodeApi) {
+              vscodeApi.postMessage({ type: 'copyToClipboard', payload: { text: textToCopy } });
+            }
+          }
           return;
         }
 

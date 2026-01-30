@@ -112,6 +112,17 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
               console.error('Failed to read clipboard:', err);
             }
             break;
+
+          case 'copyToClipboard':
+            // Webview is requesting to copy text to clipboard
+            try {
+              if (message.payload?.text) {
+                await vscode.env.clipboard.writeText(message.payload.text);
+              }
+            } catch (err) {
+              console.error('Failed to write to clipboard:', err);
+            }
+            break;
         }
       }
     );
