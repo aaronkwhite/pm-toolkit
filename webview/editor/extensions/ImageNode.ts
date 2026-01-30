@@ -4,18 +4,155 @@
  * When an image is selected/focused, it shows the raw markdown syntax
  * for direct editing. When deselected, it renders the image.
  *
+ * Supports Obsidian-style dimensions: ![alt|300](url) or ![alt|300x200](url)
+ *
  * Also includes an input rule to convert typed markdown ![alt](url) to images.
  */
 
 import Image from '@tiptap/extension-image';
-import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { TextSelection } from '@tiptap/pm/state';
 
-// Regex to match image markdown: ![alt](url)
+// Regex to match image markdown: ![alt](url) or ![alt|width](url) or ![alt|widthxheight](url)
 const imageMarkdownRegex = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/;
 
+/**
+ * Parse Obsidian-style alt text to extract actual alt and dimensions
+ * Examples:
+ *   "my image" -> { alt: "my image", width: null, height: null }
+ *   "my image|300" -> { alt: "my image", width: 300, height: null }
+ *   "my image|300x200" -> { alt: "my image", width: 300, height: 200 }
+ *   "|300" -> { alt: "", width: 300, height: null }
+ */
+function parseAltWithDimensions(altText: string): {
+  alt: string;
+  width: number | null;
+  height: number | null;
+} {
+  if (!altText) {
+    return { alt: '', width: null, height: null };
+  }
+
+  // Check for pipe separator
+  const pipeIndex = altText.lastIndexOf('|');
+  if (pipeIndex === -1) {
+    return { alt: altText, width: null, height: null };
+  }
+
+  const alt = altText.substring(0, pipeIndex);
+  const dimensionPart = altText.substring(pipeIndex + 1);
+
+  // Try to parse dimensions: "300" or "300x200"
+  const dimensionMatch = dimensionPart.match(/^(\d+)(?:x(\d+))?$/);
+  if (!dimensionMatch) {
+    // Not valid dimensions, treat entire string as alt
+    return { alt: altText, width: null, height: null };
+  }
+
+  const width = parseInt(dimensionMatch[1], 10);
+  const height = dimensionMatch[2] ? parseInt(dimensionMatch[2], 10) : null;
+
+  return { alt, width, height };
+}
+
+/**
+ * Format alt text with dimensions for markdown output
+ */
+function formatAltWithDimensions(
+  alt: string,
+  width: number | null,
+  height: number | null
+): string {
+  if (!width && !height) {
+    return alt;
+  }
+
+  const dimensionStr = height ? `${width}x${height}` : `${width}`;
+  return alt ? `${alt}|${dimensionStr}` : `|${dimensionStr}`;
+}
+
 export const ImageNode = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      originalSrc: {
+        default: null,
+        parseHTML: (element) => element.getAttribute('data-original-src'),
+        renderHTML: (attributes) => {
+          if (!attributes.originalSrc) return {};
+          return { 'data-original-src': attributes.originalSrc };
+        },
+      },
+      width: {
+        default: null,
+        parseHTML: (element) => {
+          const width = element.getAttribute('width');
+          return width ? parseInt(width, 10) : null;
+        },
+        renderHTML: (attributes) => {
+          if (!attributes.width) return {};
+          return { width: attributes.width };
+        },
+      },
+      height: {
+        default: null,
+        parseHTML: (element) => {
+          const height = element.getAttribute('height');
+          return height ? parseInt(height, 10) : null;
+        },
+        renderHTML: (attributes) => {
+          if (!attributes.height) return {};
+          return { height: attributes.height };
+        },
+      },
+    };
+  },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: any) {
+          const alt = node.attrs.alt || '';
+          // Use originalSrc for serialization (the user-friendly path), falling back to src
+          const src = node.attrs.originalSrc || node.attrs.src || '';
+          const width = node.attrs.width;
+          const height = node.attrs.height;
+
+          // Format with Obsidian-style dimensions
+          const altWithDimensions = formatAltWithDimensions(alt, width, height);
+
+          // Escape special characters in URL
+          const escapedSrc = src.replace(/[()]/g, '\\$&');
+
+          state.write(`![${altWithDimensions}](${escapedSrc})`);
+        },
+        parse: {
+          // Hook into DOM parsing to extract dimensions from alt text
+          updateDOM(element: HTMLElement) {
+            // Find all images and process their alt text for dimensions
+            element.querySelectorAll('img').forEach((img) => {
+              const rawAlt = img.getAttribute('alt') || '';
+              const { alt, width, height } = parseAltWithDimensions(rawAlt);
+
+              // Update the alt to remove dimension syntax
+              if (alt !== rawAlt) {
+                img.setAttribute('alt', alt);
+              }
+
+              // Set width/height attributes if present
+              if (width) {
+                img.setAttribute('width', String(width));
+              }
+              if (height) {
+                img.setAttribute('height', String(height));
+              }
+            });
+          },
+        },
+      },
+    };
+  },
+
   addProseMirrorPlugins() {
     const imageType = this.type;
 
@@ -30,7 +167,7 @@ export const ImageNode = Image.extend({
             }
 
             const { state } = view;
-            const { selection, doc } = state;
+            const { selection } = state;
             const { $from } = selection;
 
             // Get the text content of the current text block (paragraph)
@@ -48,7 +185,10 @@ export const ImageNode = Image.extend({
             const matchEnd = match.index! + match[0].length;
             if (matchEnd !== textBeforeCursor.length) return false;
 
-            const [fullMatch, alt, src, title] = match;
+            const [fullMatch, rawAlt, src, title] = match;
+
+            // Parse alt text for dimensions
+            const { alt, width, height } = parseAltWithDimensions(rawAlt);
 
             // Calculate positions in the document
             const blockStart = $from.start();
@@ -61,11 +201,15 @@ export const ImageNode = Image.extend({
             // Delete the matched text
             tr.delete(matchStart, matchEndPos);
 
-            // Create the image node
+            // Create the image node with dimensions
+            // Store originalSrc for user-friendly display/editing
             const imageNode = imageType.create({
               src,
+              originalSrc: src, // User typed this path, preserve it
               alt: alt || null,
               title: title || null,
+              width: width || null,
+              height: height || null,
             });
 
             // Insert the image
@@ -88,19 +232,81 @@ export const ImageNode = Image.extend({
       }),
     ];
   },
+
   addNodeView() {
     return ({ node, getPos, editor }) => {
       const container = document.createElement('span');
       container.classList.add('image-node-view');
 
+      // Helper to check if a URL is a webview URL (can be rendered)
+      const isWebviewUrl = (url: string) => {
+        return url.startsWith('http') || url.startsWith('data:') || url.includes('vscode-resource');
+      };
+
+      // Helper to request URL conversion from extension
+      const requestUrlConversion = (relativePath: string) => {
+        const vscodeApi = (window as any).vscode;
+        if (vscodeApi && relativePath && !isWebviewUrl(relativePath)) {
+          vscodeApi.postMessage({ type: 'requestImageUrl', payload: { path: relativePath } });
+        }
+      };
+
       // Image display (shown when not editing)
       const img = document.createElement('img');
-      img.src = node.attrs.src || '';
+      const initialSrc = node.attrs.src || '';
       img.alt = node.attrs.alt || '';
       if (node.attrs.title) {
         img.title = node.attrs.title;
       }
+      // Apply dimensions
+      if (node.attrs.width) {
+        img.width = node.attrs.width;
+      }
+      if (node.attrs.height) {
+        img.height = node.attrs.height;
+      }
       img.classList.add('editor-image');
+
+      // Track the path we're waiting for conversion on
+      let pendingPath = '';
+
+      // Set image src - if it's not a webview URL, request conversion
+      if (isWebviewUrl(initialSrc)) {
+        img.src = initialSrc;
+      } else if (initialSrc) {
+        // Relative path - request conversion and show placeholder
+        img.src = ''; // Will be updated when we get the webview URL
+        pendingPath = initialSrc;
+        requestUrlConversion(initialSrc);
+      }
+
+      // Listen for URL resolution from extension
+      const handleUrlResolved = (event: Event) => {
+        const customEvent = event as CustomEvent<{ originalPath: string; webviewUrl: string }>;
+        const { originalPath, webviewUrl } = customEvent.detail;
+
+        // Check if this is the path we're waiting for
+        if (pendingPath && originalPath === pendingPath) {
+          img.src = webviewUrl;
+          pendingPath = '';
+
+          // Update the node attributes with the resolved URL
+          if (typeof getPos === 'function') {
+            const pos = getPos();
+            editor.view.dispatch(
+              editor.state.tr
+                .setMeta('addToHistory', false) // Don't add to undo history
+                .setNodeMarkup(pos, undefined, {
+                  ...node.attrs,
+                  src: webviewUrl,
+                  originalSrc: originalPath,
+                })
+            );
+          }
+        }
+      };
+
+      window.addEventListener('image-url-resolved', handleUrlResolved);
 
       // Markdown edit field (shown when editing)
       const editField = document.createElement('span');
@@ -110,8 +316,12 @@ export const ImageNode = Image.extend({
 
       const updateEditField = () => {
         const alt = node.attrs.alt || '';
-        const src = node.attrs.src || '';
-        editField.textContent = `![${alt}](${src})`;
+        // Display originalSrc (the user-friendly path) instead of the webview URL
+        const displaySrc = node.attrs.originalSrc || node.attrs.src || '';
+        const width = node.attrs.width;
+        const height = node.attrs.height;
+        const altWithDimensions = formatAltWithDimensions(alt, width, height);
+        editField.textContent = `![${altWithDimensions}](${displaySrc})`;
       };
       updateEditField();
 
@@ -195,26 +405,60 @@ export const ImageNode = Image.extend({
         // Parse the markdown and update the node
         const text = (editField.textContent || '').trim();
 
-        // Match image markdown: ![alt](url)
+        // Match image markdown: ![alt](url) - alt may contain |dimensions
         const match = text.match(/^!\[([^\]]*)\]\(([^)]*)\)$/);
 
         if (typeof getPos === 'function') {
           const pos = getPos();
 
           if (match) {
-            const [, alt, src] = match;
-            // Only update if something changed
-            if (alt !== (node.attrs.alt || '') || src !== (node.attrs.src || '')) {
+            const [, rawAlt, newSrc] = match;
+            const { alt, width, height } = parseAltWithDimensions(rawAlt);
+
+            // Compare against originalSrc (what user sees) not src (webview URL)
+            const currentDisplaySrc = node.attrs.originalSrc || node.attrs.src || '';
+
+            // Check if anything changed
+            const altChanged = alt !== (node.attrs.alt || '');
+            const srcChanged = newSrc !== currentDisplaySrc;
+            const widthChanged = width !== node.attrs.width;
+            const heightChanged = height !== node.attrs.height;
+
+            if (altChanged || srcChanged || widthChanged || heightChanged) {
+              // Update attributes - only modify originalSrc, keep src (webview URL) intact
+              // The markdown serializer uses originalSrc, so saving will write the correct path
+              const newAttrs: Record<string, any> = {
+                ...node.attrs,
+                alt: alt || null,
+                width: width,
+                height: height,
+              };
+
+              if (srcChanged) {
+                // User changed the path - update originalSrc and request URL conversion
+                newAttrs.originalSrc = newSrc || null;
+                // Request conversion of the new path to webview URL
+                if (newSrc && !isWebviewUrl(newSrc)) {
+                  pendingPath = newSrc;
+                  requestUrlConversion(newSrc);
+                }
+              }
+
               editor.view.dispatch(
-                editor.state.tr.setNodeMarkup(pos, undefined, {
-                  ...node.attrs,
-                  alt: alt || null,
-                  src: src || null,
-                })
+                editor.state.tr.setNodeMarkup(pos, undefined, newAttrs)
               );
-              // Update the image element immediately
-              img.src = src || '';
+              // Update the img element
               img.alt = alt || '';
+              if (width) {
+                img.width = width;
+              } else {
+                img.removeAttribute('width');
+              }
+              if (height) {
+                img.height = height;
+              } else {
+                img.removeAttribute('height');
+              }
             }
           } else if (text === '' || text === '![]()') {
             // Empty or cleared - delete the node
@@ -389,11 +633,30 @@ export const ImageNode = Image.extend({
           if (updatedNode.type.name !== 'image') {
             return false;
           }
-          // Update image
-          img.src = updatedNode.attrs.src || '';
+          // Update image - check if we need URL conversion
+          const newSrc = updatedNode.attrs.src || '';
+          if (isWebviewUrl(newSrc)) {
+            img.src = newSrc;
+          } else if (newSrc && newSrc !== pendingPath) {
+            // New relative path - request conversion
+            img.src = ''; // Clear while loading
+            pendingPath = newSrc;
+            requestUrlConversion(newSrc);
+          }
           img.alt = updatedNode.attrs.alt || '';
           if (updatedNode.attrs.title) {
             img.title = updatedNode.attrs.title;
+          }
+          // Update dimensions
+          if (updatedNode.attrs.width) {
+            img.width = updatedNode.attrs.width;
+          } else {
+            img.removeAttribute('width');
+          }
+          if (updatedNode.attrs.height) {
+            img.height = updatedNode.attrs.height;
+          } else {
+            img.removeAttribute('height');
           }
           // Update node reference for edit field
           node = updatedNode;
@@ -416,6 +679,10 @@ export const ImageNode = Image.extend({
             return true;
           }
           return false;
+        },
+        destroy: () => {
+          // Clean up event listener
+          window.removeEventListener('image-url-resolved', handleUrlResolved);
         },
       };
     };

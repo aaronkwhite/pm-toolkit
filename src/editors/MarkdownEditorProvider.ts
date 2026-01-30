@@ -2,6 +2,56 @@ import * as vscode from 'vscode';
 import { HTMLBuilder } from './HTMLBuilder';
 import { ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../types';
 
+/**
+ * Convert relative image paths in markdown to webview URIs
+ * Preserves the original path in a data attribute for display/editing
+ *
+ * Instead of outputting markdown like: ![alt](webview-url)
+ * We output HTML like: <img src="webview-url" data-original-src="original-path" alt="...">
+ * This allows the ImageNode to display the original path in the edit field
+ */
+function convertImagePathsToWebview(
+  markdown: string,
+  documentUri: vscode.Uri,
+  webview: vscode.Webview
+): string {
+  // Match image markdown: ![alt](path)
+  // Captures the path which may be relative or absolute
+  return markdown.replace(
+    /!\[([^\]]*)\]\(([^)]+)\)/g,
+    (match, alt, imagePath) => {
+      // Skip URLs (http, https, data)
+      if (/^(https?:|data:)/i.test(imagePath)) {
+        return match;
+      }
+
+      // Skip already converted webview URIs
+      if (imagePath.includes('vscode-webview-resource:')) {
+        return match;
+      }
+
+      try {
+        // Resolve the path relative to the document
+        const documentDir = vscode.Uri.joinPath(documentUri, '..');
+        const imageUri = vscode.Uri.joinPath(documentDir, imagePath);
+        const webviewUri = webview.asWebviewUri(imageUri);
+        // Output HTML with both the webview URI (for rendering) and original path (for editing)
+        // Escape any quotes in alt and paths for HTML attributes
+        const escapedAlt = alt.replace(/"/g, '&quot;');
+        const escapedOriginal = imagePath.replace(/"/g, '&quot;');
+        return `<img src="${webviewUri.toString()}" data-original-src="${escapedOriginal}" alt="${escapedAlt}">`;
+      } catch {
+        // If conversion fails, return original
+        return match;
+      }
+    }
+  );
+}
+
+// Note: convertImagePathsFromWebview() has been removed.
+// Image paths are now preserved via the data-original-src attribute and
+// the ImageNode's originalSrc property, which is used during markdown serialization.
+
 export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = 'pmtoolkit.markdownEditor';
 
@@ -26,11 +76,19 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     webviewPanel: vscode.WebviewPanel,
     _token: vscode.CancellationToken
   ): Promise<void> {
+    // Get the document's directory for local image resolution
+    const documentDir = vscode.Uri.joinPath(document.uri, '..');
+
+    // Also include workspace folders if available
+    const workspaceFolders = vscode.workspace.workspaceFolders?.map(f => f.uri) || [];
+
     // Configure webview
     webviewPanel.webview.options = {
       enableScripts: true,
       localResourceRoots: [
         vscode.Uri.joinPath(this.context.extensionUri, 'dist'),
+        documentDir,
+        ...workspaceFolders,
       ],
     };
 
@@ -55,9 +113,15 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
         // AND it's not just echoing back what the webview sent us
         if (currentContent !== lastKnownContent && currentContent !== lastWebviewContent) {
           lastKnownContent = currentContent;
+          // Convert relative image paths to webview URIs
+          const contentWithWebviewUris = convertImagePathsToWebview(
+            currentContent,
+            document.uri,
+            webviewPanel.webview
+          );
           const message: ExtensionToWebviewMessage = {
             type: 'update',
-            payload: { content: currentContent },
+            payload: { content: contentWithWebviewUris },
           };
           webviewPanel.webview.postMessage(message);
         }
@@ -71,10 +135,16 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
           case 'ready':
             // Webview is ready, send initial content
             lastKnownContent = document.getText();
+            // Convert relative image paths to webview URIs
+            const contentWithWebviewUris = convertImagePathsToWebview(
+              lastKnownContent,
+              document.uri,
+              webviewPanel.webview
+            );
             const initMessage: ExtensionToWebviewMessage = {
               type: 'init',
               payload: {
-                content: lastKnownContent,
+                content: contentWithWebviewUris,
                 filename: document.fileName,
               },
             };
@@ -83,12 +153,14 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
 
           case 'update':
             // Content changed in webview, update document
+            // The markdown serializer uses originalSrc, so paths are already relative
+            const content = message.payload.content;
             // Only update if content is actually different
-            if (message.payload.content !== lastKnownContent) {
+            if (content !== lastKnownContent) {
               pendingWebviewUpdate = true;
-              lastKnownContent = message.payload.content;
-              lastWebviewContent = message.payload.content; // Track what webview sent
-              await this.updateDocument(document, message.payload.content);
+              lastKnownContent = content;
+              lastWebviewContent = content; // Track what webview sent
+              await this.updateDocument(document, content);
               // Small delay to let the document change event pass
               setTimeout(() => {
                 pendingWebviewUpdate = false;
@@ -121,6 +193,23 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
               }
             } catch (err) {
               console.error('Failed to write to clipboard:', err);
+            }
+            break;
+
+          case 'requestImageUrl':
+            // Webview is requesting conversion of a relative path to webview URL
+            try {
+              const imagePath = message.payload?.path;
+              if (imagePath && !imagePath.startsWith('http') && !imagePath.includes('vscode-resource')) {
+                const imageUri = vscode.Uri.joinPath(documentDir, imagePath);
+                const webviewUrl = webviewPanel.webview.asWebviewUri(imageUri).toString();
+                webviewPanel.webview.postMessage({
+                  type: 'imageUrl',
+                  payload: { originalPath: imagePath, webviewUrl },
+                });
+              }
+            } catch (err) {
+              console.error('Failed to convert image path:', err);
             }
             break;
         }

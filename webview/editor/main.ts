@@ -328,6 +328,19 @@ window.addEventListener('message', (event) => {
         (window as any).__pendingPasteTarget = null;
       }
       break;
+
+    case 'imageUrl':
+      // Extension has converted a relative path to webview URL
+      // Dispatch custom event for image nodes to handle
+      if (message.payload?.originalPath && message.payload?.webviewUrl) {
+        window.dispatchEvent(new CustomEvent('image-url-resolved', {
+          detail: {
+            originalPath: message.payload.originalPath,
+            webviewUrl: message.payload.webviewUrl,
+          },
+        }));
+      }
+      break;
   }
 });
 
