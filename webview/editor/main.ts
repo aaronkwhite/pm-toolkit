@@ -109,6 +109,33 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
           .replace(/␣/g, ' '); // open box U+2423
       },
     },
+    onCreate: ({ editor }) => {
+      // Listen for paste events and move cursor out of block elements after paste
+      editor.view.dom.addEventListener('paste', () => {
+        // Use setTimeout to run after the paste has been processed
+        setTimeout(() => {
+          const { $head } = editor.state.selection;
+          let depth = $head.depth;
+
+          // Check if we're inside a table
+          while (depth > 0) {
+            const node = $head.node(depth);
+            if (node.type.name === 'table') {
+              // Move cursor to after the table
+              const endOfTable = $head.after(depth);
+              editor.commands.setTextSelection(endOfTable);
+              // Insert a paragraph after the table if there isn't one
+              const nodeAfter = editor.state.doc.nodeAt(endOfTable);
+              if (!nodeAfter) {
+                editor.commands.insertContentAt(endOfTable, { type: 'paragraph' });
+              }
+              return;
+            }
+            depth--;
+          }
+        }, 0);
+      });
+    },
     onUpdate: ({ editor }) => {
       // Don't send updates if we're receiving from extension
       if (isUpdatingFromExtension) return;
