@@ -134,21 +134,27 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
         switch (message.type) {
           case 'ready':
             // Webview is ready, send initial content
-            lastKnownContent = document.getText();
-            // Convert relative image paths to webview URIs
-            const contentWithWebviewUris = convertImagePathsToWebview(
-              lastKnownContent,
-              document.uri,
-              webviewPanel.webview
-            );
-            const initMessage: ExtensionToWebviewMessage = {
-              type: 'init',
-              payload: {
-                content: contentWithWebviewUris,
-                filename: document.fileName,
-              },
-            };
-            webviewPanel.webview.postMessage(initMessage);
+            try {
+              lastKnownContent = document.getText();
+              // Convert relative image paths to webview URIs
+              const contentWithWebviewUris = convertImagePathsToWebview(
+                lastKnownContent,
+                document.uri,
+                webviewPanel.webview
+              );
+              const initMessage: ExtensionToWebviewMessage = {
+                type: 'init',
+                payload: {
+                  content: contentWithWebviewUris,
+                  filename: document.fileName,
+                },
+              };
+              webviewPanel.webview.postMessage(initMessage);
+            } catch (err) {
+              console.error('Failed to get document text:', err);
+              // Document might be stale after extension reload
+              // The webview's persisted state will be used as fallback
+            }
             break;
 
           case 'update':

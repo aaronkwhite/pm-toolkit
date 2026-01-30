@@ -213,6 +213,10 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
 
       updateTimeout = window.setTimeout(() => {
         const markdown = editor.storage.markdown.getMarkdown();
+
+        // Save state for potential reload recovery
+        vscode.setState({ content: markdown });
+
         vscode.postMessage({
           type: 'update',
           payload: { content: markdown },
@@ -290,8 +294,17 @@ function init() {
     return;
   }
 
+  // Try to restore state from previous session (e.g., after extension reload)
+  const previousState = vscode.getState() as { content?: string } | undefined;
+
   // Initialize editor with empty content
   initEditor(container, '');
+
+  // If we have previous state, use it immediately as a fallback
+  // (extension will send fresh content via 'init' message anyway)
+  if (previousState?.content) {
+    setContent(previousState.content);
+  }
 
   // Signal ready to extension
   vscode.postMessage({ type: 'ready' });
