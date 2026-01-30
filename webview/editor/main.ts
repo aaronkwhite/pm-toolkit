@@ -99,6 +99,15 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
       attributes: {
         class: 'prose-editor',
       },
+      // Clean up pasted text - handle common markdown documentation artifacts
+      transformPastedText(text) {
+        return text
+          // Replace middle dot (⋅) used in markdown docs to show spaces
+          .replace(/⋅/g, ' ')
+          // Replace other common "visible space" characters
+          .replace(/·/g, ' ')  // middle dot U+00B7
+          .replace(/␣/g, ' '); // open box U+2423
+      },
     },
     onUpdate: ({ editor }) => {
       // Don't send updates if we're receiving from extension
