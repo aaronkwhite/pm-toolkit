@@ -26,6 +26,9 @@ app.get('/', (req, res) => {
 // Serve bundled JS and CSS from dist/
 app.use('/dist', express.static(path.join(projectRoot, 'dist')));
 
+// Serve test files (images, etc.) for testing local file references
+app.use('/test-files', express.static(path.join(projectRoot, 'test-files')));
+
 // Health check endpoint for wait-on
 app.get('/health', (req, res) => {
   res.status(200).send('OK');

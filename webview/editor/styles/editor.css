@@ -282,12 +282,58 @@ html, body {
   cursor: col-resize;
 }
 
-/* ===== Images ===== */
+/* ===== Images (Obsidian-style) ===== */
 
 .ProseMirror img {
   max-width: 100%;
   height: auto;
   border-radius: 4px;
+}
+
+.image-node-view {
+  display: inline-flex;
+  flex-direction: column;
+  position: relative;
+  gap: 4px;
+}
+
+.image-node-view img {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.image-node-view img:hover {
+  opacity: 0.9;
+}
+
+.image-node-view.is-selected img,
+.image-node-view.is-editing img {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+/* Markdown edit field - shown above image when editing */
+.image-markdown-edit {
+  display: none;
+  font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, Menlo, Consolas, monospace);
+  font-size: 0.85em;
+  background-color: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.1));
+  padding: 6px 10px;
+  border-radius: 4px;
+  color: var(--vscode-textLink-foreground);
+  outline: none;
+  white-space: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* When editing, show markdown above the image */
+.image-node-view.is-editing .image-markdown-edit {
+  display: block;
+}
+
+.image-placeholder-text {
+  font-size: 13px;
 }
 
 /* ===== Selection ===== */

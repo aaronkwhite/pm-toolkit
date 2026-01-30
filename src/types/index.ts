@@ -4,7 +4,8 @@
 export type ExtensionToWebviewMessage =
   | { type: 'init'; payload: { content: string; filename: string } }
   | { type: 'update'; payload: { content: string } }
-  | { type: 'templates'; payload: { templates: Template[] } };
+  | { type: 'templates'; payload: { templates: Template[] } }
+  | { type: 'clipboardData'; payload: { text: string } };
 
 /**
  * Messages sent from Webview to Extension
@@ -12,7 +13,8 @@ export type ExtensionToWebviewMessage =
 export type WebviewToExtensionMessage =
   | { type: 'ready' }
   | { type: 'update'; payload: { content: string } }
-  | { type: 'requestTemplates' };
+  | { type: 'requestTemplates' }
+  | { type: 'requestClipboard' };
 
 /**
  * Template definition from YAML frontmatter

@@ -99,6 +99,19 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
           case 'requestTemplates':
             // TODO: Implement template loading
             break;
+
+          case 'requestClipboard':
+            // Webview is requesting clipboard data (for paste in input fields)
+            try {
+              const clipboardText = await vscode.env.clipboard.readText();
+              webviewPanel.webview.postMessage({
+                type: 'clipboardData',
+                payload: { text: clipboardText },
+              });
+            } catch (err) {
+              console.error('Failed to read clipboard:', err);
+            }
+            break;
         }
       }
     );

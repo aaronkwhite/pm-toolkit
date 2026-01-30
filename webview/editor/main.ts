@@ -14,6 +14,7 @@ import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
+import { ImageNode } from './extensions/ImageNode';
 import { Markdown } from 'tiptap-markdown';
 import { SlashCommand } from './extensions/SlashCommand';
 import { KeyboardNavigation } from './extensions/KeyboardNavigation';
@@ -28,6 +29,9 @@ interface VSCodeAPI {
 declare function acquireVsCodeApi(): VSCodeAPI;
 
 const vscode = acquireVsCodeApi();
+
+// Expose vscode API globally for use in extensions (e.g., clipboard access)
+(window as any).vscode = vscode;
 
 // Editor instance
 let editor: Editor | null = null;
@@ -78,6 +82,8 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
       }),
       Link.configure({
         openOnClick: false,
+        autolink: true,
+        protocols: ['http', 'https', 'mailto'],
         HTMLAttributes: {
           class: 'editor-link',
         },
@@ -103,11 +109,15 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
       TableRow,
       TableHeader,
       TableCell,
+      ImageNode.configure({
+        inline: true,
+        allowBase64: true,
+      }),
       Markdown.configure({
         html: true,
         tightLists: true,
         bulletListMarker: '-',
-        linkify: true,
+        linkify: false,  // Disable auto-linking URLs to prevent breaking image markdown
         breaks: false,
         transformPastedText: true,
         transformCopiedText: true,
@@ -278,6 +288,37 @@ window.addEventListener('message', (event) => {
     case 'templates':
       console.log('Received templates:', message.payload.templates);
       // TODO: Update slash command menu with templates
+      break;
+
+    case 'clipboardData':
+      // Handle clipboard data from extension (for paste in contenteditable fields)
+      const pasteTarget = (window as any).__pendingPasteTarget as HTMLElement | null;
+      if (pasteTarget && message.payload.text) {
+        const text = message.payload.text;
+
+        // Focus the target first
+        pasteTarget.focus();
+
+        // Get current selection
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(document.createTextNode(text));
+          // Move cursor to end of inserted text
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else {
+          // Fallback: append to end
+          pasteTarget.textContent = (pasteTarget.textContent || '') + text;
+        }
+
+        // Trigger input event so undo stack updates
+        pasteTarget.dispatchEvent(new Event('input', { bubbles: true }));
+
+        (window as any).__pendingPasteTarget = null;
+      }
       break;
   }
 });
