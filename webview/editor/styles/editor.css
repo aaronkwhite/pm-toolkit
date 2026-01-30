@@ -13,14 +13,14 @@ html, body {
   color: var(--vscode-editor-foreground);
   font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
   font-size: var(--vscode-font-size, 14px);
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 #editor {
   min-height: 100vh;
   max-width: 900px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 24px 20px;
 }
 
 /* ===== Tiptap ProseMirror Editor ===== */
@@ -53,9 +53,9 @@ html, body {
 .ProseMirror h6 {
   color: var(--vscode-editor-foreground);
   font-weight: 600;
-  line-height: 1.3;
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
+  line-height: 1.25;
+  margin-top: 1.25em;
+  margin-bottom: 0.25em;
 }
 
 .ProseMirror h1:first-child,
@@ -72,7 +72,7 @@ html, body {
 .ProseMirror h6 { font-size: 0.9em; opacity: 0.8; }
 
 .ProseMirror p {
-  margin: 1em 0;
+  margin: 0 0 0.5em 0;
 }
 
 .ProseMirror strong {
@@ -106,7 +106,7 @@ html, body {
 
 .ProseMirror ul,
 .ProseMirror ol {
-  margin: 1em 0;
+  margin: 0.5em 0;
   padding-left: 1.5em;
 }
 
@@ -180,8 +180,8 @@ html, body {
 /* ===== Blockquotes ===== */
 
 .ProseMirror blockquote {
-  margin: 1em 0;
-  padding: 0.5em 1em;
+  margin: 0.5em 0;
+  padding: 0.25em 1em;
   border-left: 3px solid var(--vscode-textBlockQuote-border, var(--vscode-focusBorder));
   background-color: var(--vscode-textBlockQuote-background, transparent);
   color: var(--vscode-foreground);
@@ -210,8 +210,8 @@ html, body {
 }
 
 .ProseMirror pre {
-  margin: 1em 0;
-  padding: 1em;
+  margin: 0.5em 0;
+  padding: 0.75em 1em;
   background-color: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.1));
   border-radius: 6px;
   overflow-x: auto;
@@ -229,7 +229,7 @@ html, body {
 .ProseMirror hr {
   border: none;
   border-top: 1px solid var(--vscode-panel-border);
-  margin: 2em 0;
+  margin: 1em 0;
 }
 
 /* ===== Tables ===== */
@@ -237,7 +237,7 @@ html, body {
 .ProseMirror table {
   border-collapse: collapse;
   width: 100%;
-  margin: 1em 0;
+  margin: 0.5em 0;
   overflow: hidden;
   table-layout: fixed;
 }
@@ -245,7 +245,7 @@ html, body {
 .ProseMirror td,
 .ProseMirror th {
   border: 1px solid var(--vscode-panel-border);
-  padding: 8px 12px;
+  padding: 6px 10px;
   text-align: left;
   vertical-align: top;
   min-width: 100px;
