@@ -49,6 +49,8 @@ function extractFirstImage(markdown: string): string | null {
  */
 function stripMarkdown(text: string): string {
   return text
+    // Remove backslash escapes first (e.g., \## -> ##)
+    .replace(/\\([#*_~`\[\]()>-])/g, '')
     // Remove images ![alt](url)
     .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
     // Remove links but keep text [text](url)
@@ -63,18 +65,21 @@ function stripMarkdown(text: string): string {
     .replace(/_([^_]+)_/g, '$1')
     // Remove strikethrough ~~text~~
     .replace(/~~([^~]+)~~/g, '$1')
-    // Remove headers ###
-    .replace(/^#{1,6}\s+/gm, '')
+    // Remove headers ### - match anywhere, not just line start
+    .replace(/#{1,6}\s+/g, '')
     // Remove blockquotes >
     .replace(/^>\s*/gm, '')
     // Remove horizontal rules
     .replace(/^[-*_]{3,}\s*$/gm, '')
-    // Remove list markers - and *
+    // Remove list markers - and * at start of lines
     .replace(/^[\s]*[-*+]\s+/gm, '')
     // Remove numbered list markers
     .replace(/^[\s]*\d+\.\s+/gm, '')
+    // Clean up any remaining backslashes before special chars
+    .replace(/\\(.)/g, '$1')
     // Remove extra whitespace
     .replace(/\n{3,}/g, '\n\n')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 

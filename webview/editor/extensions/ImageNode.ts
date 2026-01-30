@@ -124,7 +124,10 @@ export const ImageNode = Image.extend({
           // Escape special characters in URL
           const escapedSrc = src.replace(/[()]/g, '\\$&');
 
+          // Ensure image is on its own line (block element)
+          state.ensureNewLine();
           state.write(`![${altWithDimensions}](${escapedSrc})`);
+          state.ensureNewLine();
         },
         parse: {
           // Hook into DOM parsing to extract dimensions from alt text

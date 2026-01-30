@@ -30,9 +30,9 @@ export function createCardEditor(options: CardEditorOptions): Editor {
     element,
     extensions: [
       StarterKit.configure({
-        // Disable heading levels 1-2 (keep 3-6 for sub-sections)
+        // Allow all heading levels in card descriptions
         heading: {
-          levels: [3, 4, 5, 6],
+          levels: [1, 2, 3, 4, 5, 6],
         },
       }),
       Placeholder.configure({
@@ -88,7 +88,7 @@ export function createCardRenderer(options: Omit<CardEditorOptions, 'onUpdate' |
     extensions: [
       StarterKit.configure({
         heading: {
-          levels: [3, 4, 5, 6],
+          levels: [1, 2, 3, 4, 5, 6],
         },
       }),
       Link.configure({
