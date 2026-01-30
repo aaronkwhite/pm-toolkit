@@ -18,6 +18,7 @@ import { ImageNode } from './extensions/ImageNode';
 import { Markdown } from 'tiptap-markdown';
 import { SlashCommand } from './extensions/SlashCommand';
 import { KeyboardNavigation } from './extensions/KeyboardNavigation';
+import { CustomParagraph } from './extensions/CustomParagraph';
 
 // VS Code webview API
 interface VSCodeAPI {
@@ -76,7 +77,10 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
         heading: {
           levels: [1, 2, 3, 4, 5, 6],
         },
+        // Disable default paragraph so we can use CustomParagraph
+        paragraph: false,
       }),
+      CustomParagraph,
       Placeholder.configure({
         placeholder: 'Start typing, or press / for commands...',
       }),
@@ -204,8 +208,12 @@ function setContent(markdown: string, addToHistory: boolean = false) {
   const { from, to } = editor.state.selection;
   const docSize = editor.state.doc.content.size;
 
+  // Keep &nbsp; lines as-is during parsing - they'll become paragraphs with &nbsp;
+  // The CustomParagraph extension handles serialization of empty paragraphs
+  const processedMarkdown = markdown;
+
   try {
-    const parsed = editor.storage.markdown.parser.parse(markdown);
+    const parsed = editor.storage.markdown.parser.parse(processedMarkdown);
 
     if (addToHistory) {
       // Normal set that adds to history

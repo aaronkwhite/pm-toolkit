@@ -182,4 +182,83 @@ code block
     const paragraphCount = await editor.countElements('p');
     expect(paragraphCount).toBeGreaterThanOrEqual(3);
   });
+
+  test('empty paragraphs serialize to &nbsp; for preservation', async ({ page }) => {
+    // Start with empty editor and type content with blank lines
+    await editor.load('');
+
+    // Type first line - use editor.type which clicks to focus first
+    await editor.type('First line');
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter'); // Create empty paragraph
+    await page.keyboard.type('After blank line');
+
+    // Wait for debounce
+    await page.waitForTimeout(300);
+
+    // Get the markdown output
+    const markdown = await editor.getContent();
+
+    // The markdown should contain both lines
+    expect(markdown).toContain('First line');
+    expect(markdown).toContain('After blank line');
+
+    // Check that we have &nbsp; markers for empty paragraphs
+    // Empty paragraphs should serialize to \u00A0 (non-breaking space)
+    const lines = markdown.split('\n');
+    const nbspLines = lines.filter(line => line === '\u00A0');
+    expect(nbspLines.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('&nbsp; lines in markdown become empty paragraphs when loaded', async ({ page }) => {
+    // Load content with &nbsp; markers for empty paragraphs
+    const content = 'Before empty\n\n\u00A0\n\nAfter empty';
+    await editor.load(content);
+
+    // Should render as multiple paragraphs including an empty one
+    const paragraphCount = await editor.countElements('p');
+    expect(paragraphCount).toBeGreaterThanOrEqual(3);
+
+    // The middle paragraph should be empty (or contain just whitespace)
+    const paragraphs = await page.locator('.ProseMirror p').allTextContents();
+    const hasEmptyParagraph = paragraphs.some(p => p.trim() === '');
+    expect(hasEmptyParagraph).toBe(true);
+  });
+
+  test('round-trip preserves empty paragraphs', async ({ page }) => {
+    // Create content with intentional empty paragraphs
+    await editor.load('');
+    await editor.type('Line 1'); // Use editor.type to ensure focus
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter'); // Create empty paragraph
+    await page.keyboard.press('Enter'); // Another empty paragraph
+    await page.keyboard.type('Line 2');
+
+    // Wait for debounce
+    await page.waitForTimeout(300);
+
+    // Get markdown
+    const markdown1 = await editor.getContent();
+    expect(markdown1).toContain('Line 1'); // Sanity check
+
+    // Reload the same content
+    await editor.load(markdown1);
+
+    // Trigger an update by typing a space and deleting it
+    // This ensures an update message is sent
+    await editor.focus();
+    await page.keyboard.press('End'); // Go to end
+    await page.keyboard.type(' ');
+    await page.keyboard.press('Backspace');
+
+    // Wait for debounce
+    await page.waitForTimeout(300);
+
+    // Get markdown again
+    const markdown2 = await editor.getContent();
+
+    // The two outputs should be identical - no information lost
+    // Note: We compare the essential content, ignoring trailing newlines
+    expect(markdown2.replace(/\n+$/, '')).toBe(markdown1.replace(/\n+$/, ''));
+  });
 });
