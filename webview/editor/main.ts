@@ -40,6 +40,9 @@ let editor: Editor | null = null;
 // Flag to prevent feedback loops
 let isUpdatingFromExtension = false;
 
+// Flag to track if current update is from undo/redo
+let isHistoryOperation = false;
+
 // Debounce timer
 let updateTimeout: number | null = null;
 const DEBOUNCE_MS = 150;
@@ -47,9 +50,11 @@ const DEBOUNCE_MS = 150;
 /**
  * Ensure the document ends with a paragraph so users can click after block elements.
  * This prevents getting "trapped" in tables, code blocks, etc. at the end of documents.
+ * Preserves the current cursor position to avoid jumping.
  */
 function ensureTrailingParagraph(editor: Editor) {
-  const { doc } = editor.state;
+  const { state, view } = editor;
+  const { doc, selection, schema } = state;
   const lastNode = doc.lastChild;
 
   // Block elements that need a trailing paragraph
@@ -57,14 +62,26 @@ function ensureTrailingParagraph(editor: Editor) {
 
   // If the last node is a block element that can trap the cursor, add a paragraph
   if (lastNode && blockElements.includes(lastNode.type.name)) {
+    // Create a single transaction that inserts paragraph but preserves selection
+    const tr = state.tr;
     const endPos = doc.content.size;
-    editor.chain()
-      .command(({ tr }) => {
-        tr.setMeta('addToHistory', false);
-        return true;
-      })
-      .insertContentAt(endPos, { type: 'paragraph' })
-      .run();
+
+    // Insert empty paragraph at end
+    const paragraph = schema.nodes.paragraph.create();
+    tr.insert(endPos, paragraph);
+
+    // Don't add to history
+    tr.setMeta('addToHistory', false);
+
+    // Preserve original selection (map it through the transaction)
+    // Since we're inserting at the end, positions before endPos are unchanged
+    const { from, to } = selection;
+    if (from < endPos && to < endPos) {
+      // Selection is before the insertion point, restore it
+      tr.setSelection(selection.map(tr.doc, tr.mapping));
+    }
+
+    view.dispatch(tr);
   }
 }
 
@@ -147,6 +164,10 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
           .replace(/␣/g, ' '); // open box U+2423
       },
     },
+    onTransaction: ({ transaction }) => {
+      // Track if this transaction is from undo/redo
+      isHistoryOperation = !!transaction.getMeta('history$');
+    },
     onCreate: ({ editor }) => {
       // Listen for paste events and move cursor out of block elements after paste
       editor.view.dom.addEventListener('paste', () => {
@@ -178,8 +199,12 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
       // Don't send updates if we're receiving from extension
       if (isUpdatingFromExtension) return;
 
-      // Ensure document ends with a paragraph (so you can click after tables/code blocks)
-      ensureTrailingParagraph(editor);
+      // Skip ensureTrailingParagraph if this is an undo/redo operation
+      // The flag is set by onTransaction callback above
+      if (!isHistoryOperation) {
+        // Ensure document ends with a paragraph (so you can click after tables/code blocks)
+        ensureTrailingParagraph(editor);
+      }
 
       // Debounce updates
       if (updateTimeout) {
