@@ -388,13 +388,28 @@ export const ImageNode = Image.extend({
         isEditing = true;
         container.classList.add('is-editing');
         updateEditField();
-        // Focus and select all
         editField.focus();
-        const range = document.createRange();
-        range.selectNodeContents(editField);
+
+        const text = editField.textContent || '';
         const sel = window.getSelection();
-        sel?.removeAllRanges();
-        sel?.addRange(range);
+        const range = document.createRange();
+
+        // If empty image (no alt, no src), position cursor in alt text area (between [ and ])
+        if (text === '![]()') {
+          const textNode = editField.firstChild;
+          if (textNode && sel) {
+            // Position cursor after "![" (at position 2)
+            range.setStart(textNode, 2);
+            range.setEnd(textNode, 2);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        } else {
+          // Select all for non-empty images
+          range.selectNodeContents(editField);
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        }
       };
 
       const exitEditMode = () => {

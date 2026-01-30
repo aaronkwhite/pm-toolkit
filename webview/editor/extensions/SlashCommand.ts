@@ -128,6 +128,37 @@ export const defaultCommands: SlashCommandItem[] = [
         .run();
     },
   },
+  {
+    title: 'Image',
+    description: 'Insert an image',
+    icon: '🖼',
+    searchTerms: ['image', 'img', 'picture', 'photo'],
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setImage({ src: '', alt: '' })
+        .run();
+
+      // The image will be inserted with empty src, and the node view
+      // will show the edit field. User can then type the path.
+      // We need to select the image node to enter edit mode.
+      // Use setTimeout to let the node be inserted first.
+      setTimeout(() => {
+        const { state } = editor;
+        const { selection } = state;
+        const pos = selection.from - 1; // Position of the just-inserted image
+
+        if (pos >= 0) {
+          const node = state.doc.nodeAt(pos);
+          if (node?.type.name === 'image') {
+            editor.commands.setNodeSelection(pos);
+          }
+        }
+      }, 0);
+    },
+  },
 ];
 
 /**
