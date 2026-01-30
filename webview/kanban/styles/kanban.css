@@ -282,6 +282,14 @@ html, body {
   border-radius: 4px;
 }
 
+.drop-indicator {
+  height: 2px;
+  background: var(--vscode-focusBorder);
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 1000;
+}
+
 /* ===== Scrollbar Styling ===== */
 
 .column-cards::-webkit-scrollbar {

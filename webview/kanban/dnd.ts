@@ -24,13 +24,33 @@ export class KanbanDragDrop {
   private draggables: Map<string, Draggable> = new Map();
   private droppables: Map<string, Droppable> = new Map();
   private onDragEnd: OnDragEndCallback;
+  private dropIndicator: HTMLElement | null = null;
 
   constructor(onDragEnd: OnDragEndCallback) {
     this.onDragEnd = onDragEnd;
     this.manager = new DragDropManager();
 
+    // Create drop indicator element
+    this.createDropIndicator();
+
+    // Track drag movement to show drop indicator
+    this.manager.monitor.addEventListener('dragmove', (event) => {
+      const { source, target } = event.operation;
+      if (!source || !target) {
+        this.hideDropIndicator();
+        return;
+      }
+      this.updateDropIndicator(target.id as string, event.operation.position?.current?.y || 0);
+    });
+
+    // Hide indicator when drag starts (will show on dragmove over target)
+    this.manager.monitor.addEventListener('dragstart', () => {
+      this.hideDropIndicator();
+    });
+
     // Set up drag end listener
     this.manager.monitor.addEventListener('dragend', (event) => {
+      this.hideDropIndicator();
       const { source, target } = event.operation;
 
       if (!source || !target) {
@@ -73,11 +93,14 @@ export class KanbanDragDrop {
     // Clean up existing if present
     this.unregisterCard(cardId);
 
-    const draggable = new Draggable({
-      id: cardId,
-      element,
-      data: { columnId },
-    });
+    const draggable = new Draggable(
+      {
+        id: cardId,
+        element,
+        data: { columnId },
+      },
+      this.manager
+    );
 
     this.draggables.set(cardId, draggable);
   }
@@ -100,10 +123,13 @@ export class KanbanDragDrop {
     // Clean up existing if present
     this.unregisterColumn(columnId);
 
-    const droppable = new Droppable({
-      id: columnId,
-      element,
-    });
+    const droppable = new Droppable(
+      {
+        id: columnId,
+        element,
+      },
+      this.manager
+    );
 
     this.droppables.set(columnId, droppable);
   }
@@ -120,6 +146,62 @@ export class KanbanDragDrop {
   }
 
   /**
+   * Create the drop indicator element
+   */
+  private createDropIndicator(): void {
+    this.dropIndicator = document.createElement('div');
+    this.dropIndicator.className = 'drop-indicator';
+    this.dropIndicator.style.display = 'none';
+    document.body.appendChild(this.dropIndicator);
+  }
+
+  /**
+   * Update drop indicator position
+   */
+  private updateDropIndicator(columnId: string, y: number): void {
+    if (!this.dropIndicator) return;
+
+    const columnEl = document.querySelector(`[data-column-id="${columnId}"]`);
+    const cardsContainer = columnEl?.querySelector('.column-cards');
+    if (!cardsContainer) {
+      this.hideDropIndicator();
+      return;
+    }
+
+    const cards = cardsContainer.querySelectorAll('.kanban-card');
+    const containerRect = cardsContainer.getBoundingClientRect();
+
+    let insertY = containerRect.top + 4; // Default to top with small padding
+
+    // Find insertion point
+    for (let i = 0; i < cards.length; i++) {
+      const cardRect = cards[i].getBoundingClientRect();
+      const cardMiddle = cardRect.top + cardRect.height / 2;
+      if (y < cardMiddle) {
+        insertY = cardRect.top - 4;
+        break;
+      }
+      insertY = cardRect.bottom + 4;
+    }
+
+    // Position indicator
+    this.dropIndicator.style.display = 'block';
+    this.dropIndicator.style.position = 'fixed';
+    this.dropIndicator.style.left = `${containerRect.left}px`;
+    this.dropIndicator.style.top = `${insertY}px`;
+    this.dropIndicator.style.width = `${containerRect.width}px`;
+  }
+
+  /**
+   * Hide the drop indicator
+   */
+  private hideDropIndicator(): void {
+    if (this.dropIndicator) {
+      this.dropIndicator.style.display = 'none';
+    }
+  }
+
+  /**
    * Clean up all registrations
    */
   destroy(): void {
@@ -132,6 +214,12 @@ export class KanbanDragDrop {
       droppable.destroy();
     }
     this.droppables.clear();
+
+    this.hideDropIndicator();
+    if (this.dropIndicator) {
+      this.dropIndicator.remove();
+      this.dropIndicator = null;
+    }
 
     this.manager.destroy();
   }
