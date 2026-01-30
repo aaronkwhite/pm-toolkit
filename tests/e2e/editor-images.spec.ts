@@ -791,11 +791,11 @@ Some text between images.
     // Exit edit mode
     await page.keyboard.press('Enter');
 
-    // Image should have updated src and alt
+    // Wait for async URL conversion to complete
     const img = editor.proseMirror.locator('img.editor-image');
-    const src = await img.getAttribute('src');
-    const alt = await img.getAttribute('alt');
-    expect(src).toBe('/test-files/images/two.jpg');
-    expect(alt).toBe('Image Two');
+
+    // Wait for the src to be updated (URL conversion is async)
+    await expect(img).toHaveAttribute('src', '/test-files/images/two.jpg', { timeout: 2000 });
+    await expect(img).toHaveAttribute('alt', 'Image Two');
   });
 });
