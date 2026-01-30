@@ -494,3 +494,58 @@ html, body {
   color: var(--vscode-descriptionForeground);
   font-size: 13px;
 }
+
+/* ===== Table Size Picker ===== */
+
+.table-size-picker {
+  position: fixed;
+  z-index: 10000;
+  background-color: var(--vscode-menu-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  display: none;
+}
+
+.table-size-picker-header {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.table-size-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 22px);
+  grid-template-rows: repeat(8, 22px);
+  gap: 3px;
+}
+
+.table-size-picker-cell {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 2px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.table-size-picker-cell:hover {
+  border-color: var(--vscode-focusBorder);
+}
+
+.table-size-picker-cell.is-highlighted {
+  background-color: var(--vscode-editor-selectionBackground);
+  border-color: var(--vscode-focusBorder);
+}
+
+.table-size-picker-label {
+  font-size: 12px;
+  color: var(--vscode-foreground);
+  margin-top: 10px;
+  text-align: center;
+  font-weight: 500;
+}

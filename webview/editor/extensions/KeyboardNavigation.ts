@@ -4,6 +4,7 @@
  * Adds Home/End key support for cursor navigation in ProseMirror.
  * By default, ProseMirror doesn't handle Home/End keys - this extension adds that functionality.
  * Also handles delete when selection spans block elements like tables.
+ * Adds Tab/Shift+Tab navigation within tables.
  */
 
 import { Extension } from '@tiptap/core';
@@ -62,6 +63,23 @@ function findLineEnd(
   const $pos = doc.resolve(pos);
   // Get the end of the current text block
   return $pos.end($pos.depth);
+}
+
+/**
+ * Check if cursor is inside a table
+ */
+function isInTable(editor: any): boolean {
+  const { state } = editor;
+  const { selection } = state;
+  const { $from } = selection;
+
+  // Walk up the node tree to find a table
+  for (let depth = $from.depth; depth > 0; depth--) {
+    if ($from.node(depth).type.name === 'table') {
+      return true;
+    }
+  }
+  return false;
 }
 
 export const KeyboardNavigation = Extension.create({
@@ -166,6 +184,29 @@ export const KeyboardNavigation = Extension.create({
 
       Backspace: ({ editor }) => {
         return deleteSelectionWithTable(editor);
+      },
+
+      // Tab - move to next cell in table
+      // Note: We only handle Tab when in a table. For lists, returning false
+      // lets Tiptap's default behavior handle it (though list indentation
+      // may require additional configuration).
+      Tab: ({ editor }) => {
+        if (isInTable(editor)) {
+          // Use Tiptap's built-in goToNextCell command
+          return editor.commands.goToNextCell();
+        }
+        // Return false to let Tiptap handle default behavior
+        return false;
+      },
+
+      // Shift+Tab - move to previous cell in table
+      'Shift-Tab': ({ editor }) => {
+        if (isInTable(editor)) {
+          // Use Tiptap's built-in goToPreviousCell command
+          return editor.commands.goToPreviousCell();
+        }
+        // Return false to let Tiptap handle default behavior
+        return false;
       },
     };
   },

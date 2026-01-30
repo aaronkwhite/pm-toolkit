@@ -8,6 +8,7 @@ import { Extension } from '@tiptap/core';
 import { PluginKey } from '@tiptap/pm/state';
 import Suggestion, { SuggestionOptions, SuggestionProps } from '@tiptap/suggestion';
 import { Editor, Range } from '@tiptap/core';
+import { TableSizePicker } from '../components/TableSizePicker';
 
 /**
  * Command item definition
@@ -116,16 +117,35 @@ export const defaultCommands: SlashCommandItem[] = [
   },
   {
     title: 'Table',
-    description: 'Insert a table',
+    description: 'Insert a table (pick size)',
     icon: '⊞',
     searchTerms: ['table', 'grid'],
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-        .run();
+      // Delete the slash command text first
+      editor.chain().focus().deleteRange(range).run();
+
+      // Get cursor position for picker placement
+      const { view } = editor;
+      const coords = view.coordsAtPos(editor.state.selection.from);
+      const rect = new DOMRect(coords.left, coords.top, 0, coords.bottom - coords.top);
+
+      // Show table size picker
+      const picker = new TableSizePicker();
+      picker.show({
+        rect,
+        onSelect: (size) => {
+          editor
+            .chain()
+            .focus()
+            .insertTable({ rows: size.rows, cols: size.cols, withHeaderRow: true })
+            .run();
+          picker.destroy();
+        },
+        onCancel: () => {
+          editor.chain().focus().run();
+          picker.destroy();
+        },
+      });
     },
   },
   {
