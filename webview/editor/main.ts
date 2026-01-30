@@ -40,6 +40,28 @@ let updateTimeout: number | null = null;
 const DEBOUNCE_MS = 150;
 
 /**
+ * Ensure the document ends with a paragraph so users can click after block elements.
+ * This prevents getting "trapped" in tables, code blocks, etc. at the end of documents.
+ */
+function ensureTrailingParagraph(editor: Editor) {
+  const { doc } = editor.state;
+  const lastNode = doc.lastChild;
+
+  // If the last node is not a paragraph (e.g., it's a table, code block, etc.)
+  // add a paragraph at the end
+  if (lastNode && lastNode.type.name !== 'paragraph') {
+    const endPos = doc.content.size;
+    editor.chain()
+      .command(({ tr }) => {
+        tr.setMeta('addToHistory', false);
+        return true;
+      })
+      .insertContentAt(endPos, { type: 'paragraph' })
+      .run();
+  }
+}
+
+/**
  * Initialize the Tiptap editor
  */
 function initEditor(container: HTMLElement, initialContent: string = '') {
@@ -198,6 +220,9 @@ function setContent(markdown: string, addToHistory: boolean = false) {
     if (newFrom >= 0 && newTo >= 0) {
       editor.commands.setTextSelection({ from: newFrom, to: newTo });
     }
+
+    // Ensure there's a paragraph at the end so users can click after block elements
+    ensureTrailingParagraph(editor);
   } catch (err) {
     console.error('Error setting content:', err);
     // Fallback: just set the content normally
