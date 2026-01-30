@@ -291,15 +291,41 @@ html, body {
 }
 
 .image-node-view {
-  display: inline-flex;
-  flex-direction: column;
+  display: inline-block;
   position: relative;
-  gap: 4px;
+  /* Add generous padding for click targets between/around images */
+  padding: 4px 8px 4px 0;
+  vertical-align: bottom;
+  /* Prevent images from touching */
+  margin-bottom: 4px;
+}
+
+/* Clickable area extends beyond the visible image */
+.image-node-view::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: text;
+  z-index: 1;
+}
+
+/* Visual indicator when hovering the gap between images */
+.image-node-view:not(.is-editing):not(.is-selected):hover::before {
+  background: linear-gradient(to right, transparent, var(--vscode-editor-selectionBackground));
+  opacity: 0.3;
+  border-radius: 0 2px 2px 0;
 }
 
 .image-node-view img {
   cursor: pointer;
   transition: opacity 0.15s ease;
+  display: block;
+  /* Ensure consistent sizing */
+  max-width: 100%;
+  height: auto;
 }
 
 .image-node-view img:hover {
@@ -310,6 +336,13 @@ html, body {
 .image-node-view.is-editing img {
   outline: 2px solid var(--vscode-focusBorder);
   outline-offset: 2px;
+}
+
+/* When editing, expand to show the edit field properly */
+.image-node-view.is-editing {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 /* Markdown edit field - shown above image when editing */
