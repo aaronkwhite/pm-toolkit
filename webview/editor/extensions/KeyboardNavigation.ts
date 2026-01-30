@@ -3,10 +3,42 @@
  *
  * Adds Home/End key support for cursor navigation in ProseMirror.
  * By default, ProseMirror doesn't handle Home/End keys - this extension adds that functionality.
+ * Also handles delete when selection spans block elements like tables.
  */
 
 import { Extension } from '@tiptap/core';
 import { TextSelection } from '@tiptap/pm/state';
+
+/**
+ * Check if selection spans a table and delete it if so
+ */
+function deleteSelectionWithTable(editor: any): boolean {
+  const { state } = editor;
+  const { selection } = state;
+  const { $from, $to } = selection;
+
+  // Only handle non-empty selections
+  if (selection.empty) {
+    return false;
+  }
+
+  // Check if selection spans across a table
+  let hasTable = false;
+  state.doc.nodesBetween($from.pos, $to.pos, (node: any) => {
+    if (node.type.name === 'table') {
+      hasTable = true;
+      return false; // Stop traversing
+    }
+  });
+
+  if (hasTable) {
+    // Delete the entire selection range
+    editor.chain().deleteSelection().run();
+    return true;
+  }
+
+  return false;
+}
 
 /**
  * Find the start position of the current line (text block)
@@ -125,6 +157,15 @@ export const KeyboardNavigation = Extension.create({
         view.dispatch(tr);
 
         return true;
+      },
+
+      // Delete/Backspace when selection spans a table
+      Delete: ({ editor }) => {
+        return deleteSelectionWithTable(editor);
+      },
+
+      Backspace: ({ editor }) => {
+        return deleteSelectionWithTable(editor);
       },
     };
   },
