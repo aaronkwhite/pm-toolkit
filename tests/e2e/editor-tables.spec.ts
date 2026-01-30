@@ -29,6 +29,10 @@ test.describe('Tables', () => {
     await editor.type('/table');
     await page.waitForTimeout(100);
     await editor.pressKey('Enter');
+    await page.waitForTimeout(100);
+
+    // Table size picker appears - press Enter to confirm default 3x3
+    await editor.pressKey('Enter');
     await page.waitForTimeout(200);
 
     // Should have table element
@@ -51,6 +55,8 @@ test.describe('Tables', () => {
     await editor.type('/table');
     await page.waitForTimeout(100);
     await editor.pressKey('Enter');
+    await page.waitForTimeout(100);
+    await editor.pressKey('Enter'); // Confirm table size picker
     await page.waitForTimeout(200);
 
     // Table should exist
@@ -73,6 +79,8 @@ test.describe('Tables', () => {
     await editor.type('/table');
     await page.waitForTimeout(100);
     await editor.pressKey('Enter');
+    await page.waitForTimeout(100);
+    await editor.pressKey('Enter'); // Confirm table size picker
     await page.waitForTimeout(200);
 
     // First row should have th elements
@@ -91,6 +99,8 @@ test.describe('Tables', () => {
     await editor.type('/table');
     await page.waitForTimeout(100);
     await editor.pressKey('Enter');
+    await page.waitForTimeout(100);
+    await editor.pressKey('Enter'); // Confirm table size picker
     await page.waitForTimeout(200);
 
     // Default table should have 3 rows (1 header + 2 data)
@@ -109,6 +119,8 @@ test.describe('Tables', () => {
     await editor.type('/table');
     await page.waitForTimeout(100);
     await editor.pressKey('Enter');
+    await page.waitForTimeout(100);
+    await editor.pressKey('Enter'); // Confirm table size picker
     await page.waitForTimeout(200);
 
     // Click into the first header cell
@@ -132,6 +144,8 @@ test.describe('Tables', () => {
     await editor.type('/table');
     await page.waitForTimeout(100);
     await editor.pressKey('Enter');
+    await page.waitForTimeout(100);
+    await editor.pressKey('Enter'); // Confirm table size picker
     await page.waitForTimeout(200);
 
     const firstHeader = editor.proseMirror.locator('th').first();
@@ -163,6 +177,8 @@ test.describe('Tables', () => {
     await editor.type('/table');
     await page.waitForTimeout(100);
     await editor.pressKey('Enter');
+    await page.waitForTimeout(100);
+    await editor.pressKey('Enter'); // Confirm table size picker
     await page.waitForTimeout(200);
 
     const firstHeader = editor.proseMirror.locator('th').first();
@@ -195,6 +211,8 @@ test.describe('Tables', () => {
     await editor.type('/table');
     await page.waitForTimeout(100);
     await editor.pressKey('Enter');
+    await page.waitForTimeout(100);
+    await editor.pressKey('Enter'); // Confirm table size picker
     await page.waitForTimeout(200);
 
     const firstHeader = editor.proseMirror.locator('th').first();
@@ -224,6 +242,8 @@ test.describe('Tables', () => {
     await editor.type('/table');
     await page.waitForTimeout(100);
     await editor.pressKey('Enter');
+    await page.waitForTimeout(100);
+    await editor.pressKey('Enter'); // Confirm table size picker
     await page.waitForTimeout(200);
 
     const firstHeader = editor.proseMirror.locator('th').first();
@@ -248,6 +268,8 @@ test.describe('Tables', () => {
     await editor.type('/table');
     await page.waitForTimeout(100);
     await editor.pressKey('Enter');
+    await page.waitForTimeout(100);
+    await editor.pressKey('Enter'); // Confirm table size picker
     await page.waitForTimeout(200);
 
     // Click on first data cell
@@ -270,16 +292,27 @@ test.describe('Tables', () => {
     await editor.type('/table');
     await page.waitForTimeout(100);
     await editor.pressKey('Enter');
+    await page.waitForTimeout(100);
+    await editor.pressKey('Enter'); // Confirm table size picker
     await page.waitForTimeout(200);
 
-    // Click below the table to position cursor outside
-    await editor.proseMirror.click({ position: { x: 100, y: 300 } });
+    // Press Escape to ensure picker is closed, then Tab to exit table
+    await editor.pressKey('Escape');
+    await page.waitForTimeout(50);
+
+    // Tab through to exit the table (cursor starts in first cell after insertion)
+    // 3 tabs for header row + 6 tabs for 2 data rows = 9 tabs, but we exit at end
+    for (let i = 0; i < 9; i++) {
+      await editor.pressKey('Tab');
+    }
     await page.waitForTimeout(100);
 
     // Create second table
     await editor.type('/table');
     await page.waitForTimeout(100);
     await editor.pressKey('Enter');
+    await page.waitForTimeout(100);
+    await editor.pressKey('Enter'); // Confirm table size picker
     await page.waitForTimeout(200);
 
     // Should have 2 tables

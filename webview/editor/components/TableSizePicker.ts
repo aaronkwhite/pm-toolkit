@@ -29,7 +29,6 @@ export class TableSizePicker {
   private onCancel: (() => void) | null = null;
 
   constructor() {
-    console.log('[TableSizePicker] Creating picker');
     this.element = document.createElement('div');
     this.element.className = 'table-size-picker';
 
@@ -144,8 +143,6 @@ export class TableSizePicker {
     this.element.style.top = `${top}px`;
     this.element.style.left = `${left}px`;
     this.element.style.display = 'block';
-
-    console.log('[TableSizePicker] Showing at', top, left);
 
     // Add keyboard and click handlers after a short delay
     // This prevents the Enter key from the slash menu from immediately selecting

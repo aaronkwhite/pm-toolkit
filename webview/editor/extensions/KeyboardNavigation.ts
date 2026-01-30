@@ -82,6 +82,88 @@ function isInTable(editor: any): boolean {
   return false;
 }
 
+/**
+ * Check if cursor is in the last cell of a table
+ */
+function isInLastTableCell(editor: any): boolean {
+  const { state } = editor;
+  const { selection } = state;
+  const { $from } = selection;
+
+  // Find the table
+  let tableDepth = -1;
+  for (let depth = $from.depth; depth > 0; depth--) {
+    if ($from.node(depth).type.name === 'table') {
+      tableDepth = depth;
+      break;
+    }
+  }
+
+  if (tableDepth === -1) return false;
+
+  const table = $from.node(tableDepth);
+  const tableStart = $from.start(tableDepth);
+
+  // Get all cells in the table
+  let lastCellStart = -1;
+  table.descendants((node, pos) => {
+    if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+      lastCellStart = tableStart + pos;
+    }
+  });
+
+  // Check if cursor is in the last cell
+  const cellDepth = $from.depth;
+  for (let depth = cellDepth; depth > tableDepth; depth--) {
+    const node = $from.node(depth);
+    if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+      const cellStart = $from.start(depth);
+      return cellStart === lastCellStart;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Exit table and move cursor to paragraph after it
+ */
+function exitTableToNextParagraph(editor: any): boolean {
+  const { state } = editor;
+  const { selection } = state;
+  const { $from } = selection;
+
+  // Find the table
+  let tableDepth = -1;
+  for (let depth = $from.depth; depth > 0; depth--) {
+    if ($from.node(depth).type.name === 'table') {
+      tableDepth = depth;
+      break;
+    }
+  }
+
+  if (tableDepth === -1) return false;
+
+  // Get position after the table
+  const tableEnd = $from.after(tableDepth);
+
+  // Check if there's a node after the table
+  const nodeAfter = state.doc.nodeAt(tableEnd);
+
+  if (!nodeAfter || nodeAfter.type.name !== 'paragraph') {
+    // Insert a paragraph after the table and move cursor there
+    editor.chain()
+      .insertContentAt(tableEnd, { type: 'paragraph' })
+      .setTextSelection(tableEnd + 1)
+      .run();
+  } else {
+    // Move cursor to the existing paragraph
+    editor.commands.setTextSelection(tableEnd + 1);
+  }
+
+  return true;
+}
+
 export const KeyboardNavigation = Extension.create({
   name: 'keyboardNavigation',
 
@@ -186,16 +268,17 @@ export const KeyboardNavigation = Extension.create({
         return deleteSelectionWithTable(editor);
       },
 
-      // Tab - move to next cell in table
-      // Note: We only handle Tab when in a table. For lists, returning false
-      // lets Tiptap's default behavior handle it (though list indentation
-      // may require additional configuration).
+      // Tab - move to next cell in table, or exit table if in last cell
       Tab: ({ editor }) => {
         if (isInTable(editor)) {
-          // Use Tiptap's built-in goToNextCell command
+          // If in last cell, exit table instead of adding a new row
+          if (isInLastTableCell(editor)) {
+            return exitTableToNextParagraph(editor);
+          }
+          // Otherwise, move to next cell
           return editor.commands.goToNextCell();
         }
-        // Return false to let Tiptap handle default behavior
+        // Return false to let Tiptap handle default behavior (lists, etc.)
         return false;
       },
 

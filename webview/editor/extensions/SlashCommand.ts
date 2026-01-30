@@ -139,6 +139,28 @@ export const defaultCommands: SlashCommandItem[] = [
             .focus()
             .insertTable({ rows: size.rows, cols: size.cols, withHeaderRow: true })
             .run();
+
+          // Ensure there's a paragraph after the table so user can click/navigate there
+          // Use setTimeout to let the editor state update after insertTable
+          setTimeout(() => {
+            const { state } = editor;
+            const { $from } = state.selection;
+
+            // Find the table we just inserted
+            for (let depth = $from.depth; depth > 0; depth--) {
+              if ($from.node(depth).type.name === 'table') {
+                const tableEnd = $from.after(depth);
+                const nodeAfter = state.doc.nodeAt(tableEnd);
+                if (!nodeAfter || nodeAfter.type.name !== 'paragraph') {
+                  editor.chain()
+                    .insertContentAt(tableEnd, { type: 'paragraph' })
+                    .run();
+                }
+                break;
+              }
+            }
+          }, 0);
+
           picker.destroy();
         },
         onCancel: () => {

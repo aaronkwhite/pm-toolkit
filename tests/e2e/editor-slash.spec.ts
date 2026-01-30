@@ -289,6 +289,10 @@ test.describe('Slash Commands', () => {
     await editor.pressKey('Enter');
     await page.waitForTimeout(100);
 
+    // Table size picker appears - press Enter to confirm default 3x3
+    await editor.pressKey('Enter');
+    await page.waitForTimeout(200);
+
     // Table should be created
     const hasTable = await editor.hasElement('table');
     expect(hasTable).toBe(true);

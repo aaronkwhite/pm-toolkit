@@ -52,9 +52,11 @@ function ensureTrailingParagraph(editor: Editor) {
   const { doc } = editor.state;
   const lastNode = doc.lastChild;
 
-  // If the last node is not a paragraph (e.g., it's a table, code block, etc.)
-  // add a paragraph at the end
-  if (lastNode && lastNode.type.name !== 'paragraph') {
+  // Block elements that need a trailing paragraph
+  const blockElements = ['table', 'codeBlock', 'horizontalRule', 'image'];
+
+  // If the last node is a block element that can trap the cursor, add a paragraph
+  if (lastNode && blockElements.includes(lastNode.type.name)) {
     const endPos = doc.content.size;
     editor.chain()
       .command(({ tr }) => {
@@ -175,6 +177,9 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
     onUpdate: ({ editor }) => {
       // Don't send updates if we're receiving from extension
       if (isUpdatingFromExtension) return;
+
+      // Ensure document ends with a paragraph (so you can click after tables/code blocks)
+      ensureTrailingParagraph(editor);
 
       // Debounce updates
       if (updateTimeout) {
