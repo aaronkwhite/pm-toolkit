@@ -131,33 +131,48 @@ html, body {
 .ProseMirror ul[data-type="taskList"] {
   list-style: none;
   padding-left: 0;
-}
-
-.ProseMirror ul[data-type="taskList"] li {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
   margin: 0.5em 0;
 }
 
-.ProseMirror ul[data-type="taskList"] li > label {
-  flex-shrink: 0;
-  margin-top: 2px;
+.ProseMirror ul[data-type="taskList"] > li {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin: 0.25em 0;
+  min-height: 24px;
 }
 
-.ProseMirror ul[data-type="taskList"] li > div {
-  flex: 1;
+.ProseMirror ul[data-type="taskList"] > li > label {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  height: 20px;
+}
+
+.ProseMirror ul[data-type="taskList"] > li > div {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+}
+
+.ProseMirror ul[data-type="taskList"] > li > div > p {
+  margin: 0;
+  line-height: 1.4;
 }
 
 .ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   cursor: pointer;
   accent-color: var(--vscode-checkbox-foreground, var(--vscode-focusBorder));
+  margin: 0;
 }
 
 /* Completed tasks */
-.ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
+.ProseMirror ul[data-type="taskList"] > li[data-checked="true"] > div {
   text-decoration: line-through;
   opacity: 0.6;
 }
@@ -219,34 +234,40 @@ html, body {
 
 /* ===== Tables ===== */
 
-.ProseMirror .editor-table {
+.ProseMirror table {
   border-collapse: collapse;
   width: 100%;
   margin: 1em 0;
   overflow: hidden;
+  table-layout: fixed;
 }
 
-.ProseMirror .editor-table td,
-.ProseMirror .editor-table th {
+.ProseMirror td,
+.ProseMirror th {
   border: 1px solid var(--vscode-panel-border);
   padding: 8px 12px;
   text-align: left;
   vertical-align: top;
   min-width: 100px;
+  position: relative;
 }
 
-.ProseMirror .editor-table th {
+.ProseMirror th {
   background-color: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.1));
   font-weight: 600;
 }
 
-.ProseMirror .editor-table td > p,
-.ProseMirror .editor-table th > p {
+.ProseMirror td > p,
+.ProseMirror th > p {
   margin: 0;
 }
 
+.ProseMirror tr {
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
 /* Selected cells */
-.ProseMirror .editor-table .selectedCell {
+.ProseMirror .selectedCell {
   background-color: var(--vscode-editor-selectionBackground);
 }
 

@@ -16,6 +16,7 @@ import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
 import { Markdown } from 'tiptap-markdown';
 import { SlashCommand } from './extensions/SlashCommand';
+import { KeyboardNavigation } from './extensions/KeyboardNavigation';
 
 // VS Code webview API
 interface VSCodeAPI {
@@ -59,9 +60,17 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
           class: 'editor-link',
         },
       }),
-      TaskList,
+      TaskList.configure({
+        HTMLAttributes: {
+          class: 'task-list',
+        },
+      }),
       TaskItem.configure({
         nested: true,
+        onReadOnlyChecked: (node, checked) => {
+          // Allow checking even in scenarios where editor might be readonly
+          return true;
+        },
       }),
       Table.configure({
         resizable: true,
@@ -82,6 +91,7 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
         transformCopiedText: true,
       }),
       SlashCommand,
+      KeyboardNavigation,
     ],
     content: initialContent,
     autofocus: true,
@@ -114,12 +124,50 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
 
 /**
  * Set editor content from markdown
+ * @param markdown - The markdown content to set
+ * @param addToHistory - Whether to add this change to undo history (default: false for external updates)
  */
-function setContent(markdown: string) {
+function setContent(markdown: string, addToHistory: boolean = false) {
   if (!editor) return;
 
   isUpdatingFromExtension = true;
-  editor.commands.setContent(markdown);
+
+  // Save current cursor position
+  const { from, to } = editor.state.selection;
+  const docSize = editor.state.doc.content.size;
+
+  try {
+    const parsed = editor.storage.markdown.parser.parse(markdown);
+
+    if (addToHistory) {
+      // Normal set that adds to history
+      editor.commands.setContent(parsed, false, { preserveWhitespace: 'full' });
+    } else {
+      // Set without adding to undo history
+      editor.chain()
+        .command(({ tr }) => {
+          tr.setMeta('addToHistory', false);
+          return true;
+        })
+        .setContent(parsed, false, { preserveWhitespace: 'full' })
+        .run();
+    }
+
+    // Restore cursor position (clamped to new document size)
+    const newDocSize = editor.state.doc.content.size;
+    const newFrom = Math.min(from, newDocSize - 1);
+    const newTo = Math.min(to, newDocSize - 1);
+
+    // Only restore if we have valid positions
+    if (newFrom >= 0 && newTo >= 0) {
+      editor.commands.setTextSelection({ from: newFrom, to: newTo });
+    }
+  } catch (err) {
+    console.error('Error setting content:', err);
+    // Fallback: just set the content normally
+    editor.commands.setContent(markdown);
+  }
+
   isUpdatingFromExtension = false;
 }
 
@@ -152,11 +200,16 @@ window.addEventListener('message', (event) => {
       break;
 
     case 'update':
-      if (editor) {
+      if (editor && !isUpdatingFromExtension) {
         // Only update if content actually differs (external change)
+        // Normalize whitespace for comparison to avoid false positives
         const currentMarkdown = editor.storage.markdown.getMarkdown();
-        if (message.payload.content !== currentMarkdown) {
-          setContent(message.payload.content);
+        const incomingNormalized = message.payload.content.trim();
+        const currentNormalized = currentMarkdown.trim();
+
+        if (incomingNormalized !== currentNormalized) {
+          console.log('External change detected, updating editor');
+          setContent(message.payload.content, false);
         }
       }
       break;

@@ -40,17 +40,27 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
       this.context.extensionUri
     );
 
-    // Track if we're currently updating from extension to prevent loops
-    let isUpdatingFromExtension = false;
+    // Track the last content we sent TO the webview or received FROM it
+    // This prevents echo loops
+    let lastKnownContent = document.getText();
+    // Track content that came FROM the webview (to avoid echoing it back)
+    let lastWebviewContent = '';
+    let pendingWebviewUpdate = false;
 
-    // Send content to webview
+    // Send content to webview (only for external changes)
     const updateWebview = () => {
-      if (webviewPanel.webview) {
-        const message: ExtensionToWebviewMessage = {
-          type: 'update',
-          payload: { content: document.getText() },
-        };
-        webviewPanel.webview.postMessage(message);
+      if (webviewPanel.webview && !pendingWebviewUpdate) {
+        const currentContent = document.getText();
+        // Only send if content actually changed from what we know
+        // AND it's not just echoing back what the webview sent us
+        if (currentContent !== lastKnownContent && currentContent !== lastWebviewContent) {
+          lastKnownContent = currentContent;
+          const message: ExtensionToWebviewMessage = {
+            type: 'update',
+            payload: { content: currentContent },
+          };
+          webviewPanel.webview.postMessage(message);
+        }
       }
     };
 
@@ -60,10 +70,11 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
         switch (message.type) {
           case 'ready':
             // Webview is ready, send initial content
+            lastKnownContent = document.getText();
             const initMessage: ExtensionToWebviewMessage = {
               type: 'init',
               payload: {
-                content: document.getText(),
+                content: lastKnownContent,
                 filename: document.fileName,
               },
             };
@@ -72,8 +83,16 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
 
           case 'update':
             // Content changed in webview, update document
-            if (!isUpdatingFromExtension) {
+            // Only update if content is actually different
+            if (message.payload.content !== lastKnownContent) {
+              pendingWebviewUpdate = true;
+              lastKnownContent = message.payload.content;
+              lastWebviewContent = message.payload.content; // Track what webview sent
               await this.updateDocument(document, message.payload.content);
+              // Small delay to let the document change event pass
+              setTimeout(() => {
+                pendingWebviewUpdate = false;
+              }, 100); // Increased from 50ms to 100ms for safer timing
             }
             break;
 
@@ -84,14 +103,13 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
       }
     );
 
-    // Handle document changes from outside (git, other editors)
+    // Handle document changes from outside (git, other editors, etc.)
     const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
       (e) => {
         if (e.document.uri.toString() === document.uri.toString()) {
-          if (e.contentChanges.length > 0 && !isUpdatingFromExtension) {
-            isUpdatingFromExtension = true;
+          // Only notify webview if this wasn't from the webview itself
+          if (!pendingWebviewUpdate && e.contentChanges.length > 0) {
             updateWebview();
-            isUpdatingFromExtension = false;
           }
         }
       }

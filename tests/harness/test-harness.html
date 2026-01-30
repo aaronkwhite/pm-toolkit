@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PM Toolkit Editor - Test Harness</title>
+
+    <!-- Mock VS Code CSS Variables (Dark Theme) -->
+    <style>
+        :root {
+            /* Editor colors */
+            --vscode-editor-background: #1e1e1e;
+            --vscode-editor-foreground: #d4d4d4;
+            --vscode-editor-selectionBackground: rgba(38, 79, 120, 0.5);
+            --vscode-editor-lineHighlightBackground: rgba(255, 255, 255, 0.04);
+
+            /* Input colors */
+            --vscode-input-placeholderForeground: #6c6c6c;
+
+            /* Text colors */
+            --vscode-foreground: #cccccc;
+            --vscode-descriptionForeground: #9d9d9d;
+            --vscode-textLink-foreground: #3794ff;
+            --vscode-textLink-activeForeground: #3794ff;
+            --vscode-textBlockQuote-border: #007acc;
+            --vscode-textBlockQuote-background: rgba(127, 127, 127, 0.1);
+            --vscode-textCodeBlock-background: rgba(10, 10, 10, 0.4);
+
+            /* UI colors */
+            --vscode-focusBorder: #007acc;
+            --vscode-panel-border: #3c3c3c;
+            --vscode-list-hoverBackground: rgba(90, 93, 94, 0.31);
+
+            /* Menu colors */
+            --vscode-menu-background: #252526;
+            --vscode-menu-foreground: #cccccc;
+            --vscode-menu-border: #454545;
+            --vscode-menu-selectionBackground: #04395e;
+            --vscode-menu-selectionForeground: #ffffff;
+
+            /* Font settings */
+            --vscode-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --vscode-font-size: 14px;
+            --vscode-editor-font-family: 'SF Mono', Monaco, Menlo, Consolas, monospace;
+
+            /* Checkbox */
+            --vscode-checkbox-foreground: #f0f0f0;
+        }
+
+        /* Light theme variant (can be toggled) */
+        .theme-light {
+            --vscode-editor-background: #ffffff;
+            --vscode-editor-foreground: #333333;
+            --vscode-editor-selectionBackground: rgba(173, 214, 255, 0.5);
+            --vscode-editor-lineHighlightBackground: rgba(0, 0, 0, 0.04);
+            --vscode-input-placeholderForeground: #767676;
+            --vscode-foreground: #333333;
+            --vscode-descriptionForeground: #717171;
+            --vscode-textLink-foreground: #006ab1;
+            --vscode-textLink-activeForeground: #006ab1;
+            --vscode-textCodeBlock-background: rgba(220, 220, 220, 0.4);
+            --vscode-panel-border: #e0e0e0;
+            --vscode-menu-background: #f3f3f3;
+            --vscode-menu-foreground: #333333;
+            --vscode-menu-border: #c8c8c8;
+            --vscode-menu-selectionBackground: #0060c0;
+            --vscode-checkbox-foreground: #333333;
+        }
+    </style>
+
+    <!-- Load editor CSS -->
+    <link href="/dist/webview/editor.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Inject VS Code API mock BEFORE any other scripts -->
+    <script>
+        (function() {
+            // Store for messages sent via postMessage
+            window._vscodeMessages = [];
+
+            // State storage
+            let _state = {};
+
+            // The mock VS Code API
+            const mockVSCodeAPI = {
+                postMessage: function(message) {
+                    console.log('[vscode-mock] postMessage:', JSON.stringify(message));
+                    window._vscodeMessages.push(message);
+
+                    // Dispatch a custom event so tests can listen for messages
+                    window.dispatchEvent(new CustomEvent('vscode-message', {
+                        detail: message
+                    }));
+                },
+                getState: function() {
+                    return _state;
+                },
+                setState: function(state) {
+                    _state = state;
+                }
+            };
+
+            // Expose the mock API
+            window.vscode = mockVSCodeAPI;
+
+            // Mock acquireVsCodeApi to return our mock
+            window.acquireVsCodeApi = function() {
+                return mockVSCodeAPI;
+            };
+
+            // Test helper: Simulate a message from the extension to the webview
+            window._simulateMessage = function(message) {
+                console.log('[vscode-mock] Simulating message:', JSON.stringify(message));
+                window.postMessage(message, '*');
+            };
+
+            // Test helper: Clear all captured messages
+            window._clearMessages = function() {
+                window._vscodeMessages = [];
+            };
+
+            // Test helper: Get all captured messages
+            window._getMessages = function() {
+                return window._vscodeMessages;
+            };
+
+            // Test helper: Get messages of a specific type
+            window._getMessagesByType = function(type) {
+                return window._vscodeMessages.filter(function(m) { return m.type === type; });
+            };
+
+            // Test helper: Wait for a message of a specific type
+            window._waitForMessage = function(type, timeout) {
+                timeout = timeout || 5000;
+                return new Promise(function(resolve, reject) {
+                    var existing = window._vscodeMessages.find(function(m) { return m.type === type; });
+                    if (existing) {
+                        resolve(existing);
+                        return;
+                    }
+
+                    var handler = function(event) {
+                        if (event.detail.type === type) {
+                            window.removeEventListener('vscode-message', handler);
+                            resolve(event.detail);
+                        }
+                    };
+
+                    window.addEventListener('vscode-message', handler);
+
+                    setTimeout(function() {
+                        window.removeEventListener('vscode-message', handler);
+                        reject(new Error('Timeout waiting for message: ' + type));
+                    }, timeout);
+                });
+            };
+
+            console.log('[vscode-mock] Mock VS Code API initialized');
+        })();
+    </script>
+
+    <!-- Editor container -->
+    <div id="editor"></div>
+
+    <!-- Load the bundled editor script -->
+    <script src="/dist/webview/editor.js"></script>
+</body>
+</html>
