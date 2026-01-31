@@ -27,6 +27,7 @@ npm-debug.log*
 coverage/
 .nyc_output/
 test-files/
+playwright-report/
 
 # Environment
 .env
