@@ -181,6 +181,30 @@ export class KanbanEditorProvider implements vscode.CustomTextEditorProvider {
               console.error('Failed to resolve image URL:', err);
             }
             break;
+
+          case 'requestClipboard':
+            // Webview is requesting clipboard data (for paste in input fields)
+            try {
+              const clipboardText = await vscode.env.clipboard.readText();
+              webviewPanel.webview.postMessage({
+                type: 'clipboardData',
+                payload: { text: clipboardText },
+              });
+            } catch (err) {
+              console.error('Failed to read clipboard:', err);
+            }
+            break;
+
+          case 'copyToClipboard':
+            // Webview is requesting to copy text to clipboard
+            try {
+              if (message.payload?.text) {
+                await vscode.env.clipboard.writeText(message.payload.text);
+              }
+            } catch (err) {
+              console.error('Failed to write to clipboard:', err);
+            }
+            break;
         }
       }
     );

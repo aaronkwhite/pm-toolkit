@@ -212,6 +212,37 @@ window.addEventListener('message', (event) => {
         })
       );
       break;
+
+    case 'clipboardData':
+      // Handle clipboard data from extension (for paste in contenteditable fields)
+      const pasteTarget = (window as any).__pendingPasteTarget as HTMLElement | null;
+      if (pasteTarget && message.payload.text) {
+        const text = message.payload.text;
+
+        // Focus the target first
+        pasteTarget.focus();
+
+        // Get current selection
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(document.createTextNode(text));
+          // Move cursor to end of inserted text
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else {
+          // Fallback: append to end
+          pasteTarget.textContent = (pasteTarget.textContent || '') + text;
+        }
+
+        // Trigger input event so undo stack updates
+        pasteTarget.dispatchEvent(new Event('input', { bubbles: true }));
+
+        (window as any).__pendingPasteTarget = null;
+      }
+      break;
   }
 });
 
