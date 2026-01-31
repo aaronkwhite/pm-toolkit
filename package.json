@@ -112,6 +112,11 @@
         "command": "pmtoolkit.openWithPMToolkit",
         "title": "Open with PM Toolkit Editor",
         "category": "PM Toolkit"
+      },
+      {
+        "command": "pmtoolkit.toggleKanbanThumbnails",
+        "title": "Toggle Card Thumbnails",
+        "category": "PM Toolkit"
       }
     ],
     "menus": {
@@ -120,6 +125,13 @@
           "command": "pmtoolkit.openAsKanban",
           "when": "resourceExtname == .md",
           "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "pmtoolkit.toggleKanbanThumbnails",
+          "when": "activeCustomEditorId == pmtoolkit.kanbanEditor",
+          "group": "1_modification"
         }
       ]
     },

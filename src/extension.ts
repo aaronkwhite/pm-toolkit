@@ -122,6 +122,12 @@ export function activate(context: vscode.ExtensionContext) {
       );
     })
   );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('pmtoolkit.toggleKanbanThumbnails', async () => {
+      await KanbanEditorProvider.toggleThumbnails();
+    })
+  );
 }
 
 export function deactivate() {

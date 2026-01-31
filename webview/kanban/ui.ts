@@ -4,7 +4,11 @@
  * Vanilla JavaScript rendering for the kanban board
  */
 
-import type { KanbanBoard, KanbanColumn, KanbanCard, ColumnSettings } from './parser';
+import type { KanbanBoard, KanbanColumn, KanbanCard, ColumnSettings, BoardSettings } from './parser';
+
+interface RenderOptions {
+  boardSettings?: BoardSettings;
+}
 import { MoreVertical } from './icons';
 import { showColumnMenu } from './menu';
 import { openCardModal } from './modal';
@@ -16,6 +20,7 @@ export interface UICallbacks {
   onCardTextChange: (cardId: string, text: string) => void;
   onCardDescriptionChange: (cardId: string, description: string) => void;
   onColumnSettingsChange: (columnId: string, settings: Partial<ColumnSettings>) => void;
+  onBoardSettingsChange: (settings: Partial<BoardSettings>) => void;
 }
 
 /**
@@ -90,7 +95,7 @@ export function renderCard(
   card: KanbanCard,
   columnId: string,
   callbacks: UICallbacks,
-  columnSettings?: ColumnSettings
+  options?: RenderOptions
 ): HTMLElement {
   const cardEl = document.createElement('div');
   cardEl.className = `kanban-card${card.completed ? ' completed' : ''}`;
@@ -115,7 +120,7 @@ export function renderCard(
   contentEl.appendChild(titleEl);
 
   // Show thumbnail if enabled (default true) and description has an image
-  const showThumbnails = columnSettings?.showThumbnails !== false;
+  const showThumbnails = options?.boardSettings?.showThumbnails !== false;
   if (card.description && showThumbnails) {
     const imageUrl = extractFirstImage(card.description);
     if (imageUrl) {
@@ -195,7 +200,7 @@ export function renderCard(
 /**
  * Render a column
  */
-export function renderColumn(column: KanbanColumn, callbacks: UICallbacks): HTMLElement {
+export function renderColumn(column: KanbanColumn, callbacks: UICallbacks, options?: RenderOptions): HTMLElement {
   const columnEl = document.createElement('div');
   columnEl.className = 'kanban-column';
   columnEl.dataset.columnId = column.id;
@@ -231,17 +236,11 @@ export function renderColumn(column: KanbanColumn, callbacks: UICallbacks): HTML
       column.id,
       {
         autoComplete: column.settings?.autoComplete ?? false,
-        showThumbnails: column.settings?.showThumbnails !== false, // Default true
       },
       {
         onToggleAutoComplete: () => {
           callbacks.onColumnSettingsChange(column.id, {
             autoComplete: !column.settings?.autoComplete,
-          });
-        },
-        onToggleThumbnails: () => {
-          callbacks.onColumnSettingsChange(column.id, {
-            showThumbnails: column.settings?.showThumbnails === false ? undefined : false,
           });
         },
       }
@@ -267,7 +266,7 @@ export function renderColumn(column: KanbanColumn, callbacks: UICallbacks): HTML
 
   // Render cards
   for (const card of column.cards) {
-    cardsContainer.appendChild(renderCard(card, column.id, callbacks, column.settings));
+    cardsContainer.appendChild(renderCard(card, column.id, callbacks, options));
   }
 
   // Add card button event
@@ -288,8 +287,12 @@ export function renderBoard(
 ): void {
   container.innerHTML = '';
 
+  const options: RenderOptions = {
+    boardSettings: board.settings,
+  };
+
   for (const column of board.columns) {
-    container.appendChild(renderColumn(column, callbacks));
+    container.appendChild(renderColumn(column, callbacks, options));
   }
 }
 

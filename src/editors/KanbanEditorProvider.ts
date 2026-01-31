@@ -9,7 +9,58 @@ export class KanbanEditorProvider implements vscode.CustomTextEditorProvider {
   private updateTimeout: NodeJS.Timeout | undefined;
   private static readonly DEBOUNCE_MS = 150;
 
+  // Track active webview panels for commands
+  private static activeWebviewPanels = new Map<string, vscode.WebviewPanel>();
+
   constructor(private readonly context: vscode.ExtensionContext) {}
+
+  /**
+   * Toggle the showThumbnails setting for the active kanban document
+   */
+  public static async toggleThumbnails(): Promise<void> {
+    const activeEditor = vscode.window.activeTextEditor;
+    const visibleEditors = vscode.window.visibleTextEditors;
+
+    // Find the active kanban document
+    let document: vscode.TextDocument | undefined;
+
+    // Check visible custom editors via their documents
+    for (const doc of vscode.workspace.textDocuments) {
+      if (doc.fileName.endsWith('.kanban')) {
+        // Check if we have an active panel for this document
+        if (KanbanEditorProvider.activeWebviewPanels.has(doc.uri.toString())) {
+          document = doc;
+          break;
+        }
+      }
+    }
+
+    if (!document) {
+      vscode.window.showWarningMessage('No active Kanban board found');
+      return;
+    }
+
+    const content = document.getText();
+    let newContent: string;
+
+    // Toggle [no-thumbnails] in preamble
+    if (/\[no-thumbnails\]/i.test(content)) {
+      // Remove [no-thumbnails]
+      newContent = content.replace(/\s*\[no-thumbnails\]\s*/gi, '\n').replace(/^\n+/, '');
+    } else {
+      // Add [no-thumbnails] at the start
+      newContent = '[no-thumbnails]\n\n' + content;
+    }
+
+    // Apply the edit
+    const edit = new vscode.WorkspaceEdit();
+    edit.replace(
+      document.uri,
+      new vscode.Range(0, 0, document.lineCount, 0),
+      newContent
+    );
+    await vscode.workspace.applyEdit(edit);
+  }
 
   public static register(context: vscode.ExtensionContext): vscode.Disposable {
     const provider = new KanbanEditorProvider(context);
@@ -52,6 +103,9 @@ export class KanbanEditorProvider implements vscode.CustomTextEditorProvider {
       webviewPanel.webview,
       this.context.extensionUri
     );
+
+    // Track this panel for commands
+    KanbanEditorProvider.activeWebviewPanels.set(document.uri.toString(), webviewPanel);
 
     let isUpdatingFromExtension = false;
 
@@ -146,6 +200,7 @@ export class KanbanEditorProvider implements vscode.CustomTextEditorProvider {
     webviewPanel.onDidDispose(() => {
       messageHandler.dispose();
       changeDocumentSubscription.dispose();
+      KanbanEditorProvider.activeWebviewPanels.delete(document.uri.toString());
       if (this.updateTimeout) {
         clearTimeout(this.updateTimeout);
       }

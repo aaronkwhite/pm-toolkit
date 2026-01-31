@@ -8,12 +8,10 @@ import { Check } from './icons';
 
 export interface ColumnMenuOptions {
   autoComplete: boolean;
-  showThumbnails: boolean;
 }
 
 export interface ColumnMenuCallbacks {
   onToggleAutoComplete: () => void;
-  onToggleThumbnails: () => void;
 }
 
 /**
@@ -57,17 +55,7 @@ export class ColumnMenu {
       }
     );
 
-    const thumbnailsItem = this.createMenuItem(
-      'Show thumbnails',
-      this.options.showThumbnails,
-      () => {
-        this.callbacks.onToggleThumbnails();
-        this.hide();
-      }
-    );
-
     this.menuEl.appendChild(autoCompleteItem);
-    this.menuEl.appendChild(thumbnailsItem);
 
     // Position the menu
     document.body.appendChild(this.menuEl);

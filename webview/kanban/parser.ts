@@ -21,6 +21,9 @@ export interface KanbanCard {
 
 export interface ColumnSettings {
   autoComplete?: boolean;
+}
+
+export interface BoardSettings {
   showThumbnails?: boolean; // Default true - show first image as card thumbnail
 }
 
@@ -34,6 +37,7 @@ export interface KanbanColumn {
 export interface KanbanBoard {
   preamble: string; // Content before first column
   columns: KanbanColumn[];
+  settings?: BoardSettings;
 }
 
 /**
@@ -57,17 +61,32 @@ function parseColumnTitle(rawTitle: string): { title: string; settings?: ColumnS
     title = title.replace(/\s*\[auto-complete\]\s*/gi, ' ').trim();
   }
 
-  // Parse [no-thumbnails]
-  if (/\[no-thumbnails\]/i.test(title)) {
-    settings.showThumbnails = false;
-    title = title.replace(/\s*\[no-thumbnails\]\s*/gi, ' ').trim();
-  }
-
   if (Object.keys(settings).length > 0) {
     return { title, settings };
   }
 
   return { title };
+}
+
+/**
+ * Parse board settings from preamble
+ * Format: [no-thumbnails] on its own line
+ */
+function parseBoardSettings(preamble: string): { cleanPreamble: string; settings?: BoardSettings } {
+  let cleanPreamble = preamble;
+  const settings: BoardSettings = {};
+
+  // Parse [no-thumbnails]
+  if (/\[no-thumbnails\]/i.test(cleanPreamble)) {
+    settings.showThumbnails = false;
+    cleanPreamble = cleanPreamble.replace(/\s*\[no-thumbnails\]\s*/gi, '\n').trim();
+  }
+
+  if (Object.keys(settings).length > 0) {
+    return { cleanPreamble, settings };
+  }
+
+  return { cleanPreamble };
 }
 
 /**
@@ -77,9 +96,6 @@ function serializeColumnTitle(column: KanbanColumn): string {
   let title = column.title;
   if (column.settings?.autoComplete) {
     title += ' [auto-complete]';
-  }
-  if (column.settings?.showThumbnails === false) {
-    title += ' [no-thumbnails]';
   }
   return title;
 }
@@ -169,7 +185,12 @@ export function parseMarkdown(markdown: string): KanbanBoard {
   while (preambleLines.length > 0 && preambleLines[preambleLines.length - 1].trim() === '') {
     preambleLines.pop();
   }
-  board.preamble = preambleLines.join('\n');
+
+  // Parse board settings from preamble
+  const rawPreamble = preambleLines.join('\n');
+  const { cleanPreamble, settings: boardSettings } = parseBoardSettings(rawPreamble);
+  board.preamble = cleanPreamble;
+  board.settings = boardSettings;
 
   // If no columns found, create default columns
   if (board.columns.length === 0) {
@@ -188,6 +209,12 @@ export function parseMarkdown(markdown: string): KanbanBoard {
  */
 export function serializeBoard(board: KanbanBoard): string {
   const lines: string[] = [];
+
+  // Add board settings
+  if (board.settings?.showThumbnails === false) {
+    lines.push('[no-thumbnails]');
+    lines.push('');
+  }
 
   // Add preamble if present
   if (board.preamble.trim()) {
@@ -347,6 +374,17 @@ export function updateColumnSettings(
   if (column) {
     column.settings = { ...column.settings, ...settings };
   }
+  return board;
+}
+
+/**
+ * Update board-level settings
+ */
+export function updateBoardSettings(
+  board: KanbanBoard,
+  settings: Partial<BoardSettings>
+): KanbanBoard {
+  board.settings = { ...board.settings, ...settings };
   return board;
 }
 
