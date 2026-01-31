@@ -29,23 +29,34 @@
     "onCustomEditor:pmtoolkit.csvViewer"
   ],
   "contributes": {
-    "customEditors": [
+    "languages": [
       {
-        "viewType": "pmtoolkit.markdownEditor",
-        "displayName": "PM Toolkit Editor",
-        "selector": [
-          {
-            "filenamePattern": "*.md"
-          }
-        ],
-        "priority": "option"
-      },
+        "id": "kanban",
+        "aliases": ["Kanban Board"],
+        "extensions": [".kanban"],
+        "icon": {
+          "light": "./icons/kanban-light.svg",
+          "dark": "./icons/kanban-dark.svg"
+        }
+      }
+    ],
+    "customEditors": [
       {
         "viewType": "pmtoolkit.kanbanEditor",
         "displayName": "Kanban Board",
         "selector": [
           {
             "filenamePattern": "*.kanban"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "pmtoolkit.markdownEditor",
+        "displayName": "PM Toolkit Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
           }
         ],
         "priority": "default"
@@ -117,6 +128,12 @@
         "command": "pmtoolkit.toggleKanbanThumbnails",
         "title": "Toggle Card Thumbnails",
         "category": "PM Toolkit"
+      },
+      {
+        "command": "pmtoolkit.viewSource",
+        "title": "View Source",
+        "category": "PM Toolkit",
+        "icon": "$(code)"
       }
     ],
     "menus": {
@@ -128,6 +145,11 @@
         }
       ],
       "editor/title": [
+        {
+          "command": "pmtoolkit.viewSource",
+          "when": "activeCustomEditorId == pmtoolkit.markdownEditor || activeCustomEditorId == pmtoolkit.kanbanEditor",
+          "group": "navigation"
+        },
         {
           "command": "pmtoolkit.toggleKanbanThumbnails",
           "when": "activeCustomEditorId == pmtoolkit.kanbanEditor",

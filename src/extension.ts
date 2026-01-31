@@ -128,6 +128,25 @@ export function activate(context: vscode.ExtensionContext) {
       await KanbanEditorProvider.toggleThumbnails();
     })
   );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('pmtoolkit.viewSource', async () => {
+      // Get the active tab's resource URI
+      const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+      if (!activeTab?.input) {
+        return;
+      }
+
+      // Get the URI from the tab input
+      const input = activeTab.input as { uri?: vscode.Uri };
+      if (!input.uri) {
+        return;
+      }
+
+      // Open the file with the default text editor
+      await vscode.commands.executeCommand('vscode.openWith', input.uri, 'default');
+    })
+  );
 }
 
 export function deactivate() {
