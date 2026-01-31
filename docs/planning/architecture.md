@@ -234,39 +234,50 @@ template_icon: "calendar"
 
 ## Phase Plan
 
-### Phase 1: Foundation
-- [ ] Project scaffolding
-- [ ] VS Code extension boilerplate
-- [ ] Basic Tiptap editor in webview
-- [ ] Extension ↔ Webview message protocol
-- [ ] File save/load working
+### Phase 1: Foundation ✅
+- [x] Project scaffolding
+- [x] VS Code extension boilerplate
+- [x] Basic Tiptap editor in webview
+- [x] Extension ↔ Webview message protocol
+- [x] File save/load working
 
-### Phase 2: Editor Features
-- [ ] Slash command menu
-- [ ] Markdown import/export
-- [ ] Theme matching (dark/light)
-- [ ] Formatting toolbar
-- [ ] Table editing
+### Phase 2: Editor Features ✅
+- [x] Slash command menu
+- [x] Markdown import/export
+- [x] Theme matching (dark/light)
+- [x] Formatting toolbar
+- [x] Table editing
 
-### Phase 3: Kanban Board
-- [ ] Markdown parser (board ↔ markdown)
-- [ ] Board rendering with dnd-kit
-- [ ] Drag-drop between columns
-- [ ] Task completion toggle
-- [ ] Add/edit/delete tasks
+### Phase 3: Kanban Board ✅
+- [x] Markdown parser (board ↔ markdown)
+- [x] Board rendering with dnd-kit
+- [x] Drag-drop between columns
+- [x] Task completion toggle
+- [x] Add/edit/delete tasks
+- [x] Card modal with rich editing
+- [x] Card thumbnails (image preview)
+- [x] Column settings (WIP limits, colors)
+- [x] Clipboard support in card modal
 
-### Phase 4: File Viewers
-- [ ] PDF viewer with PDF.js
-- [ ] Word viewer with Mammoth.js
-- [ ] Excel viewer with SheetJS
-- [ ] CSV viewer with Papa Parse
+### Phase 4: File Viewers ✅
+- [x] PDF viewer with PDF.js
+- [x] Word viewer with Mammoth.js
+- [x] Excel viewer with SheetJS
+- [x] CSV viewer with Papa Parse
+- [x] All viewers set to default priority
 
-### Phase 5: Templates & Polish
+### Phase 5: Templates & Polish (In Progress)
 - [ ] Template manager
 - [ ] Template variables
 - [ ] Mermaid diagram support
 - [ ] Outline panel
 - [ ] Accessibility audit
+
+### Additional Features Completed
+- [x] View Source command (switch to text editor)
+- [x] Kanban file language registration (.kanban)
+- [x] Custom file icons for .kanban files
+- [x] Toggle card thumbnails command
 
 ---
 

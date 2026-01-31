@@ -38,14 +38,20 @@
 - [x] Requirements analysis
 - [x] Technology selection
 - [x] Architecture design
-- [ ] Project scaffolding
-- [ ] Implementation
+- [x] Project scaffolding
+- [x] Phase 1: Foundation (Extension boilerplate, Tiptap editor, messaging)
+- [x] Phase 2: Editor Features (Slash commands, markdown, themes, tables)
+- [x] Phase 3: Kanban Board (Parser, dnd-kit, drag-drop, card modal, thumbnails)
+- [x] Phase 4: File Viewers (PDF, Word, Excel, CSV - all working)
+- [ ] Phase 5: Templates & Polish
 - [ ] Testing
 - [ ] Release
 
-## Next Steps
+## Recent Updates (Jan 2025)
 
-1. Rename project directory to `pm-toolkit`
-2. Initialize npm project
-3. Set up VS Code extension boilerplate
-4. Implement Phase 1 (Foundation)
+- View Source command for markdown/kanban editors
+- Kanban file language registration with custom icons
+- All viewers set to default priority (auto-open)
+- PDF viewer worker bundling fix
+- Card modal with clipboard support
+- Kanban column settings and card thumbnails
