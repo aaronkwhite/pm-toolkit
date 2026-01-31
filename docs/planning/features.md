@@ -4,13 +4,15 @@
 
 | Feature | Priority | Complexity | Status |
 |---------|----------|------------|--------|
-| WYSIWYG Markdown Editor | P0 | High | Planned |
-| Slash Command Menu | P0 | Medium | Planned |
-| Kanban Board | P0 | High | Planned |
-| PDF Viewer | P1 | Low | Planned |
-| Word Viewer | P1 | Low | Planned |
-| Excel Viewer | P1 | Low | Planned |
-| CSV Viewer | P1 | Low | Planned |
+| WYSIWYG Markdown Editor | P0 | High | ✅ Complete |
+| Slash Command Menu | P0 | Medium | ✅ Complete |
+| Kanban Board | P0 | High | ✅ Complete |
+| Kanban Column Settings | P1 | Medium | ✅ Complete |
+| Kanban Card Modal | P1 | Medium | ✅ Complete |
+| PDF Viewer | P1 | Low | ✅ Complete |
+| Word Viewer | P1 | Low | ✅ Complete |
+| Excel Viewer | P1 | Low | ✅ Complete |
+| CSV Viewer | P1 | Low | ✅ Complete |
 | Template System | P2 | Medium | Planned |
 | Mermaid Diagrams | P2 | Medium | Planned |
 | Outline Panel | P2 | Low | Planned |
@@ -133,41 +135,75 @@ Visual task board that reads/writes standard markdown checkbox syntax.
 ### Requirements
 
 **Display:**
-- [ ] Parse markdown into board structure
-- [ ] Render columns from `## ` headings
-- [ ] Render cards from `- [ ]` items
-- [ ] Show completion state (checkbox)
-- [ ] Show task count per column
-- [ ] Support multi-line task descriptions
+- [x] Parse markdown into board structure
+- [x] Render columns from `## ` headings
+- [x] Render cards from `- [ ]` items
+- [x] Show completion state (checkbox)
+- [x] Show task count per column
+- [x] Support multi-line task descriptions
+- [x] Card thumbnails (first image from description)
 
 **Interactions:**
-- [ ] Drag cards between columns
-- [ ] Drag to reorder within column
-- [ ] Click checkbox to toggle completion
-- [ ] Double-click to edit task text
-- [ ] Add new task button per column
-- [ ] Delete task (with confirmation or menu)
-- [ ] Archive task (move to Archive column)
+- [x] Drag cards between columns
+- [x] Drag to reorder within column
+- [x] Click checkbox to toggle completion
+- [x] Click card to open detail modal
+- [x] Add new task button per column
+- [x] Delete task button
+- [x] Archive task (move to Archive column)
+
+**Column Settings:**
+- [x] Kebab menu dropdown on column headers
+- [x] Auto-complete toggle per column (`[auto-complete]`)
+- [x] Settings persist in markdown syntax
+
+**Card Modal:**
+- [x] Linear-style modal overlay
+- [x] Click-to-edit card title
+- [x] Tiptap WYSIWYG editor for description
+- [x] Image support with copy/paste
+- [x] Auto-save on close
+
+**Board Settings:**
+- [x] Toggle thumbnails (`[no-thumbnails]` in preamble)
+- [x] VS Code menu command for thumbnail toggle
 
 **Auto-behaviors:**
-- [ ] Moving to "Done" column marks complete
-- [ ] Moving to "Archive" column marks complete
-- [ ] Archive column hidden by default
+- [x] Moving to column with [auto-complete] marks complete
+- [x] Archive column hidden when empty
 
 **Sync:**
-- [ ] Changes write back to markdown file
-- [ ] External changes update the board
-- [ ] Debounce updates (150ms)
+- [x] Changes write back to markdown file
+- [x] External changes update the board
+- [x] Debounce updates (150ms)
 
 ### File Types
 - `.kanban` files open as board by default
 - `.md` files can "Open as Kanban" via context menu
 
+### Markdown Format (Updated)
+
+```markdown
+[no-thumbnails]
+
+## To Do
+
+- [ ] Task with description
+  Description text here
+  ![image](./path/to/image.png)
+
+## In Progress
+
+## Done [auto-complete]
+```
+
 ### Acceptance Criteria
-1. Opening a `.kanban` file shows the board
-2. Dragging a card updates the markdown
-3. Completing a task updates the checkbox
-4. Board survives round-trip (md → board → md)
+1. ✅ Opening a `.kanban` file shows the board
+2. ✅ Dragging a card updates the markdown
+3. ✅ Completing a task updates the checkbox
+4. ✅ Board survives round-trip (md → board → md)
+5. ✅ Clicking card opens detail modal
+6. ✅ Column settings persist in markdown
 
 ---
 

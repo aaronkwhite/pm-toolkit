@@ -1,7 +1,7 @@
 # PM Toolkit - Implementation Checklist
 
 > **Last Updated**: 2026-01-30
-> **Current Phase**: Phase 6 - Templates (Next)
+> **Current Phase**: Phase 4.5 Complete, Phase 6 - Templates (Next)
 
 This checklist tracks all implementation tasks. Update status as work progresses.
 
@@ -209,6 +209,59 @@ This checklist tracks all implementation tasks. Update status as work progresses
 
 **Phase 4 Commit Checkpoints:**
 - [x] `feat: Kanban board with drag-and-drop` (combined all)
+
+---
+
+## Phase 4.5: Kanban Enhancements
+
+### 4.5.1 Column Settings
+- [x] Add Lucide icons dependency
+- [x] Create icons.ts with SVG icon helpers
+- [x] Add ColumnSettings interface (autoComplete)
+- [x] Parse [auto-complete] from column titles
+- [x] Serialize column settings back to markdown
+- [x] Update moveCard() to use column settings
+
+### 4.5.2 Kebab Menu
+- [x] Create menu.ts with ColumnMenu class
+- [x] Dropdown menu UI with VS Code styling
+- [x] "Auto-complete items" toggle with checkmark
+- [x] Close on outside click or Escape
+- [x] Add kebab button to column headers
+
+### 4.5.3 Card Detail Modal
+- [x] Create modal.ts with CardModal class
+- [x] Linear-style modal overlay
+- [x] Click-to-edit card title
+- [x] Tiptap editor for description (tiptap-editor.ts)
+- [x] Reuse ImageNode from main editor
+- [x] Auto-save description on close
+
+### 4.5.4 Card Thumbnails
+- [x] Extract first image from card description
+- [x] Render thumbnail on card preview
+- [x] Add BoardSettings interface (showThumbnails)
+- [x] Parse [no-thumbnails] from document preamble
+- [x] VS Code menu command to toggle thumbnails
+- [x] Pass board settings through render chain
+
+### 4.5.5 Clipboard Support
+- [x] Add requestClipboard handler to KanbanEditorProvider
+- [x] Add copyToClipboard handler to KanbanEditorProvider
+- [x] Add clipboardData handler to kanban webview
+- [x] Image copy/paste works in card modal
+
+### 4.5.6 Bug Fixes
+- [x] Image serialization: ensureNewLine() before/after images
+- [x] Heading escaping: Enable all levels [1-6] in card editor
+- [x] Markdown stripping: Match headers anywhere, handle escapes
+- [x] stripMarkdown() for clean card previews
+
+**Phase 4.5 Commit Checkpoints:**
+- [x] `feat: add kanban column settings, card modal, and thumbnails`
+- [x] `fix: improve image serialization and markdown stripping for cards`
+- [x] `feat: add VS Code menu command to toggle card thumbnails`
+- [x] `feat: add clipboard support to kanban card modal`
 
 ---
 
@@ -480,3 +533,11 @@ This checklist tracks all implementation tasks. Update status as work progresses
   - Verified watch mode works (`npm run watch`)
   - All 128 e2e tests pass (6 pre-existing local image test failures remain)
   - Added CSV/TSV test files for file viewer testing
+- Phase 4.5: Kanban Enhancements (NEW)
+  - Column settings with [auto-complete] markdown syntax
+  - Kebab menu dropdown for column options
+  - Linear-style card detail modal with Tiptap editor
+  - Card thumbnails (first image from description)
+  - Board-level [no-thumbnails] setting with VS Code menu toggle
+  - Full clipboard support for image editing in modal
+  - Fixed image serialization (newlines), heading escaping, markdown stripping
