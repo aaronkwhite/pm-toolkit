@@ -133,7 +133,7 @@
         "command": "pmtoolkit.viewSource",
         "title": "View Source",
         "category": "PM Toolkit",
-        "icon": "$(code)"
+        "icon": "$(file-code)"
       }
     ],
     "menus": {
@@ -147,13 +147,20 @@
       "editor/title": [
         {
           "command": "pmtoolkit.viewSource",
-          "when": "activeCustomEditorId == pmtoolkit.markdownEditor || activeCustomEditorId == pmtoolkit.kanbanEditor",
+          "when": "activeCustomEditorId =~ /pmtoolkit\\./",
           "group": "navigation"
         },
         {
           "command": "pmtoolkit.toggleKanbanThumbnails",
           "when": "activeCustomEditorId == pmtoolkit.kanbanEditor",
           "group": "1_modification"
+        }
+      ],
+      "editor/title/run": [
+        {
+          "command": "pmtoolkit.viewSource",
+          "when": "activeCustomEditorId =~ /pmtoolkit\\./",
+          "group": "navigation"
         }
       ]
     },
