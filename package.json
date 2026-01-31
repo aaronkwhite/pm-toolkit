@@ -69,7 +69,7 @@
             "filenamePattern": "*.pdf"
           }
         ],
-        "priority": "option"
+        "priority": "default"
       },
       {
         "viewType": "pmtoolkit.docxViewer",
@@ -79,7 +79,7 @@
             "filenamePattern": "*.docx"
           }
         ],
-        "priority": "option"
+        "priority": "default"
       },
       {
         "viewType": "pmtoolkit.xlsxViewer",
@@ -92,7 +92,7 @@
             "filenamePattern": "*.xls"
           }
         ],
-        "priority": "option"
+        "priority": "default"
       },
       {
         "viewType": "pmtoolkit.csvViewer",
@@ -105,7 +105,7 @@
             "filenamePattern": "*.tsv"
           }
         ],
-        "priority": "option"
+        "priority": "default"
       }
     ],
     "commands": [

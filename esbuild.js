@@ -89,6 +89,16 @@ const cssFiles = [
 ];
 
 /**
+ * Vendor files to copy (e.g., workers that can't be bundled)
+ */
+const vendorFiles = [
+  {
+    src: 'node_modules/pdfjs-dist/build/pdf.worker.min.mjs',
+    dest: 'dist/webview/pdf.worker.min.mjs',
+  },
+];
+
+/**
  * Create webview config with common options
  */
 function createWebviewConfig(config) {
@@ -138,6 +148,29 @@ function copyCssFiles() {
   }
 }
 
+/**
+ * Copy vendor files to dist
+ */
+function copyVendorFiles() {
+  // Ensure dist/webview directory exists
+  const distDir = path.join(__dirname, 'dist', 'webview');
+  if (!fs.existsSync(distDir)) {
+    fs.mkdirSync(distDir, { recursive: true });
+  }
+
+  for (const { src, dest } of vendorFiles) {
+    const srcPath = path.join(__dirname, src);
+    const destPath = path.join(__dirname, dest);
+
+    if (fs.existsSync(srcPath)) {
+      fs.copyFileSync(srcPath, destPath);
+      console.log(`[vendor] Copied ${src} -> ${dest}`);
+    } else {
+      console.warn(`[vendor] Warning: ${src} not found`);
+    }
+  }
+}
+
 async function main() {
   const configs = [
     extensionConfig,
@@ -146,6 +179,9 @@ async function main() {
 
   // Copy CSS files
   copyCssFiles();
+
+  // Copy vendor files (PDF.js worker, etc.)
+  copyVendorFiles();
 
   if (watch) {
     // Watch mode

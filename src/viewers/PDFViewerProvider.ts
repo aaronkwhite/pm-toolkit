@@ -32,19 +32,28 @@ export class PDFViewerProvider implements vscode.CustomReadonlyEditorProvider {
     webviewPanel: vscode.WebviewPanel,
     _token: vscode.CancellationToken
   ): Promise<void> {
+    // Allow access to extension dist folder and the document's directory
+    const localResourceRoots = [
+      vscode.Uri.joinPath(this.context.extensionUri, 'dist'),
+      vscode.Uri.joinPath(document.uri, '..'), // Parent directory of the PDF
+    ];
+
+    // Also add workspace folders if available
+    if (vscode.workspace.workspaceFolders) {
+      localResourceRoots.push(...vscode.workspace.workspaceFolders.map(f => f.uri));
+    }
+
     webviewPanel.webview.options = {
       enableScripts: true,
-      localResourceRoots: [
-        vscode.Uri.joinPath(this.context.extensionUri, 'dist'),
-      ],
+      localResourceRoots,
     };
 
     // Convert the file URI to a webview URI
     const fileUri = webviewPanel.webview.asWebviewUri(document.uri);
 
-    // Get the PDF.js worker from node_modules
+    // Get the PDF.js worker from dist (copied during build)
     const workerUri = webviewPanel.webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', 'pdfjs-dist', 'build', 'pdf.worker.min.mjs')
+      vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview', 'pdf.worker.min.mjs')
     );
 
     const scriptUri = webviewPanel.webview.asWebviewUri(
@@ -62,7 +71,7 @@ export class PDFViewerProvider implements vscode.CustomReadonlyEditorProvider {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webviewPanel.webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' ${webviewPanel.webview.cspSource}; worker-src blob:; img-src ${webviewPanel.webview.cspSource} blob: data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webviewPanel.webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' ${webviewPanel.webview.cspSource}; worker-src blob:; img-src ${webviewPanel.webview.cspSource} blob: data:; connect-src ${webviewPanel.webview.cspSource};">
   <link rel="stylesheet" href="${styleUri}">
   <title>PDF Viewer</title>
 </head>
