@@ -293,6 +293,15 @@ export const MermaidNode = Node.create({
         setViewMode(viewMode === 'scroll' ? 'fit' : 'scroll');
       });
 
+      // Show/hide icon on hover (20% default, 50% on hover)
+      const isDark = () => document.body.classList.contains('vscode-dark');
+      const setIconColor = (opacity: number) => {
+        viewToggle.style.color = isDark() ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`;
+      };
+      setIconColor(0.2);
+      diagramWrapper.addEventListener('mouseenter', () => setIconColor(0.5));
+      diagramWrapper.addEventListener('mouseleave', () => setIconColor(0.2));
+
       // Simple undo/redo stack for the textarea
       const undoStack: string[] = [];
       const redoStack: string[] = [];

@@ -614,12 +614,16 @@ html, body {
   border-radius: 6px;
   background: none;
   background-color: transparent;
-  color: rgba(0, 0, 0, 0.5);
+  color: rgba(0, 0, 0, 0.2);
   cursor: pointer;
   transition: color 0.15s ease;
 }
 
-.vscode-dark .mermaid-view-toggle {
+.mermaid-diagram-wrapper:hover .mermaid-view-toggle {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.vscode-dark .mermaid-diagram-wrapper:hover .mermaid-view-toggle {
   color: rgba(255, 255, 255, 0.5);
 }
 
