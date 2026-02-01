@@ -2,7 +2,6 @@
 
 A Cursor extension that brings visual editing tools to your workflow. Write documentation, manage tasks, and view files—all without leaving your editor.
 
-[![Tests](https://github.com/aaronkwhite/pm-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/aaronkwhite/pm-toolkit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/aaronkwhite/pm-toolkit/blob/main/LICENSE)
 
 ## Support the project
