@@ -1,6 +1,6 @@
 # PM Toolkit
 
-A VS Code / Cursor extension that brings visual editing tools to your workflow. Write documentation, manage tasks, and view files—all without leaving your editor.
+A Cursor extension that brings visual editing tools to your workflow. Write documentation, manage tasks, and view files—all without leaving your editor.
 
 ## Features
 
@@ -37,14 +37,10 @@ View common file types without leaving your editor:
 
 ## Installation
 
-### From VS Code Marketplace
+### From Cursor Marketplace
 
 Search for "PM Toolkit" in the Extensions view (`Cmd+Shift+X` / `Ctrl+Shift+X`).
 
-### From VSIX
-
-1. Download the `.vsix` file from [Releases](../../releases)
-2. In VS Code: `Extensions` → `...` → `Install from VSIX`
 
 ## Getting Started
 
@@ -142,7 +138,7 @@ npm install
 # Start development (watches for changes)
 npm run watch
 
-# In VS Code: Press F5 to launch Extension Development Host
+# In Cursor: Press F5 to launch Extension Development Host
 ```
 
 ### Running Tests
