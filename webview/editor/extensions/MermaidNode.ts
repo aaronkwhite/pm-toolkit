@@ -202,6 +202,18 @@ export const MermaidNode = Node.create({
       toolbar.style.left = 'auto';
       toolbar.style.pointerEvents = 'auto';
 
+      // Code edit button
+      const codeButton = document.createElement('button');
+      codeButton.classList.add('mermaid-view-toggle');
+      codeButton.type = 'button';
+      codeButton.title = 'Edit code';
+      codeButton.style.border = 'none';
+      codeButton.style.background = 'none';
+      codeButton.style.outline = 'none';
+      // Lucide file-pen-line icon
+      codeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 5-2.414-2.414A2 2 0 0 0 14.172 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg>`;
+
+      // View toggle button
       const viewToggle = document.createElement('button');
       viewToggle.classList.add('mermaid-view-toggle');
       viewToggle.type = 'button';
@@ -212,6 +224,7 @@ export const MermaidNode = Node.create({
       // Lucide Shrink icon
       viewToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 15 6 6m-6-6v4.8m0-4.8h4.8"/><path d="M9 19.8V15m0 0H4.2M9 15l-6 6"/><path d="M15 4.2V9m0 0h4.8M15 9l6-6"/><path d="M9 4.2V9m0 0H4.2M9 9 3 3"/></svg>`;
 
+      toolbar.appendChild(codeButton);
       toolbar.appendChild(viewToggle);
       diagramWrapper.appendChild(diagramContainer);
       diagramWrapper.appendChild(toolbar);
@@ -293,10 +306,12 @@ export const MermaidNode = Node.create({
         setViewMode(viewMode === 'scroll' ? 'fit' : 'scroll');
       });
 
-      // Show/hide icon on hover (20% default, 50% on hover)
+      // Show/hide icons on hover (20% default, 50% on hover)
       const isDark = () => document.body.classList.contains('vscode-dark');
       const setIconColor = (opacity: number) => {
-        viewToggle.style.color = isDark() ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`;
+        const color = isDark() ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`;
+        codeButton.style.color = color;
+        viewToggle.style.color = color;
       };
       setIconColor(0.2);
       diagramWrapper.addEventListener('mouseenter', () => setIconColor(0.5));
@@ -418,8 +433,8 @@ export const MermaidNode = Node.create({
         }
       }
 
-      // Click on diagram enters edit mode
-      diagramContainer.addEventListener('click', (e) => {
+      // Click code button to enter edit mode
+      codeButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         enterEditMode();
@@ -611,7 +626,7 @@ export const MermaidNode = Node.create({
         },
         selectNode: () => {
           container.classList.add('is-selected');
-          enterEditMode();
+          // Don't auto-enter edit mode - user must click code button
         },
         deselectNode: () => {
           container.classList.remove('is-selected');
