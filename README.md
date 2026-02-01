@@ -1,7 +1,7 @@
 # PM Toolkit
 
-[![Tests](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Tests](https://github.com/aaronkwhite/pm-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/aaronkwhite/pm-toolkit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/aaronkwhite/pm-toolkit/blob/main/LICENSE)
 
 <p align="center">
   <a href="https://buymeacoffee.com/aaronkwhite">
@@ -131,7 +131,7 @@ PM Toolkit is built on solid open-source foundations:
 
 Contributions are welcome! Please:
 
-1. Check [existing issues](../../issues) before opening a new one
+1. Check [existing issues](https://github.com/aaronkwhite/pm-toolkit/issues) before opening a new one
 2. For bugs, include steps to reproduce and your environment details
 3. For features, describe the use case and why it would help
 
@@ -139,7 +139,7 @@ Contributions are welcome! Please:
 
 ```bash
 # Clone the repository
-git clone <repo-url>
+git clone https://github.com/aaronkwhite/pm-toolkit.git
 cd pm-toolkit
 
 # Install dependencies
@@ -163,9 +163,9 @@ npm run test:e2e:ui
 
 ## Support
 
-- **Bug reports** — [Open an issue](../../issues/new?template=bug_report.md)
-- **Feature requests** — [Open an issue](../../issues/new?template=feature_request.md)
-- **Questions** — [Start a discussion](../../discussions)
+- **Bug reports** — [Open an issue](https://github.com/aaronkwhite/pm-toolkit/issues/new?template=bug_report.md)
+- **Feature requests** — [Open an issue](https://github.com/aaronkwhite/pm-toolkit/issues/new?template=feature_request.md)
+- **Questions** — [Start a discussion](https://github.com/aaronkwhite/pm-toolkit/discussions)
 
 ## License
 
