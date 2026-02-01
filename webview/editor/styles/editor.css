@@ -560,3 +560,130 @@ html, body {
   text-align: center;
   font-weight: 500;
 }
+
+/* ===== Mermaid Diagrams ===== */
+
+.mermaid-node {
+  margin: 1rem 0;
+  border-radius: 6px;
+  background-color: var(--vscode-editor-background);
+  border: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+.mermaid-node:hover {
+  border-color: var(--vscode-panel-border);
+}
+
+.mermaid-node.is-selected,
+.mermaid-node.is-editing {
+  border-color: var(--vscode-focusBorder);
+}
+
+/* Diagram display area - scrollable for large diagrams */
+.mermaid-diagram {
+  padding: 1rem;
+  min-height: 100px;
+  max-height: 400px;
+  cursor: pointer;
+  overflow: auto;
+}
+
+/* SVG should maintain intrinsic size, not scale to fit */
+.mermaid-diagram svg {
+  display: block;
+  /* Remove max-width constraint to prevent responsive scaling */
+  max-width: none !important;
+  width: auto !important;
+  height: auto !important;
+  /* Don't center - let it scroll from left edge */
+}
+
+/* Subtle scrollbar styling */
+.mermaid-diagram::-webkit-scrollbar {
+  height: 8px;
+}
+
+.mermaid-diagram::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mermaid-diagram::-webkit-scrollbar-thumb {
+  background-color: var(--vscode-scrollbarSlider-background);
+  border-radius: 4px;
+}
+
+.mermaid-diagram::-webkit-scrollbar-thumb:hover {
+  background-color: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+/* Hide diagram when editing */
+.mermaid-node.is-editing .mermaid-diagram {
+  display: none;
+}
+
+/* Placeholder for empty diagrams */
+.mermaid-placeholder {
+  color: var(--vscode-input-placeholderForeground);
+  font-size: 14px;
+  padding: 2rem;
+  text-align: center;
+}
+
+/* Error state */
+.mermaid-error {
+  padding: 1rem;
+  background-color: var(--vscode-inputValidation-errorBackground, rgba(255, 0, 0, 0.1));
+  border: 1px solid var(--vscode-inputValidation-errorBorder, #be1100);
+  border-radius: 4px;
+  margin: 0.5rem;
+}
+
+.mermaid-error-title {
+  font-weight: 600;
+  color: var(--vscode-errorForeground, #f48771);
+  margin-bottom: 0.5rem;
+}
+
+.mermaid-error-message {
+  font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, Menlo, Consolas, monospace);
+  font-size: 0.85em;
+  color: var(--vscode-foreground);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Edit mode container */
+.mermaid-edit {
+  display: none;
+  padding: 0;
+}
+
+.mermaid-node.is-editing .mermaid-edit {
+  display: block;
+}
+
+/* Textarea for editing mermaid code */
+.mermaid-textarea {
+  width: 100%;
+  min-height: 200px;
+  max-height: 500px;
+  padding: 1rem;
+  font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, Menlo, Consolas, monospace);
+  font-size: 0.9em;
+  line-height: 1.5;
+  background-color: var(--vscode-input-background, var(--vscode-editor-background));
+  color: var(--vscode-input-foreground, var(--vscode-editor-foreground));
+  border: none;
+  outline: none;
+  resize: vertical;
+  tab-size: 4;
+}
+
+.mermaid-textarea::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.mermaid-textarea:focus {
+  outline: none;
+}
