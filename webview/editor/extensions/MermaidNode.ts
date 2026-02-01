@@ -183,9 +183,38 @@ export const MermaidNode = Node.create({
       const container = document.createElement('div');
       container.classList.add('mermaid-node');
 
+      // Wrapper for diagram + toolbar (for positioning)
+      const diagramWrapper = document.createElement('div');
+      diagramWrapper.classList.add('mermaid-diagram-wrapper');
+      diagramWrapper.style.position = 'relative';
+
       // Diagram container (shown when not editing)
       const diagramContainer = document.createElement('div');
       diagramContainer.classList.add('mermaid-diagram');
+      diagramContainer.classList.add('mermaid-scroll-mode');
+
+      // Toolbar with view toggle button
+      const toolbar = document.createElement('div');
+      toolbar.classList.add('mermaid-toolbar');
+      toolbar.style.position = 'absolute';
+      toolbar.style.top = '8px';
+      toolbar.style.right = '8px';
+      toolbar.style.left = 'auto';
+      toolbar.style.pointerEvents = 'auto';
+
+      const viewToggle = document.createElement('button');
+      viewToggle.classList.add('mermaid-view-toggle');
+      viewToggle.type = 'button';
+      viewToggle.title = 'Fit to view';
+      viewToggle.style.border = 'none';
+      viewToggle.style.background = 'none';
+      viewToggle.style.outline = 'none';
+      // Lucide Shrink icon
+      viewToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 15 6 6m-6-6v4.8m0-4.8h4.8"/><path d="M9 19.8V15m0 0H4.2M9 15l-6 6"/><path d="M15 4.2V9m0 0h4.8M15 9l6-6"/><path d="M9 4.2V9m0 0H4.2M9 9 3 3"/></svg>`;
+
+      toolbar.appendChild(viewToggle);
+      diagramWrapper.appendChild(diagramContainer);
+      diagramWrapper.appendChild(toolbar);
 
       // Edit container (shown when editing)
       const editContainer = document.createElement('div');
@@ -197,11 +226,72 @@ export const MermaidNode = Node.create({
       textarea.placeholder = 'Enter mermaid diagram code...';
 
       editContainer.appendChild(textarea);
-      container.appendChild(diagramContainer);
+
+      container.appendChild(diagramWrapper);
       container.appendChild(editContainer);
 
       let isEditing = false;
       let currentContent = node.attrs.content || '';
+      let viewMode: 'scroll' | 'fit' = 'scroll';
+
+      // Toggle between scroll and fit modes
+      function setViewMode(mode: 'scroll' | 'fit') {
+        viewMode = mode;
+        diagramContainer.classList.toggle('mermaid-scroll-mode', mode === 'scroll');
+        diagramContainer.classList.toggle('mermaid-fit-mode', mode === 'fit');
+
+        // Update icon
+        if (mode === 'scroll') {
+          // Shrink icon
+          viewToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 15 6 6m-6-6v4.8m0-4.8h4.8"/><path d="M9 19.8V15m0 0H4.2M9 15l-6 6"/><path d="M15 4.2V9m0 0h4.8M15 9l6-6"/><path d="M9 4.2V9m0 0H4.2M9 9 3 3"/></svg>`;
+          viewToggle.title = 'Fit to view';
+        } else {
+          // Expand icon
+          viewToggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8"/><path d="M3 16.2V21m0 0h4.8M3 21l6-6"/><path d="M21 7.8V3m0 0h-4.8M21 3l-6 6"/><path d="M3 7.8V3m0 0h4.8M3 3l6 6"/></svg>`;
+          viewToggle.title = 'Scroll mode';
+        }
+
+        // Re-apply SVG sizing
+        const svgEl = diagramContainer.querySelector('svg');
+        if (svgEl) {
+          applySvgSizing(svgEl, mode);
+        }
+      }
+
+      function applySvgSizing(svgEl: SVGSVGElement, mode: 'scroll' | 'fit') {
+        const viewBox = svgEl.getAttribute('viewBox');
+        if (viewBox) {
+          const [, , vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+          if (vbWidth && vbHeight) {
+            if (mode === 'scroll') {
+              svgEl.setAttribute('width', `${vbWidth}px`);
+              svgEl.setAttribute('height', `${vbHeight}px`);
+              svgEl.style.width = `${vbWidth}px`;
+              svgEl.style.height = `${vbHeight}px`;
+              svgEl.style.minWidth = `${vbWidth}px`;
+              svgEl.style.maxWidth = 'none';
+            } else {
+              svgEl.removeAttribute('width');
+              svgEl.removeAttribute('height');
+              svgEl.style.width = '100%';
+              svgEl.style.height = 'auto';
+              svgEl.style.minWidth = '';
+              svgEl.style.maxWidth = '100%';
+            }
+          }
+        }
+      }
+
+      // Stop clicks on toolbar from bubbling to diagram
+      toolbar.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+
+      viewToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setViewMode(viewMode === 'scroll' ? 'fit' : 'scroll');
+      });
 
       // Simple undo/redo stack for the textarea
       const undoStack: string[] = [];
@@ -255,22 +345,10 @@ export const MermaidNode = Node.create({
           const { svg } = await mermaid.render(id, content);
           diagramContainer.innerHTML = svg;
 
-          // Set fixed dimensions from viewBox to prevent responsive scaling
+          // Apply sizing based on current view mode
           const svgEl = diagramContainer.querySelector('svg');
           if (svgEl) {
-            const viewBox = svgEl.getAttribute('viewBox');
-            if (viewBox) {
-              const [, , vbWidth, vbHeight] = viewBox.split(' ').map(Number);
-              if (vbWidth && vbHeight) {
-                // Set explicit pixel dimensions from viewBox
-                svgEl.setAttribute('width', `${vbWidth}px`);
-                svgEl.setAttribute('height', `${vbHeight}px`);
-                svgEl.style.width = `${vbWidth}px`;
-                svgEl.style.height = `${vbHeight}px`;
-                svgEl.style.minWidth = `${vbWidth}px`;
-                svgEl.style.maxWidth = 'none';
-              }
-            }
+            applySvgSizing(svgEl, viewMode);
           }
         } catch (error: any) {
           // Show error message
@@ -531,6 +609,10 @@ export const MermaidNode = Node.create({
           exitEditMode(true);
         },
         stopEvent: (event) => {
+          // Let the toolbar handle its own events (don't let ProseMirror select the node)
+          if (toolbar.contains(event.target as Node)) {
+            return true;
+          }
           // Let the textarea handle its own events when editing
           if (isEditing && container.contains(event.target as Node)) {
             return true;

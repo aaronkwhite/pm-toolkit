@@ -580,23 +580,90 @@ html, body {
   border-color: var(--vscode-focusBorder);
 }
 
-/* Diagram display area - scrollable for large diagrams */
+/* Wrapper for diagram + toolbar positioning */
+/* Note: position:relative is set inline in MermaidNode.ts */
+.mermaid-diagram-wrapper {
+  overflow: visible;
+}
+
+/* Toolbar with view toggle */
+/* Note: position/top/right are set inline in MermaidNode.ts */
+.mermaid-toolbar {
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.mermaid-diagram-wrapper:hover .mermaid-toolbar {
+  opacity: 1;
+}
+
+.mermaid-view-toggle {
+  -webkit-appearance: none;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-style: none;
+  outline: none;
+  border-radius: 6px;
+  background: none;
+  background-color: transparent;
+  color: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.vscode-dark .mermaid-view-toggle {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.mermaid-view-toggle:hover {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.vscode-dark .mermaid-view-toggle:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.mermaid-view-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Diagram display area */
 .mermaid-diagram {
   padding: 1rem;
   min-height: 100px;
-  max-height: 400px;
   cursor: pointer;
+}
+
+/* Scroll mode - fixed size with scrolling */
+.mermaid-diagram.mermaid-scroll-mode {
+  max-height: 400px;
   overflow: auto;
 }
 
-/* SVG should maintain intrinsic size, not scale to fit */
-.mermaid-diagram svg {
+.mermaid-diagram.mermaid-scroll-mode svg {
   display: block;
-  /* Remove max-width constraint to prevent responsive scaling */
-  max-width: none !important;
-  width: auto !important;
-  height: auto !important;
-  /* Don't center - let it scroll from left edge */
+}
+
+/* Fit mode - scale to container */
+.mermaid-diagram.mermaid-fit-mode {
+  max-height: none;
+  overflow: visible;
+}
+
+.mermaid-diagram.mermaid-fit-mode svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
 }
 
 /* Subtle scrollbar styling */
