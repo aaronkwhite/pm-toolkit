@@ -15,7 +15,7 @@ If PM Toolkit saves you time, consider buying me a coffee. Your support helps ke
 
 ## Features
 
-### WYSIWYG Markdown Editor
+### ✍️ WYSIWYG Markdown Editor
 
 Edit markdown files visually. What you see is what you get—no more switching between raw text and preview.
 
@@ -25,7 +25,7 @@ Edit markdown files visually. What you see is what you get—no more switching b
 - **Task lists** — Interactive checkboxes that save to standard markdown
 - **Mermaid diagrams** — Flowcharts, sequence diagrams, and more render inline
 
-### Kanban Boards
+### 📋 Kanban Boards
 
 Turn any markdown file into a visual task board. Your data stays in plain text—always portable, always yours.
 
@@ -37,7 +37,7 @@ Turn any markdown file into a visual task board. Your data stays in plain text�
 
 Create a `.kanban` file or right-click any `.md` file and select "Open as Kanban Board."
 
-### File Viewers
+### 📄 File Viewers
 
 View common file types without leaving your editor:
 
