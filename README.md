@@ -13,7 +13,7 @@ If PM Toolkit saves you time, consider buying me a coffee. Your support helps ke
   <img src="https://github.com/user-attachments/assets/fa213bf0-9dc1-4c94-b5d2-3e0612ccb37d" width="128" alt="Buy A-A-Ron a Coffee" />
 </a>
 
-## Features
+## 🚀 Features
 
 ### ✍️ WYSIWYG Markdown Editor
 
