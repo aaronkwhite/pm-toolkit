@@ -115,6 +115,7 @@ PM Toolkit is built on solid open-source foundations:
 | [ProseMirror](https://prosemirror.net) | Editor toolkit (powers Tiptap) | MIT |
 | [dnd-kit](https://dndkit.com) | Drag and drop | MIT |
 | [Mermaid](https://mermaid.js.org) | Diagrams from text | MIT |
+| [Lucide](https://lucide.dev) | Icons | ISC |
 | [PDF.js](https://mozilla.github.io/pdf.js/) | PDF rendering | Apache 2.0 |
 | [Mammoth](https://github.com/mwilliamson/mammoth.js) | Word document conversion | BSD-2 |
 | [SheetJS](https://sheetjs.com) | Excel parsing | Apache 2.0 |
