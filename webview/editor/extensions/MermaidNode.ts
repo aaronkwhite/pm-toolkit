@@ -176,6 +176,47 @@ export const MermaidNode = Node.create({
     };
   },
 
+  addKeyboardShortcuts() {
+    return {
+      // Allow Enter to create a new paragraph after the mermaid node
+      Enter: ({ editor }) => {
+        const { selection } = editor.state;
+        const node = editor.state.doc.nodeAt(selection.from);
+
+        if (node?.type.name === 'mermaid') {
+          // Insert a paragraph after the mermaid node
+          const pos = selection.from + node.nodeSize;
+          editor.chain()
+            .insertContentAt(pos, { type: 'paragraph' })
+            .setTextSelection(pos + 1)
+            .run();
+          return true;
+        }
+        return false;
+      },
+      // Allow ArrowDown to move cursor after the mermaid node
+      ArrowDown: ({ editor }) => {
+        const { selection } = editor.state;
+        const node = editor.state.doc.nodeAt(selection.from);
+
+        if (node?.type.name === 'mermaid') {
+          const pos = selection.from + node.nodeSize;
+          // If there's no content after, insert a paragraph
+          if (pos >= editor.state.doc.content.size - 1) {
+            editor.chain()
+              .insertContentAt(pos, { type: 'paragraph' })
+              .setTextSelection(pos + 1)
+              .run();
+          } else {
+            editor.commands.setTextSelection(pos);
+          }
+          return true;
+        }
+        return false;
+      },
+    };
+  },
+
   addNodeView() {
     return ({ node, getPos, editor }) => {
       initMermaid();
