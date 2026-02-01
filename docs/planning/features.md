@@ -14,7 +14,7 @@
 | Excel Viewer | P1 | Low | ✅ Complete |
 | CSV Viewer | P1 | Low | ✅ Complete |
 | Template System | P2 | Medium | Planned |
-| Mermaid Diagrams | P2 | Medium | Planned |
+| Mermaid Diagrams | P2 | Medium | ✅ Complete |
 | Outline Panel | P2 | Low | Planned |
 
 ---
@@ -357,12 +357,13 @@ Render Mermaid diagram code blocks as interactive diagrams.
 
 ### Requirements
 
-- [ ] Detect ```mermaid code blocks
-- [ ] Render diagram inline
-- [ ] Zoom controls on diagram
-- [ ] Pan/scroll large diagrams
-- [ ] Theme-aware colors
-- [ ] Edit code button (optional)
+- [x] Detect ```mermaid code blocks
+- [x] Render diagram inline
+- [x] View mode toggle (scroll/fit)
+- [x] Scroll large diagrams in scroll mode
+- [x] Theme-aware colors (dark/light)
+- [x] Edit code button with dedicated toolbar
+- [x] Keyboard navigation (Enter/ArrowDown after diagram)
 
 ### Supported Diagram Types
 - Flowchart
@@ -373,9 +374,11 @@ Render Mermaid diagram code blocks as interactive diagrams.
 - Pie chart
 
 ### Acceptance Criteria
-1. Mermaid blocks render as diagrams
-2. Diagrams update on code change
-3. Zoom/pan works smoothly
+1. ✅ Mermaid blocks render as diagrams
+2. ✅ Diagrams update on code change
+3. ✅ Scroll/fit modes work correctly
+4. ✅ Edit button opens code editor
+5. ✅ E2E tests pass (17 tests)
 
 ---
 

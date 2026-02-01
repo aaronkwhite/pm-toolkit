@@ -47,7 +47,11 @@
 - [ ] Testing
 - [ ] Release
 
-## Recent Updates (Jan 2025)
+## Recent Updates (Feb 2025)
+
+- **Mermaid Diagrams**: Full implementation with scroll/fit modes, edit button, theme support, and 17 e2e tests
+
+## Previous Updates (Jan 2025)
 
 - View Source command for markdown/kanban editors
 - Kanban file language registration with custom icons
