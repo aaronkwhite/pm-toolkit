@@ -2,7 +2,7 @@
   "name": "pm-toolkit",
   "displayName": "PM Toolkit",
   "description": "WYSIWYG Markdown Editor and Kanban Boards for Cursor/VS Code",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "publisher": "pm-toolkit",
   "license": "MIT",
   "engines": {
