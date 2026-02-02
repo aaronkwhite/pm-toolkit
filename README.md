@@ -1,7 +1,8 @@
 # PM Toolkit
 
-[![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](https://github.com/aaronkwhite/pm-toolkit/releases)
+[![Latest Release](https://img.shields.io/github/v/release/aaronkwhite/pm-toolkit?label=version)](https://github.com/aaronkwhite/pm-toolkit/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/aaronkwhite/pm-toolkit/blob/main/LICENSE)
+[![Changelog](https://img.shields.io/badge/changelog-view-blue)](https://github.com/aaronkwhite/pm-toolkit/blob/main/CHANGELOG.md)
 
 **A rich editing experience for Cursor.** WYSIWYG markdown, kanban boards, and file viewers—built for product managers and teams who work alongside AI.
 
@@ -132,12 +133,16 @@ Templates are regular markdown files. The filename becomes the template name in 
 
 ## Configuration
 
-Access settings via `Code` → `Settings` → `Extensions` → `PM Toolkit`.
+Access settings via the **PM Toolkit Settings** command (from the editor `...` menu or Command Palette), or through `Code` → `Settings` → `Extensions` → `PM Toolkit`.
 
-| Setting | Description |
-|---------|-------------|
-| `pmtoolkit.templateFolder` | Path to folder containing template markdown files |
-| `pmtoolkit.templateWatchEnabled` | Auto-reload templates when folder contents change (default: true) |
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `pmtoolkit.editorFontSize` | Font size for the editor and kanban board (10-24px) | 14 |
+| `pmtoolkit.templateFolder` | Path to folder containing template markdown files | — |
+| `pmtoolkit.templateWatchEnabled` | Auto-reload templates when folder contents change | true |
+| `pmtoolkit.kanbanDefaultColumns` | Comma-separated list of columns for new boards | Backlog, In Progress, Done |
+| `pmtoolkit.kanbanShowThumbnails` | Show image thumbnails on kanban cards | true |
+| `pmtoolkit.kanbanSaveDelay` | Delay before saving kanban changes (50-2000ms) | 150 |
 
 ## Built With
 
