@@ -20,10 +20,12 @@ If PM Toolkit saves you time, consider buying me a coffee. Your support helps ke
 Edit markdown files visually. What you see is what you get—no more switching between raw text and preview.
 
 - **Slash commands** — Type `/` to insert headings, lists, tables, code blocks, and more
+- **Templates** — Create reusable templates and insert them via `/` commands
 - **Rich formatting** — Bold, italic, links, and images with familiar keyboard shortcuts
-- **Tables** — Create and edit tables visually
+- **Tables** — Create and edit tables visually with Tab/Shift+Tab navigation
 - **Task lists** — Interactive checkboxes that save to standard markdown
 - **Mermaid diagrams** — Flowcharts, sequence diagrams, and more render inline
+- **Smart navigation** — Escape code blocks and tables with arrow keys or Cmd+Enter
 
 ### 📋 Kanban Boards
 
@@ -66,6 +68,10 @@ Search for "PM Toolkit" in the Extensions view (`Cmd+Shift+X` / `Ctrl+Shift+X`).
 - `Cmd/Ctrl + I` — Italic
 - `Cmd/Ctrl + Z` — Undo
 - `Cmd/Ctrl + Shift + Z` — Redo
+- `Cmd/Ctrl + Enter` — Exit code block or table (insert paragraph below)
+- `Tab` / `Shift+Tab` — Navigate table cells (Tab in last cell exits table)
+- `Arrow Up` — Exit code block from top
+- `Arrow Down` — Exit code block from bottom
 
 ### Kanban Boards
 
@@ -105,6 +111,17 @@ graph TD
 
 Hover over a diagram to see controls for editing or switching between scroll and fit modes.
 
+## Templates
+
+Create reusable document templates that appear in the slash command menu.
+
+1. Create a folder with your template `.md` files
+2. Run **PM Toolkit: Set Template Folder** from the Command Palette (`Cmd/Ctrl + Shift + P`)
+3. Select your templates folder
+4. Type `/` in any document to see your templates listed
+
+Templates are regular markdown files. The filename becomes the template name in the menu.
+
 ## Configuration
 
 Access settings via `Code` → `Settings` → `Extensions` → `PM Toolkit`.
@@ -112,6 +129,7 @@ Access settings via `Code` → `Settings` → `Extensions` → `PM Toolkit`.
 | Setting | Description |
 |---------|-------------|
 | `pmtoolkit.templateFolder` | Path to folder containing template markdown files |
+| `pmtoolkit.templateWatchEnabled` | Auto-reload templates when folder contents change (default: true) |
 
 ## Built With
 
