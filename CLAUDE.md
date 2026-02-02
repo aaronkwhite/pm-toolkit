@@ -31,6 +31,24 @@ This project uses **SemVer** (Semantic Versioning): `MAJOR.MINOR.PATCH`
 
 **Version lives in**: `package.json` → `"version"`
 
+### Release Checklist
+
+When bumping the version, complete these steps:
+
+1. **Update version** in `package.json`
+2. **Update CHANGELOG.md** with new version section
+3. **Commit** with message: `chore: bump version to X.Y.Z`
+4. **Create git tag**: `git tag vX.Y.Z`
+5. **Push with tags**: `git push && git push --tags`
+6. **Create GitHub Release**:
+   - Go to https://github.com/aaronkwhite/pm-toolkit/releases/new
+   - Select the tag you just pushed
+   - Title: `vX.Y.Z`
+   - Description: Copy from CHANGELOG.md for this version
+   - Attach `.vsix` file if publishing to marketplace
+
+The README version badge auto-updates from GitHub releases.
+
 ## Project Structure
 
 ```

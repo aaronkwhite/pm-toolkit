@@ -5,6 +5,21 @@ All notable changes to PM Toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-02-02
+
+### Added
+
+- Settings panel E2E tests for comprehensive UI coverage
+
+### Fixed
+
+- Flaky test reliability improvements
+
+### Documentation
+
+- Updated README with new configuration options
+- Updated planning docs for v0.4.x
+
 ## [0.4.0] - 2026-02-02
 
 ### Added
@@ -105,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Custom File Icons**: Kanban files show dedicated icon in file explorer
 
+[0.4.1]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.4.1
 [0.4.0]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.4.0
 [0.3.0]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.3.0
 [0.2.0]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.2.0
