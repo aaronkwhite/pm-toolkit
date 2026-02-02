@@ -2,7 +2,7 @@
   "name": "pm-toolkit",
   "displayName": "PM Toolkit",
   "description": "WYSIWYG Markdown Editor and Kanban Boards for Cursor/VS Code",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "pm-toolkit",
   "license": "MIT",
   "engines": {
@@ -32,8 +32,12 @@
     "languages": [
       {
         "id": "kanban",
-        "aliases": ["Kanban Board"],
-        "extensions": [".kanban"],
+        "aliases": [
+          "Kanban Board"
+        ],
+        "extensions": [
+          ".kanban"
+        ],
         "icon": {
           "light": "./icons/kanban-light.svg",
           "dark": "./icons/kanban-dark.svg"
@@ -139,6 +143,12 @@
         "command": "pmtoolkit.setTemplateFolder",
         "title": "Set Template Folder",
         "category": "PM Toolkit"
+      },
+      {
+        "command": "pmtoolkit.openSettings",
+        "title": "PM Toolkit Settings",
+        "category": "PM Toolkit",
+        "icon": "$(gear)"
       }
     ],
     "menus": {
@@ -151,9 +161,9 @@
       ],
       "editor/title": [
         {
-          "command": "pmtoolkit.viewSource",
+          "command": "pmtoolkit.openSettings",
           "when": "activeCustomEditorId =~ /pmtoolkit\\./",
-          "group": "navigation"
+          "group": "2_settings"
         },
         {
           "command": "pmtoolkit.toggleKanbanThumbnails",
@@ -181,6 +191,30 @@
           "type": "boolean",
           "default": true,
           "description": "Watch template folder for changes and auto-reload"
+        },
+        "pmtoolkit.editorFontSize": {
+          "type": "number",
+          "default": 14,
+          "minimum": 10,
+          "maximum": 24,
+          "description": "Font size in pixels for the markdown editor and kanban board"
+        },
+        "pmtoolkit.kanbanSaveDelay": {
+          "type": "number",
+          "default": 150,
+          "minimum": 50,
+          "maximum": 2000,
+          "description": "Delay in milliseconds before saving kanban changes to disk"
+        },
+        "pmtoolkit.kanbanDefaultColumns": {
+          "type": "string",
+          "default": "Backlog, In Progress, Done",
+          "description": "Comma-separated list of default columns for new kanban boards"
+        },
+        "pmtoolkit.kanbanShowThumbnails": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show image thumbnails on kanban cards by default"
         }
       }
     }

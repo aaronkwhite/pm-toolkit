@@ -17,6 +17,14 @@ export class HTMLBuilder {
   }
 
   /**
+   * Get the configured font size from settings
+   */
+  private static getFontSize(): number {
+    const config = vscode.workspace.getConfiguration('pmtoolkit');
+    return config.get<number>('editorFontSize', 14);
+  }
+
+  /**
    * Generate HTML for the markdown editor webview
    */
   public static getEditorHTML(
@@ -32,6 +40,8 @@ export class HTMLBuilder {
       vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'editor.css')
     );
 
+    const fontSize = this.getFontSize();
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,6 +55,7 @@ export class HTMLBuilder {
         font-src ${webview.cspSource};
     ">
     <link href="${styleUri}" rel="stylesheet">
+    <style>:root { --pmtoolkit-font-size: ${fontSize}px; }</style>
     <title>PM Toolkit Editor</title>
 </head>
 <body>
@@ -70,6 +81,8 @@ export class HTMLBuilder {
       vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'kanban.css')
     );
 
+    const fontSize = this.getFontSize();
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -83,6 +96,7 @@ export class HTMLBuilder {
         font-src ${webview.cspSource};
     ">
     <link href="${styleUri}" rel="stylesheet">
+    <style>:root { --pmtoolkit-font-size: ${fontSize}px; }</style>
     <title>Kanban Board</title>
 </head>
 <body>
