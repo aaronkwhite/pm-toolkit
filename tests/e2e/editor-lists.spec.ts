@@ -247,9 +247,10 @@ test.describe('Lists', () => {
   - Nested child`;
     await editor.load(content);
 
-    // Click on nested item
+    // Click on nested item and wait for cursor to position
     const nestedItem = editor.proseMirror.locator('ul ul li');
     await nestedItem.click();
+    await page.waitForTimeout(100);
 
     // Press Shift+Tab to outdent
     await editor.pressKey('Shift+Tab');

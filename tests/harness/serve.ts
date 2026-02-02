@@ -23,6 +23,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'test-harness.html'));
 });
 
+// Serve the settings harness
+app.get('/settings', (req, res) => {
+  res.sendFile(path.join(__dirname, 'settings-harness.html'));
+});
+
 // Serve bundled JS and CSS from dist/
 app.use('/dist', express.static(path.join(projectRoot, 'dist')));
 
