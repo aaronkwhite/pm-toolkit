@@ -8,6 +8,7 @@ import {
   CSVViewerProvider,
 } from './viewers';
 import { TemplateManager } from './templates/TemplateManager';
+import { SettingsPanel } from './settings/SettingsPanel';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('PM Toolkit is now active');
@@ -169,6 +170,12 @@ export function activate(context: vscode.ExtensionContext) {
         await config.update('templateFolder', folder[0].fsPath, vscode.ConfigurationTarget.Workspace);
         vscode.window.showInformationMessage(`Template folder set to: ${folder[0].fsPath}`);
       }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('pmtoolkit.openSettings', () => {
+      SettingsPanel.createOrShow(context.extensionUri);
     })
   );
 }

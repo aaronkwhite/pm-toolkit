@@ -139,6 +139,12 @@
         "command": "pmtoolkit.setTemplateFolder",
         "title": "Set Template Folder",
         "category": "PM Toolkit"
+      },
+      {
+        "command": "pmtoolkit.openSettings",
+        "title": "Open Settings",
+        "category": "PM Toolkit",
+        "icon": "$(list-flat)"
       }
     ],
     "menus": {
@@ -151,11 +157,6 @@
       ],
       "editor/title": [
         {
-          "command": "pmtoolkit.viewSource",
-          "when": "activeCustomEditorId =~ /pmtoolkit\\./",
-          "group": "navigation"
-        },
-        {
           "command": "pmtoolkit.toggleKanbanThumbnails",
           "when": "activeCustomEditorId == pmtoolkit.kanbanEditor",
           "group": "1_modification"
@@ -164,6 +165,11 @@
       "editor/title/run": [
         {
           "command": "pmtoolkit.viewSource",
+          "when": "activeCustomEditorId =~ /pmtoolkit\\./",
+          "group": "navigation"
+        },
+        {
+          "command": "pmtoolkit.openSettings",
           "when": "activeCustomEditorId =~ /pmtoolkit\\./",
           "group": "navigation"
         }
