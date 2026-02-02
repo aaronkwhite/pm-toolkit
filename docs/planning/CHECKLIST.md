@@ -1,7 +1,8 @@
 # PM Toolkit - Implementation Checklist
 
-> **Last Updated**: 2026-01-30
-> **Current Phase**: Phase 4.5 Complete, Phase 6 - Templates (Next)
+> **Last Updated**: 2026-02-01
+> **Current Version**: 0.3.0
+> **Current Phase**: Phase 6 Complete, Testing & Release (Next)
 
 This checklist tracks all implementation tasks. Update status as work progresses.
 
@@ -313,82 +314,111 @@ This checklist tracks all implementation tasks. Update status as work progresses
 
 ---
 
-## Phase 6: Templates
+## Phase 6: Templates ✅
 
 ### 6.1 Template Manager
-- [ ] Create TemplateManager.ts
-- [ ] Install gray-matter
-- [ ] Folder scanning logic
-- [ ] YAML frontmatter parsing
-- [ ] Template caching
+- [x] Create TemplateManager.ts
+- [x] Install gray-matter
+- [x] Folder scanning logic
+- [x] YAML frontmatter parsing
+- [x] Template caching
 
 ### 6.2 Variable System
-- [ ] Create TemplateVariables.ts
-- [ ] Implement {{date}} variable
-- [ ] Implement {{time}} variable
-- [ ] Implement {{datetime}} variable
-- [ ] Implement {{year}}, {{month}}, {{day}}
+- [x] Create TemplateVariables.ts
+- [x] Implement {{date}} variable
+- [x] Implement {{time}} variable
+- [x] Implement {{datetime}} variable
+- [x] Implement {{year}}, {{month}}, {{day}}
 
 ### 6.3 File Watcher
-- [ ] Set up FileSystemWatcher
-- [ ] Cache invalidation on changes
-- [ ] Notify webviews of template updates
+- [x] Set up FileSystemWatcher
+- [x] Cache invalidation on changes
+- [x] Notify webviews of template updates
 
 ### 6.4 Slash Menu Integration
-- [ ] Add template category to slash menu
-- [ ] Handle template selection
-- [ ] Request content from extension
-- [ ] Insert resolved content
+- [x] Add template category to slash menu
+- [x] Handle template selection
+- [x] Request content from extension
+- [x] Insert resolved content
 
 ### 6.5 Settings
-- [ ] Add pmtoolkit.templateFolder setting
-- [ ] Add pmtoolkit.templateWatchEnabled setting
-- [ ] Settings change listener
+- [x] Add pmtoolkit.templateFolder setting
+- [x] Add pmtoolkit.templateWatchEnabled setting
+- [x] Settings change listener
+- [x] Add setTemplateFolder command with folder picker dialog
 
 **Phase 6 Commit Checkpoints:**
-- [ ] `feat: template manager with YAML parsing`
-- [ ] `feat: template variables`
-- [ ] `feat: template slash menu integration`
+- [x] `feat: template manager with YAML parsing`
+- [x] `feat: template variables`
+- [x] `feat: template slash menu integration`
+- [x] `feat: add setTemplateFolder command with folder picker`
 
 ---
 
-## Phase 7: Mermaid Diagrams
+## Phase 7: Mermaid Diagrams ✅
 
 ### 7.1 Mermaid Extension
-- [ ] Create MermaidNode.ts Tiptap extension
-- [ ] Node schema definition
-- [ ] parseHTML / renderHTML
-- [ ] Editor commands (insertMermaid)
+- [x] Create MermaidNode.ts Tiptap extension
+- [x] Node schema definition
+- [x] parseHTML / renderHTML
+- [x] Editor commands (insertMermaid)
 
 ### 7.2 Node View
-- [ ] Create MermaidNodeView.ts
-- [ ] DOM structure with toolbar
-- [ ] Mermaid.js rendering
-- [ ] Error handling for invalid syntax
+- [x] Create MermaidNodeView.ts
+- [x] DOM structure with toolbar
+- [x] Mermaid.js rendering
+- [x] Error handling for invalid syntax
 
 ### 7.3 Interactions
-- [ ] Zoom controls (buttons + wheel)
-- [ ] Pan support (drag)
-- [ ] Edit/preview toggle
-- [ ] Debounced re-rendering
+- [x] Zoom controls (buttons + wheel)
+- [x] Pan support (drag)
+- [x] Edit/preview toggle
+- [x] Debounced re-rendering
 
 ### 7.4 Theme Integration
-- [ ] Detect VS Code theme
-- [ ] Configure Mermaid theme
-- [ ] Re-render on theme change
-- [ ] Style mermaid.css
+- [x] Detect VS Code theme
+- [x] Configure Mermaid theme
+- [x] Re-render on theme change
+- [x] Style mermaid.css
 
 ### 7.5 Slash Commands
-- [ ] Add /diagram command (flowchart)
-- [ ] Add /sequence command
-- [ ] Add /class command
-- [ ] Add /gantt command
+- [x] Add /diagram command (flowchart)
+- [x] Add /sequence command
+- [x] Add /class command
+- [x] Add /gantt command
+
+### 7.6 Bug Fixes
+- [x] Mermaid preprocessing to preserve newlines (tiptap-markdown was stripping them)
+- [x] Register MermaidNode extension in main.ts
 
 **Phase 7 Commit Checkpoints:**
-- [ ] `feat: Mermaid Tiptap extension`
-- [ ] `feat: Mermaid node view with interactions`
-- [ ] `feat: Mermaid theme integration`
-- [ ] `feat: Mermaid slash commands`
+- [x] `feat: Mermaid Tiptap extension`
+- [x] `feat: Mermaid node view with interactions`
+- [x] `feat: Mermaid theme integration`
+- [x] `feat: Mermaid slash commands`
+- [x] `fix: mermaid newline preservation`
+
+---
+
+## Phase 7.5: Editor Enhancements ✅
+
+### 7.5.1 Code Block Navigation
+- [x] Detect cursor position in code blocks
+- [x] ArrowUp at start exits above code block
+- [x] ArrowDown at end exits below code block
+- [x] Cmd+Enter inserts paragraph below and exits
+
+### 7.5.2 Table Navigation Enhancement
+- [x] Cmd+Enter in table inserts paragraph below and exits
+- [x] Tab/Shift+Tab navigation (from Phase 2)
+
+### 7.5.3 UI Polish
+- [x] View Source icon changed to 3-line style (`$(list-flat)`)
+- [x] SemVer versioning (switched from CalVer)
+
+**Phase 7.5 Commit Checkpoints:**
+- [x] `feat: keyboard navigation for code blocks and tables`
+- [x] `chore: update View Source icon`
 
 ---
 
@@ -490,6 +520,12 @@ This checklist tracks all implementation tasks. Update status as work progresses
 | 2026-01-29 | `d2426fb` | feat: Kanban board with drag-and-drop |
 | 2026-01-29 | `c80a55d` | docs: update checklist with Phase 4 progress |
 | 2026-01-29 | `561f5db` | feat: File viewers (PDF, Word, Excel, CSV) |
+| 2026-02-01 | `b1f6bbb` | docs: add rocket emoji to Features heading |
+| 2026-02-01 | ... | feat: template system with slash commands |
+| 2026-02-01 | ... | feat: mermaid diagram rendering |
+| 2026-02-01 | ... | fix: mermaid newline preservation |
+| 2026-02-01 | ... | feat: keyboard navigation for code blocks/tables |
+| 2026-02-01 | ... | chore: v0.3.0 release |
 
 ---
 
@@ -541,3 +577,29 @@ This checklist tracks all implementation tasks. Update status as work progresses
   - Board-level [no-thumbnails] setting with VS Code menu toggle
   - Full clipboard support for image editing in modal
   - Fixed image serialization (newlines), heading escaping, markdown stripping
+
+### 2026-02-01
+- **v0.3.0 Release**
+- Phase 6: Templates (COMPLETE)
+  - TemplateManager with gray-matter YAML frontmatter parsing
+  - Template variables (date, time, datetime, year, month, day)
+  - FileSystemWatcher for template folder changes
+  - Slash command integration for templates
+  - `pmtoolkit.setTemplateFolder` command with native folder picker dialog
+  - Settings: templateFolder, templateWatchEnabled
+- Phase 7: Mermaid Diagrams (COMPLETE)
+  - MermaidNode Tiptap extension with full rendering
+  - Theme integration (light/dark)
+  - Edit/preview toggle
+  - Critical fix: `preprocessMermaidBlocks()` to preserve newlines before tiptap-markdown parsing
+  - MermaidNode registration in main.ts (was missing)
+- Phase 7.5: Editor Enhancements (COMPLETE)
+  - Code block keyboard navigation (ArrowUp/Down to exit, Cmd+Enter to insert below)
+  - Table keyboard enhancement (Cmd+Enter to insert paragraph below)
+  - View Source icon updated to `$(list-flat)` (3-line style)
+  - Switched from CalVer to SemVer for VS Code Marketplace compatibility
+- GitHub Issues cleanup
+  - Closed #2 (Template System) - complete
+  - Created and closed historical phase issues (#7-10)
+  - Created #11 (Testing) and #12 (Release to Marketplace)
+  - Closed #1 (File Tree Icons) as "won't do" - VS Code doesn't allow overriding built-in language icons

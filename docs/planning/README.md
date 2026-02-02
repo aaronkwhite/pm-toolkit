@@ -35,6 +35,8 @@
 
 ### Project Status
 
+**Current Version**: 0.3.0
+
 - [x] Requirements analysis
 - [x] Technology selection
 - [x] Architecture design
@@ -43,13 +45,19 @@
 - [x] Phase 2: Editor Features (Slash commands, markdown, themes, tables)
 - [x] Phase 3: Kanban Board (Parser, dnd-kit, drag-drop, card modal, thumbnails)
 - [x] Phase 4: File Viewers (PDF, Word, Excel, CSV - all working)
-- [ ] Phase 5: Templates & Polish
+- [x] Phase 5: Templates (Slash command integration, folder picker, file watcher)
+- [x] Phase 6: Mermaid Diagrams (Rendering, theme support, preprocessing)
 - [ ] Testing
 - [ ] Release
 
 ## Recent Updates (Feb 2025)
 
-- **Mermaid Diagrams**: Full implementation with scroll/fit modes, edit button, theme support, and 17 e2e tests
+- **v0.3.0 Release**
+  - Template system with slash command integration and folder picker dialog
+  - Mermaid diagram rendering with preprocessing for newline preservation
+  - Keyboard navigation for code blocks (ArrowUp/Down to exit, Cmd+Enter to insert below)
+  - Keyboard navigation for tables (Cmd+Enter to insert paragraph below)
+  - View Source icon updated to 3-line style
 
 ## Previous Updates (Jan 2025)
 
