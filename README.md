@@ -2,7 +2,7 @@
 
 A Cursor extension that brings visual editing tools to your workflow. Write documentation, manage tasks, and view files—all without leaving your editor.
 
-[![Version](https://img.shields.io/badge/version-2026.02.0-green.svg)](https://github.com/aaronkwhite/pm-toolkit/releases)
+[![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](https://github.com/aaronkwhite/pm-toolkit/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/aaronkwhite/pm-toolkit/blob/main/LICENSE)
 
 ## Support the project
