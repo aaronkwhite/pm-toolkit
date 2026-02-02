@@ -3,7 +3,9 @@
 [![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](https://github.com/aaronkwhite/pm-toolkit/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/aaronkwhite/pm-toolkit/blob/main/LICENSE)
 
-A Cursor extension that brings visual editing tools to your workflow. Write documentation, manage tasks, and view files—all without leaving your editor.
+A Cursor extension for product managers and non-developers who want powerful visual editing without leaving their editor.
+
+**WYSIWYG Markdown** with slash commands, templates, and Mermaid diagrams. **Kanban boards** backed by plain markdown. **File viewers** for PDF, Word, Excel, and CSV. All your data stays in plain text—portable, version-controlled, and yours.
 
 ### Support the project
 
