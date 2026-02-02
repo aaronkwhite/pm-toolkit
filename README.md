@@ -3,13 +3,11 @@
 [![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](https://github.com/aaronkwhite/pm-toolkit/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/aaronkwhite/pm-toolkit/blob/main/LICENSE)
 
-A Cursor extension for product managers and non-developers who want powerful visual editing alongside their AI-powered coding workflow.
-
-Work with Cursor's AI agent to draft specs, then edit them visually. Keep your planning docs, task boards, and reference files right next to your code—all in one place.
+A Cursor extension for product managers and non-developers who want powerful visual editing alongside their AI-powered coding workflow.  Work with Cursor's AI agent to draft specs, then edit them visually. Keep your planning docs, task boards, and reference files right next to your code—all in one place.
 
 **WYSIWYG Markdown** with slash commands, templates, and Mermaid diagrams. **Kanban boards** backed by plain markdown. **File viewers** for PDF, Word, Excel, and CSV. All your data stays in plain text—portable, version-controlled, and yours.
 
-### Support the project
+#### Support the project
 
 If PM Toolkit saves you time, consider buying me a coffee. Your support helps keep this project maintained and free for everyone.
 
