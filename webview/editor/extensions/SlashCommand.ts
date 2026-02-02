@@ -284,6 +284,48 @@ export const defaultCommands: SlashCommandItem[] = [
       }, 0);
     },
   },
+  {
+    title: 'Mermaid Diagram',
+    description: 'Insert a mermaid diagram',
+    icon: '◇',
+    searchTerms: ['mermaid', 'diagram', 'flowchart', 'chart', 'graph'],
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertMermaidBlock()
+        .run();
+    },
+  },
+  {
+    title: 'Flowchart',
+    description: 'Mermaid flowchart diagram',
+    icon: '⬡',
+    searchTerms: ['flowchart', 'flow', 'diagram', 'mermaid'],
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertMermaidBlock('graph TD\n    A[Start] --> B[End]')
+        .run();
+    },
+  },
+  {
+    title: 'Sequence Diagram',
+    description: 'Mermaid sequence diagram',
+    icon: '⇄',
+    searchTerms: ['sequence', 'diagram', 'mermaid', 'interaction'],
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertMermaidBlock('sequenceDiagram\n    Alice->>Bob: Hello\n    Bob-->>Alice: Hi')
+        .run();
+    },
+  },
 ];
 
 /**

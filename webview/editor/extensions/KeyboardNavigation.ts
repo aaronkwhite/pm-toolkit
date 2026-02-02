@@ -409,7 +409,7 @@ export const KeyboardNavigation = Extension.create({
         return deleteSelectionWithTable(editor);
       },
 
-      // Tab - move to next cell in table, or exit table if in last cell
+      // Tab - move to next cell in table, or indent list item
       Tab: ({ editor }) => {
         if (isInTable(editor)) {
           // If in last cell, exit table instead of adding a new row
@@ -419,15 +419,29 @@ export const KeyboardNavigation = Extension.create({
           // Otherwise, move to next cell
           return editor.commands.goToNextCell();
         }
-        // Return false to let Tiptap handle default behavior (lists, etc.)
+        // Try to indent list item (sinkListItem)
+        if (editor.can().sinkListItem('listItem')) {
+          return editor.commands.sinkListItem('listItem');
+        }
+        if (editor.can().sinkListItem('taskItem')) {
+          return editor.commands.sinkListItem('taskItem');
+        }
+        // Return false to let Tiptap handle default behavior
         return false;
       },
 
-      // Shift+Tab - move to previous cell in table
+      // Shift+Tab - move to previous cell in table, or outdent list item
       'Shift-Tab': ({ editor }) => {
         if (isInTable(editor)) {
           // Use Tiptap's built-in goToPreviousCell command
           return editor.commands.goToPreviousCell();
+        }
+        // Try to outdent list item (liftListItem)
+        if (editor.can().liftListItem('listItem')) {
+          return editor.commands.liftListItem('listItem');
+        }
+        if (editor.can().liftListItem('taskItem')) {
+          return editor.commands.liftListItem('taskItem');
         }
         // Return false to let Tiptap handle default behavior
         return false;

@@ -228,9 +228,10 @@ test.describe('Lists', () => {
 - Child candidate`;
     await editor.load(content);
 
-    // Click on second item
+    // Click on second item and wait for focus
     const items = editor.proseMirror.locator('ul > li');
     await items.nth(1).click();
+    await page.waitForTimeout(100); // Ensure click is processed
 
     // Press Tab to indent
     await editor.pressKey('Tab');
