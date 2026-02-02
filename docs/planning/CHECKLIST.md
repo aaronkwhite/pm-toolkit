@@ -1,8 +1,8 @@
 # PM Toolkit - Implementation Checklist
 
-> **Last Updated**: 2026-02-01
-> **Current Version**: 0.3.0
-> **Current Phase**: Phase 6 Complete, Testing & Release (Next)
+> **Last Updated**: 2026-02-02
+> **Current Version**: 0.4.1
+> **Current Phase**: Phase 8 Complete (Settings Panel)
 
 This checklist tracks all implementation tasks. Update status as work progresses.
 
@@ -422,86 +422,123 @@ This checklist tracks all implementation tasks. Update status as work progresses
 
 ---
 
-## Phase 8: Testing
+## Phase 8: Settings Panel ✅
 
-### 8.1 Test Infrastructure
-- [ ] Install Vitest
-- [ ] Configure vitest.config.ts
-- [ ] Create VS Code API mocks
-- [ ] Create test fixtures directory
-- [ ] Create test helpers
+### 8.1 Settings Panel UI
+- [x] Create `src/settings/SettingsPanel.ts`
+- [x] WebviewPanel with inline HTML/CSS/JS
+- [x] Card-based section layout (Editor, Templates, Kanban, Support)
+- [x] Match Cursor's settings UI aesthetic
+- [x] Green toggle switches
+- [x] VS Code CSS variable theming
 
-### 8.2 Unit Tests
-- [ ] Markdown parser tests
-- [ ] Kanban parser tests
-- [ ] Template variable tests
-- [ ] HTMLBuilder tests
+### 8.2 New Configuration Options
+- [x] `pmtoolkit.editorFontSize` (10-24px, default: 14)
+- [x] `pmtoolkit.kanbanDefaultColumns` (default: "Backlog, In Progress, Done")
+- [x] `pmtoolkit.kanbanShowThumbnails` (default: true)
+- [x] `pmtoolkit.kanbanSaveDelay` (50-2000ms, default: 150)
 
-### 8.3 Integration Tests
-- [ ] Extension-webview messaging tests
-- [ ] File round-trip tests
-- [ ] Custom editor provider tests
+### 8.3 Menu Integration
+- [x] Command: `pmtoolkit.openSettings` ("PM Toolkit Settings")
+- [x] Add to `editor/title` overflow menu (group: 2_settings)
+- [x] Keep View Source icon in `editor/title/run` (single command = icon)
+- [x] Input validation for number ranges
 
-### 8.4 E2E Tests
-- [ ] Install @vscode/test-electron
-- [ ] Extension activation test
-- [ ] File open tests
-- [ ] File save tests
-
-### 8.5 Webview Tests
-- [ ] Install Playwright
-- [ ] Editor interaction tests
-- [ ] Kanban drag-drop tests
-
-### 8.6 CI/CD
-- [ ] Create .github/workflows/ci.yml
-- [ ] Create .github/workflows/release.yml
-- [ ] Configure Codecov
-- [ ] Pre-commit hooks
+### 8.4 Settings Panel Tests
+- [x] Create `tests/harness/settings-harness.html`
+- [x] Add `/settings` route to test server
+- [x] 22 E2E tests for settings panel
+- [x] Layout and content tests
+- [x] Input control and toggle tests
+- [x] Message passing tests
+- [x] Input validation tests
 
 **Phase 8 Commit Checkpoints:**
-- [ ] `test: unit test infrastructure`
-- [ ] `test: parser and utility tests`
-- [ ] `test: integration tests`
-- [ ] `test: E2E tests`
+- [x] `feat: add settings panel with template configuration`
+- [x] `feat: improve settings panel and editor title menu`
+- [x] `test: add settings panel E2E tests and fix flaky test`
+
+---
+
+## Phase 9: Testing Infrastructure ✅
+
+### 9.1 E2E Test Harness
+- [x] Install Playwright
+- [x] Create test harness server (`tests/harness/serve.ts`)
+- [x] Create editor harness HTML with VS Code mock
+- [x] Create settings harness HTML
+- [x] EditorHelper page object (`tests/utils/editor-helper.ts`)
+
+### 9.2 Editor Tests (170 tests)
+- [x] Basic editor loading and content
+- [x] Cursor positioning and movement
+- [x] Text formatting (bold, italic, code, etc.)
+- [x] Images (rendering, editing, deletion)
+- [x] Lists (bullet, numbered, task, indent/outdent)
+- [x] Mermaid diagrams
+- [x] Slash commands
+- [x] State persistence
+- [x] Tables
+- [x] Undo/redo
+- [x] Common workflows
+- [x] Code block keyboard navigation
+
+### 9.3 Settings Panel Tests (22 tests)
+- [x] Layout and content display
+- [x] Editor settings controls
+- [x] Template settings controls
+- [x] Kanban settings controls
+- [x] Support section
+- [x] Input validation
+
+### 9.4 CI/CD (Pending)
+- [ ] Create .github/workflows/ci.yml
+- [ ] Create .github/workflows/release.yml
+- [ ] Pre-commit hooks
+
+**Phase 9 Status:**
+- 194 total tests (192 passing, 2 skipped)
+- Skipped: local image tests (need local files)
+
+**Phase 9 Commit Checkpoints:**
+- [x] `test: add settings panel E2E tests and fix flaky test`
 - [ ] `ci: GitHub Actions workflows`
 
 ---
 
-## Phase 9: Polish & Release
+## Phase 10: Polish & Release
 
-### 9.1 Documentation
-- [ ] Update README.md
-- [ ] Add CHANGELOG.md
+### 10.1 Documentation
+- [x] Update README.md
+- [x] Add CHANGELOG.md
 - [ ] Add CONTRIBUTING.md
-- [ ] Add LICENSE (MIT)
-- [ ] API documentation
+- [x] Add LICENSE (MIT)
 
-### 9.2 Accessibility
+### 10.2 Accessibility
 - [ ] Keyboard navigation audit
 - [ ] Screen reader testing
 - [ ] Focus indicator styling
 - [ ] ARIA labels
 
-### 9.3 Performance
+### 10.3 Performance
 - [ ] Large file handling
 - [ ] Lazy loading optimization
 - [ ] Bundle size analysis
 - [ ] Memory leak testing
 
-### 9.4 Cross-platform Testing
+### 10.4 Cross-platform Testing
 - [ ] Windows testing
-- [ ] macOS testing
+- [x] macOS testing
 - [ ] Linux testing
 
-### 9.5 Release
-- [ ] Version 0.1.0 preparation
+### 10.5 Release
+- [x] SemVer versioning (v0.4.1)
 - [ ] VS Code Marketplace submission
 - [ ] Open VSX submission
 - [ ] Release announcement
 
-**Phase 9 Commit Checkpoints:**
-- [ ] `docs: README and documentation`
+**Phase 10 Commit Checkpoints:**
+- [x] `docs: README and documentation`
 - [ ] `a11y: accessibility improvements`
 - [ ] `perf: performance optimizations`
 - [ ] `chore: release preparation`
@@ -526,6 +563,12 @@ This checklist tracks all implementation tasks. Update status as work progresses
 | 2026-02-01 | ... | fix: mermaid newline preservation |
 | 2026-02-01 | ... | feat: keyboard navigation for code blocks/tables |
 | 2026-02-01 | ... | chore: v0.3.0 release |
+| 2026-02-02 | ... | feat: add settings panel with template configuration |
+| 2026-02-02 | ... | feat: improve settings panel and editor title menu |
+| 2026-02-02 | ... | test: add settings panel E2E tests and fix flaky test |
+| 2026-02-02 | ... | docs: update CHANGELOG for v0.4.0 |
+| 2026-02-02 | ... | chore: bump version to 0.4.1 |
+| 2026-02-02 | ... | docs: update README with new configuration options |
 
 ---
 
@@ -603,3 +646,23 @@ This checklist tracks all implementation tasks. Update status as work progresses
   - Created and closed historical phase issues (#7-10)
   - Created #11 (Testing) and #12 (Release to Marketplace)
   - Closed #1 (File Tree Icons) as "won't do" - VS Code doesn't allow overriding built-in language icons
+
+### 2026-02-02
+- **v0.4.0 Release** - Settings Panel
+- Phase 8: Settings Panel (COMPLETE)
+  - Created `src/settings/SettingsPanel.ts` with Cursor-style UI
+  - Card-based sections: Editor, Templates, Kanban, Support
+  - New settings: editorFontSize, kanbanDefaultColumns, kanbanShowThumbnails, kanbanSaveDelay
+  - Menu integration: settings in overflow menu, View Source icon preserved
+  - Buy Me a Coffee support link
+- Phase 9: Testing Infrastructure (COMPLETE)
+  - 22 new tests for Settings Panel
+  - Created settings-harness.html for E2E testing
+  - Fixed flaky "Shift+Tab outdents list item" test
+  - Total: 192 passing tests (194 total, 2 skipped)
+- GitHub Issues
+  - Closed #5 (Improve extension settings)
+  - Updated #11 (Testing) with current test coverage
+- **v0.4.1 Release** - Testing & Documentation
+  - README updated with new configuration options
+  - CHANGELOG updated

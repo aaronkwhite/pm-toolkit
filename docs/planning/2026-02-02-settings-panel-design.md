@@ -1,105 +1,113 @@
 # Settings Panel Design
 
-**Issue:** #5 - Improve extension settings
+**Issue:** #5 - Improve extension settings (COMPLETED)
 **Date:** 2026-02-02
+**Released:** v0.4.0
 
 ## Overview
 
-Create a dedicated settings panel for PM Toolkit with a simple, single-page UI. No sidebar needed given the current scope of settings.
+Dedicated settings panel for PM Toolkit with organized sections for Editor, Templates, Kanban, and Support.
 
 ## Access Points
 
 | Location | Trigger | Details |
 |----------|---------|---------|
-| Command Palette | `PM Toolkit: Open Settings` | Always available |
-| Editor title bar | Gear icon (`$(gear)`) | When PM Toolkit editor is active |
+| Command Palette | `PM Toolkit: PM Toolkit Settings` | Always available |
+| Editor overflow menu | `...` → "PM Toolkit Settings" | When PM Toolkit editor is active |
+| Editor title bar | View Source icon | Separate from settings (unchanged) |
 
-The gear icon appears in the `navigation` group, to the right of the existing "View Source" icon.
+**Note:** VS Code's `editor/title/run` menu only shows a single icon when one command is registered. With multiple commands, it shows a dropdown with run icon. To keep View Source as a visible icon, settings was moved to the overflow menu via `editor/title` with a different group.
 
 ## Panel Layout
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │  PM Toolkit                                         │
-│  Version 0.3.0                                      │
-│  WYSIWYG markdown, kanban boards, and file viewers  │
-├─────────────────────────────────────────────────────┤
+│  Notion-like editing in Cursor/VS Code — markdown,  │
+│  kanban, and diagrams in one extension.             │
 │                                                     │
-│  TEMPLATES                                          │
+│  Editor                                             │
+│  ┌─────────────────────────────────────────────────┐│
+│  │ Font Size                              [14] px  ││
+│  │ Font size for the markdown editor and kanban    ││
+│  └─────────────────────────────────────────────────┘│
+│                                                     │
+│  Templates                                          │
+│  ┌─────────────────────────────────────────────────┐│
+│  │ Template Folder                                 ││
+│  │ Not set                            [Browse]     ││
+│  │─────────────────────────────────────────────────││
+│  │ Watch for Changes                      [●───]   ││
+│  │ Auto-reload templates when files change         ││
+│  └─────────────────────────────────────────────────┘│
+│                                                     │
+│  Kanban                                             │
+│  ┌─────────────────────────────────────────────────┐│
+│  │ Default Columns                                 ││
+│  │ [Backlog, In Progress, Done            ]        ││
+│  │─────────────────────────────────────────────────││
+│  │ Show Thumbnails                        [●───]   ││
+│  │─────────────────────────────────────────────────││
+│  │ Save Delay                            [150] ms  ││
+│  │ Delay before saving changes to disk             ││
+│  └─────────────────────────────────────────────────┘│
+│                                                     │
+│  Support the Project                                │
+│  ┌─────────────────────────────────────────────────┐│
+│  │ If PM Toolkit saves you time, consider buying   ││
+│  │ me a coffee...                                  ││
+│  │ [Buy Me A Coffee button]                        ││
+│  └─────────────────────────────────────────────────┘│
+│                                                     │
 │  ─────────────────────────────────────────────────  │
-│  Template Folder                                    │
-│  [/path/to/templates                    ] [Browse]  │
-│                                                     │
-│  ☑ Watch for changes                               │
-│    Auto-reload templates when folder changes        │
-│                                                     │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│  SUPPORT THE PROJECT                                │
-│  ─────────────────────────────────────────────────  │
-│  If PM Toolkit saves you time, consider buying me   │
-│  a coffee. Your support helps keep this project     │
-│  maintained and free for everyone.                  │
-│                                                     │
-│  [Buy Me a Coffee button/image]                     │
-│                                                     │
+│  PM Toolkit v0.4.1                                  │
 └─────────────────────────────────────────────────────┘
 ```
 
-## Current Settings
+## Settings
 
-| Setting | Type | Default |
-|---------|------|---------|
-| `pmtoolkit.templateFolder` | string | `""` |
-| `pmtoolkit.templateWatchEnabled` | boolean | `true` |
+| Setting | Type | Default | Range |
+|---------|------|---------|-------|
+| `pmtoolkit.editorFontSize` | number | 14 | 10-24 |
+| `pmtoolkit.templateFolder` | string | `""` | — |
+| `pmtoolkit.templateWatchEnabled` | boolean | `true` | — |
+| `pmtoolkit.kanbanDefaultColumns` | string | `"Backlog, In Progress, Done"` | — |
+| `pmtoolkit.kanbanShowThumbnails` | boolean | `true` | — |
+| `pmtoolkit.kanbanSaveDelay` | number | 150 | 50-2000 |
 
 ## Implementation
 
-### Files to Create/Modify
+### Files
 
-1. **`src/settings/SettingsPanel.ts`** (new)
-   - WebviewPanel management
-   - HTML generation
-   - Message handling for settings updates
-
-2. **`package.json`**
-   - Add `pmtoolkit.openSettings` command
-   - Add editor/title menu entry with gear icon
-
-3. **`src/extension.ts`**
-   - Register settings command
-   - Import SettingsPanel
+| File | Purpose |
+|------|---------|
+| `src/settings/SettingsPanel.ts` | WebviewPanel with inline HTML/CSS/JS |
+| `package.json` | Commands, menu contributions, configuration schema |
+| `src/extension.ts` | Command registration |
 
 ### Webview Communication
 
 ```typescript
-// Extension → Webview: Send current settings
-panel.webview.postMessage({
-  type: 'init',
-  settings: {
-    templateFolder: config.get('templateFolder'),
-    templateWatchEnabled: config.get('templateWatchEnabled')
-  },
-  version: extension.packageJSON.version
-});
-
-// Webview → Extension: Update setting
-// { type: 'updateSetting', key: 'templateFolder', value: '/path' }
-// { type: 'browseFolder' }
+// Webview → Extension
+{ type: 'browseFolder' }
+{ type: 'updateSetting', key: 'editorFontSize', value: 16 }
+{ type: 'openExternal', url: 'https://buymeacoffee.com/...' }
 ```
 
 ### Styling
 
-- Match VS Code theme (light/dark)
-- Use VS Code CSS variables for colors
-- Lucide icons for visual elements inside webview
-- Simple, clean layout without unnecessary decoration
+- Matches Cursor's settings UI aesthetic
+- Card-based sections with rounded corners
+- Green toggle switches (matches Cursor style)
+- Uses VS Code CSS variables for theme support
+- Input validation prevents out-of-range values
 
-## Future Extensibility
+## Testing
 
-The single-page layout can accommodate additional sections:
-- Kanban defaults (default columns, thumbnail size)
-- Mermaid settings (default view mode)
-- Granola sync (when implemented)
+22 E2E tests in `tests/e2e/settings-panel.spec.ts`:
+- Layout and content display
+- All input controls and toggles
+- Message passing to extension
+- Input validation
 
-If settings grow significantly, a sidebar navigation can be added later.
+Test harness: `tests/harness/settings-harness.html`
