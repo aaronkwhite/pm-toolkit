@@ -7,7 +7,6 @@ export class KanbanEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = 'pmtoolkit.kanbanEditor';
 
   private updateTimeout: NodeJS.Timeout | undefined;
-  private static readonly DEBOUNCE_MS = 150;
 
   // Track active webview panels for commands
   private static activeWebviewPanels = new Map<string, vscode.WebviewPanel>();
@@ -235,9 +234,11 @@ export class KanbanEditorProvider implements vscode.CustomTextEditorProvider {
     if (this.updateTimeout) {
       clearTimeout(this.updateTimeout);
     }
+    const config = vscode.workspace.getConfiguration('pmtoolkit');
+    const delay = config.get<number>('kanbanSaveDelay', 150);
     this.updateTimeout = setTimeout(async () => {
       await this.updateDocument(document, content);
-    }, KanbanEditorProvider.DEBOUNCE_MS);
+    }, delay);
   }
 
   private async updateDocument(

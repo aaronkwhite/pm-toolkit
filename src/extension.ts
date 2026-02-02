@@ -90,16 +90,19 @@ export function activate(context: vscode.ExtensionContext) {
         `${fileName}.kanban`
       );
 
-      const defaultContent = `## Backlog
+      // Get default columns from settings
+      const config = vscode.workspace.getConfiguration('pmtoolkit');
+      const columnsStr = config.get<string>('kanbanDefaultColumns', 'Backlog, In Progress, Done');
+      const columns = columnsStr.split(',').map(c => c.trim()).filter(c => c);
 
-- [ ] First task
-- [ ] Second task
-
-## In Progress
-
-## Done
-
-`;
+      // Build content with columns - first column gets sample tasks
+      let defaultContent = '';
+      columns.forEach((col, i) => {
+        defaultContent += `## ${col}\n\n`;
+        if (i === 0) {
+          defaultContent += `- [ ] First task\n- [ ] Second task\n\n`;
+        }
+      });
 
       await vscode.workspace.fs.writeFile(
         fileUri,
