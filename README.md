@@ -1,17 +1,19 @@
 # PM Toolkit
 
-A Cursor extension that brings visual editing tools to your workflow. Write documentation, manage tasks, and view files—all without leaving your editor.
-
 [![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](https://github.com/aaronkwhite/pm-toolkit/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/aaronkwhite/pm-toolkit/blob/main/LICENSE)
 
-## Support the project
+A Cursor extension that brings visual editing tools to your workflow. Write documentation, manage tasks, and view files—all without leaving your editor.
+
+### Support the project
 
 If PM Toolkit saves you time, consider buying me a coffee. Your support helps keep this project maintained and free for everyone.
 
 <a href="https://buymeacoffee.com/aaronkwhite">
   <img src="https://github.com/user-attachments/assets/fa213bf0-9dc1-4c94-b5d2-3e0612ccb37d" width="128" alt="Buy A-A-Ron a Coffee" />
 </a>
+
+---
 
 ## 🚀 Features
 
