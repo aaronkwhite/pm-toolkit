@@ -2,7 +2,7 @@
   "name": "pm-toolkit",
   "displayName": "PM Toolkit",
   "description": "WYSIWYG Markdown Editor and Kanban Boards for Cursor/VS Code",
-  "version": "2026.02.0",
+  "version": "0.3.0",
   "publisher": "pm-toolkit",
   "license": "MIT",
   "engines": {
@@ -133,7 +133,12 @@
         "command": "pmtoolkit.viewSource",
         "title": "View Source",
         "category": "PM Toolkit",
-        "icon": "$(file-code)"
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "pmtoolkit.setTemplateFolder",
+        "title": "Set Template Folder",
+        "category": "PM Toolkit"
       }
     ],
     "menus": {
@@ -171,6 +176,11 @@
           "type": "string",
           "default": "",
           "description": "Path to folder containing template markdown files"
+        },
+        "pmtoolkit.templateWatchEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Watch template folder for changes and auto-reload"
         }
       }
     }

@@ -14,21 +14,19 @@ PM Toolkit is a Cursor extension providing:
 
 ## Versioning
 
-This project uses **CalVer** (Calendar Versioning): `YYYY.MM.MICRO`
+This project uses **SemVer** (Semantic Versioning): `MAJOR.MINOR.PATCH`
 
-- `YYYY` - Four-digit year
-- `MM` - Two-digit month (zero-padded)
-- `MICRO` - Patch number within the month (starts at 0)
-
-**Examples**: `2026.02.0`, `2026.02.1`, `2026.03.0`
+- `MAJOR` - Breaking changes
+- `MINOR` - New features (backwards compatible)
+- `PATCH` - Bug fixes (backwards compatible)
 
 ### When to Update Version
 
 | Change Type | Action |
 |-------------|--------|
-| New feature | Bump MICRO, or wait for next month |
-| Bug fix | Bump MICRO |
-| New month + release | Reset to `YYYY.MM.0` |
+| Breaking change | Bump MAJOR |
+| New feature | Bump MINOR |
+| Bug fix | Bump PATCH |
 | Documentation only | No version change needed |
 
 **Version lives in**: `package.json` → `"version"`

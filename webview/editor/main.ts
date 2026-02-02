@@ -15,8 +15,9 @@ import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
 import { ImageNode } from './extensions/ImageNode';
+import { MermaidNode } from './extensions/MermaidNode';
 import { Markdown } from 'tiptap-markdown';
-import { SlashCommand } from './extensions/SlashCommand';
+import { SlashCommand, setTemplates } from './extensions/SlashCommand';
 import { KeyboardNavigation } from './extensions/KeyboardNavigation';
 import { CustomParagraph } from './extensions/CustomParagraph';
 
@@ -136,6 +137,7 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
         inline: true,
         allowBase64: true,
       }),
+      MermaidNode,
       Markdown.configure({
         html: true,
         tightLists: true,
@@ -229,6 +231,28 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
 }
 
 /**
+ * Preprocess markdown to protect mermaid code blocks from newline stripping.
+ * Extracts mermaid blocks and replaces them with placeholders, storing the
+ * original content in window.__mermaidBlocks for the MermaidNode plugin to retrieve.
+ */
+function preprocessMermaidBlocks(markdown: string): string {
+  const mermaidBlocks: string[] = [];
+  (window as any).__mermaidBlocks = mermaidBlocks;
+
+  // Match ```mermaid ... ``` blocks (with content preserved)
+  const processed = markdown.replace(
+    /```mermaid\n([\s\S]*?)```/g,
+    (match, content) => {
+      const index = mermaidBlocks.length;
+      mermaidBlocks.push(content.trimEnd());
+      return '```mermaid\n___MERMAID_BLOCK_' + index + '___\n```';
+    }
+  );
+
+  return processed;
+}
+
+/**
  * Set editor content from markdown
  * @param markdown - The markdown content to set
  * @param addToHistory - Whether to add this change to undo history (default: false for external updates)
@@ -242,9 +266,9 @@ function setContent(markdown: string, addToHistory: boolean = false) {
   const { from, to } = editor.state.selection;
   const docSize = editor.state.doc.content.size;
 
-  // Keep &nbsp; lines as-is during parsing - they'll become paragraphs with &nbsp;
-  // The CustomParagraph extension handles serialization of empty paragraphs
-  const processedMarkdown = markdown;
+  // Preprocess mermaid blocks to preserve newlines
+  // The MermaidNode plugin will resolve the placeholders
+  const processedMarkdown = preprocessMermaidBlocks(markdown);
 
   try {
     const parsed = editor.storage.markdown.parser.parse(processedMarkdown);
@@ -308,6 +332,9 @@ function init() {
 
   // Signal ready to extension
   vscode.postMessage({ type: 'ready' });
+
+  // Request templates
+  vscode.postMessage({ type: 'requestTemplates' });
 }
 
 // Handle messages from extension
@@ -337,8 +364,10 @@ window.addEventListener('message', (event) => {
       break;
 
     case 'templates':
-      console.log('Received templates:', message.payload.templates);
-      // TODO: Update slash command menu with templates
+      // Update templates in the slash command menu
+      if (message.payload?.templates) {
+        setTemplates(message.payload.templates);
+      }
       break;
 
     case 'clipboardData':

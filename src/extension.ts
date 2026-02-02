@@ -7,9 +7,15 @@ import {
   ExcelViewerProvider,
   CSVViewerProvider,
 } from './viewers';
+import { TemplateManager } from './templates/TemplateManager';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('PM Toolkit is now active');
+
+  // Initialize the template manager
+  const templateManager = TemplateManager.getInstance();
+  templateManager.initialize();
+  context.subscriptions.push({ dispose: () => templateManager.dispose() });
 
   // Auto-save dirty kanban files on window focus to prevent Cursor diff state issues
   context.subscriptions.push(
@@ -46,7 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
   })();
 
   // Register custom editor providers
-  context.subscriptions.push(MarkdownEditorProvider.register(context));
+  context.subscriptions.push(MarkdownEditorProvider.register(context, templateManager));
   context.subscriptions.push(KanbanEditorProvider.register(context));
 
   // Register viewer providers
@@ -145,6 +151,24 @@ export function activate(context: vscode.ExtensionContext) {
 
       // Open the file with the default text editor
       await vscode.commands.executeCommand('vscode.openWith', input.uri, 'default');
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('pmtoolkit.setTemplateFolder', async () => {
+      const folder = await vscode.window.showOpenDialog({
+        canSelectFolders: true,
+        canSelectFiles: false,
+        canSelectMany: false,
+        title: 'Select Template Folder',
+        openLabel: 'Select Folder'
+      });
+
+      if (folder && folder[0]) {
+        const config = vscode.workspace.getConfiguration('pmtoolkit');
+        await config.update('templateFolder', folder[0].fsPath, vscode.ConfigurationTarget.Workspace);
+        vscode.window.showInformationMessage(`Template folder set to: ${folder[0].fsPath}`);
+      }
     })
   );
 }

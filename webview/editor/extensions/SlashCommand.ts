@@ -11,6 +11,17 @@ import { Editor, Range } from '@tiptap/core';
 import { TableSizePicker } from '../components/TableSizePicker';
 
 /**
+ * Template interface (matches src/types/index.ts)
+ */
+export interface Template {
+  id: string;
+  name: string;
+  description: string;
+  icon?: string;
+  content: string;
+}
+
+/**
  * Command item definition
  */
 export interface SlashCommandItem {
@@ -18,7 +29,79 @@ export interface SlashCommandItem {
   description: string;
   icon: string;
   searchTerms: string[];
+  category?: 'blocks' | 'templates';
   command: (params: { editor: Editor; range: Range }) => void;
+}
+
+/**
+ * Variable substitution for templates
+ */
+function substituteVariables(content: string): string {
+  const now = new Date();
+  const pad = (n: number) => n.toString().padStart(2, '0');
+
+  const year = now.getFullYear().toString();
+  const month = pad(now.getMonth() + 1);
+  const day = pad(now.getDate());
+  const hours = pad(now.getHours());
+  const minutes = pad(now.getMinutes());
+  const seconds = pad(now.getSeconds());
+
+  return content
+    .split('{{date}}').join(`${year}-${month}-${day}`)
+    .split('{{time}}').join(`${hours}:${minutes}:${seconds}`)
+    .split('{{datetime}}').join(`${year}-${month}-${day} ${hours}:${minutes}:${seconds}`)
+    .split('{{year}}').join(year)
+    .split('{{month}}').join(month)
+    .split('{{day}}').join(day);
+}
+
+/**
+ * Global templates storage - updated by webview message handler
+ */
+let loadedTemplates: Template[] = [];
+
+/**
+ * Set templates (called from main.ts when templates are received)
+ */
+export function setTemplates(templates: Template[]): void {
+  loadedTemplates = templates;
+}
+
+/**
+ * Get current templates
+ */
+export function getTemplates(): Template[] {
+  return loadedTemplates;
+}
+
+/**
+ * Convert templates to slash command items
+ */
+function templateToCommandItem(template: Template): SlashCommandItem {
+  return {
+    title: template.name,
+    description: template.description || 'Insert template',
+    icon: template.icon || '📄',
+    searchTerms: [
+      template.name.toLowerCase(),
+      template.id.toLowerCase(),
+      'template',
+    ],
+    category: 'templates',
+    command: ({ editor, range }) => {
+      // Substitute variables and insert content
+      const content = substituteVariables(template.content);
+
+      // Delete the slash command and insert template content as markdown
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent(content)
+        .run();
+    },
+  };
 }
 
 /**
@@ -244,12 +327,46 @@ class SlashCommandMenu {
       return;
     }
 
-    this.element.innerHTML = this.items
+    // Group items by category
+    const blockItems = this.items.filter((item) => item.category !== 'templates');
+    const templateItems = this.items.filter((item) => item.category === 'templates');
+
+    let html = '';
+    let globalIndex = 0;
+
+    // Render block items
+    if (blockItems.length > 0) {
+      html += this.renderItems(blockItems, globalIndex);
+      globalIndex += blockItems.length;
+    }
+
+    // Render template items with category header
+    if (templateItems.length > 0) {
+      if (blockItems.length > 0) {
+        html += '<div class="slash-command-separator"></div>';
+      }
+      html += '<div class="slash-command-category">Templates</div>';
+      html += this.renderItems(templateItems, globalIndex);
+    }
+
+    this.element.innerHTML = html;
+
+    // Add click handlers
+    this.element.querySelectorAll('.slash-command-item').forEach((el) => {
+      el.addEventListener('click', () => {
+        const index = parseInt(el.getAttribute('data-index') || '0', 10);
+        this.selectItem(index);
+      });
+    });
+  }
+
+  private renderItems(items: SlashCommandItem[], startIndex: number): string {
+    return items
       .map(
-        (item, index) => `
+        (item, i) => `
         <button
-          class="slash-command-item ${index === this.selectedIndex ? 'is-selected' : ''}"
-          data-index="${index}"
+          class="slash-command-item ${startIndex + i === this.selectedIndex ? 'is-selected' : ''}"
+          data-index="${startIndex + i}"
         >
           <span class="slash-command-icon">${item.icon}</span>
           <div class="slash-command-content">
@@ -260,14 +377,6 @@ class SlashCommandMenu {
       `
       )
       .join('');
-
-    // Add click handlers
-    this.element.querySelectorAll('.slash-command-item').forEach((el) => {
-      el.addEventListener('click', () => {
-        const index = parseInt(el.getAttribute('data-index') || '0', 10);
-        this.selectItem(index);
-      });
-    });
   }
 
   private updatePosition(clientRect: (() => DOMRect | null) | null) {
@@ -366,12 +475,27 @@ export const SlashCommand = Extension.create({
         pluginKey: SlashCommandPluginKey,
         items: ({ query }: { query: string }) => {
           const search = query.toLowerCase();
-          return defaultCommands.filter((item) => {
+
+          // Filter default commands
+          const filteredCommands = defaultCommands.filter((item) => {
             return (
               item.title.toLowerCase().includes(search) ||
               item.searchTerms.some((term) => term.includes(search))
             );
           });
+
+          // Filter templates
+          const templateCommands = loadedTemplates
+            .map(templateToCommandItem)
+            .filter((item) => {
+              return (
+                item.title.toLowerCase().includes(search) ||
+                item.searchTerms.some((term) => term.includes(search))
+              );
+            });
+
+          // Return blocks first, then templates
+          return [...filteredCommands, ...templateCommands];
         },
         render: () => {
           let menu: SlashCommandMenu | null = null;

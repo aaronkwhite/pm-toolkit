@@ -83,6 +83,116 @@ function isInTable(editor: any): boolean {
 }
 
 /**
+ * Check if cursor is inside a code block
+ */
+function isInCodeBlock(editor: any): { inCodeBlock: boolean; depth: number } {
+  const { state } = editor;
+  const { selection } = state;
+  const { $from } = selection;
+
+  for (let depth = $from.depth; depth > 0; depth--) {
+    if ($from.node(depth).type.name === 'codeBlock') {
+      return { inCodeBlock: true, depth };
+    }
+  }
+  return { inCodeBlock: false, depth: -1 };
+}
+
+/**
+ * Check if cursor is at the very start of a code block
+ */
+function isAtCodeBlockStart(editor: any): boolean {
+  const { state } = editor;
+  const { selection } = state;
+  const { $from } = selection;
+
+  const { inCodeBlock, depth } = isInCodeBlock(editor);
+  if (!inCodeBlock) return false;
+
+  // Get the start position of the code block content
+  const codeBlockStart = $from.start(depth);
+  return $from.pos === codeBlockStart;
+}
+
+/**
+ * Check if cursor is at the very end of a code block (or on the last line)
+ */
+function isAtCodeBlockEnd(editor: any): boolean {
+  const { state } = editor;
+  const { selection } = state;
+  const { $from } = selection;
+
+  const { inCodeBlock, depth } = isInCodeBlock(editor);
+  if (!inCodeBlock) return false;
+
+  // Get the end position of the code block content
+  const codeBlockEnd = $from.end(depth);
+
+  // Check if at exact end, or if there's no newline after cursor position
+  // (i.e., cursor is on the last line)
+  const codeBlock = $from.node(depth);
+  const textContent = codeBlock.textContent;
+  const posInBlock = $from.pos - $from.start(depth);
+  const textAfterCursor = textContent.slice(posInBlock);
+
+  // At end if no text after cursor, or only whitespace with no newlines
+  return $from.pos === codeBlockEnd || !textAfterCursor.includes('\n');
+}
+
+/**
+ * Exit code block and move cursor above it
+ */
+function exitCodeBlockAbove(editor: any): boolean {
+  const { state } = editor;
+  const { selection } = state;
+  const { $from } = selection;
+
+  const { inCodeBlock, depth } = isInCodeBlock(editor);
+  if (!inCodeBlock) return false;
+
+  // Get position before the code block
+  const codeBlockBefore = $from.before(depth);
+
+  // Check if there's a node before the code block
+  if (codeBlockBefore <= 0) {
+    // At the start of document, insert paragraph before
+    editor.chain()
+      .insertContentAt(codeBlockBefore, { type: 'paragraph' })
+      .setTextSelection(codeBlockBefore + 1)
+      .run();
+  } else {
+    // Move cursor to the position before code block
+    editor.commands.setTextSelection(codeBlockBefore);
+  }
+
+  return true;
+}
+
+/**
+ * Exit code block and move cursor below it
+ * Always inserts a new paragraph right after the code block
+ */
+function exitCodeBlockBelow(editor: any): boolean {
+  const { state } = editor;
+  const { selection } = state;
+  const { $from } = selection;
+
+  const { inCodeBlock, depth } = isInCodeBlock(editor);
+  if (!inCodeBlock) return false;
+
+  // Get position after the code block
+  const codeBlockAfter = $from.after(depth);
+
+  // Always insert a paragraph right after the code block
+  editor.chain()
+    .insertContentAt(codeBlockAfter, { type: 'paragraph' })
+    .setTextSelection(codeBlockAfter + 1)
+    .run();
+
+  return true;
+}
+
+/**
  * Check if cursor is in the last cell of a table
  */
 function isInLastTableCell(editor: any): boolean {
@@ -160,6 +270,37 @@ function exitTableToNextParagraph(editor: any): boolean {
     // Move cursor to the existing paragraph
     editor.commands.setTextSelection(tableEnd + 1);
   }
+
+  return true;
+}
+
+/**
+ * Exit table and always insert a new paragraph below it
+ */
+function exitTableInsertBelow(editor: any): boolean {
+  const { state } = editor;
+  const { selection } = state;
+  const { $from } = selection;
+
+  // Find the table
+  let tableDepth = -1;
+  for (let depth = $from.depth; depth > 0; depth--) {
+    if ($from.node(depth).type.name === 'table') {
+      tableDepth = depth;
+      break;
+    }
+  }
+
+  if (tableDepth === -1) return false;
+
+  // Get position after the table
+  const tableEnd = $from.after(tableDepth);
+
+  // Always insert a paragraph right after the table
+  editor.chain()
+    .insertContentAt(tableEnd, { type: 'paragraph' })
+    .setTextSelection(tableEnd + 1)
+    .run();
 
   return true;
 }
@@ -289,6 +430,33 @@ export const KeyboardNavigation = Extension.create({
           return editor.commands.goToPreviousCell();
         }
         // Return false to let Tiptap handle default behavior
+        return false;
+      },
+
+      // ArrowUp at start of code block - exit above
+      ArrowUp: ({ editor }) => {
+        if (isInCodeBlock(editor).inCodeBlock && isAtCodeBlockStart(editor)) {
+          return exitCodeBlockAbove(editor);
+        }
+        return false;
+      },
+
+      // ArrowDown at end of code block - exit below
+      ArrowDown: ({ editor }) => {
+        if (isInCodeBlock(editor).inCodeBlock && isAtCodeBlockEnd(editor)) {
+          return exitCodeBlockBelow(editor);
+        }
+        return false;
+      },
+
+      // Cmd/Ctrl+Enter - exit code block or table and insert paragraph below
+      'Mod-Enter': ({ editor }) => {
+        if (isInCodeBlock(editor).inCodeBlock) {
+          return exitCodeBlockBelow(editor);
+        }
+        if (isInTable(editor)) {
+          return exitTableInsertBelow(editor);
+        }
         return false;
       },
     };

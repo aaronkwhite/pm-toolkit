@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { HTMLBuilder } from './HTMLBuilder';
 import { ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../types';
+import { TemplateManager } from '../templates/TemplateManager';
 
 /**
  * Convert relative image paths in markdown to webview URIs
@@ -55,10 +56,16 @@ function convertImagePathsToWebview(
 export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = 'pmtoolkit.markdownEditor';
 
-  constructor(private readonly context: vscode.ExtensionContext) {}
+  constructor(
+    private readonly context: vscode.ExtensionContext,
+    private readonly templateManager: TemplateManager
+  ) {}
 
-  public static register(context: vscode.ExtensionContext): vscode.Disposable {
-    const provider = new MarkdownEditorProvider(context);
+  public static register(
+    context: vscode.ExtensionContext,
+    templateManager: TemplateManager
+  ): vscode.Disposable {
+    const provider = new MarkdownEditorProvider(context, templateManager);
     return vscode.window.registerCustomEditorProvider(
       MarkdownEditorProvider.viewType,
       provider,
@@ -175,7 +182,13 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
             break;
 
           case 'requestTemplates':
-            // TODO: Implement template loading
+            // Send current templates to webview
+            const templates = this.templateManager.getTemplates();
+            const templatesMessage: ExtensionToWebviewMessage = {
+              type: 'templates',
+              payload: { templates },
+            };
+            webviewPanel.webview.postMessage(templatesMessage);
             break;
 
           case 'requestClipboard':
@@ -234,10 +247,22 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
       }
     );
 
+    // Listen for template changes and notify webview
+    const templateChangeSubscription = this.templateManager.onTemplatesChange(
+      (templates) => {
+        const templatesMessage: ExtensionToWebviewMessage = {
+          type: 'templates',
+          payload: { templates },
+        };
+        webviewPanel.webview.postMessage(templatesMessage);
+      }
+    );
+
     // Cleanup on dispose
     webviewPanel.onDidDispose(() => {
       messageHandler.dispose();
       changeDocumentSubscription.dispose();
+      templateChangeSubscription.dispose();
     });
   }
 
