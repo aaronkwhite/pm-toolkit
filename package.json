@@ -3,9 +3,13 @@
   "displayName": "PM Toolkit",
   "description": "WYSIWYG Markdown Editor and Kanban Boards for Cursor/VS Code",
   "version": "0.4.1",
-  "publisher": "pm-toolkit",
+  "publisher": "aaronkwhite",
   "license": "MIT",
   "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aaronkwhite/pm-toolkit"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },

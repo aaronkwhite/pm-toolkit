@@ -1,0 +1,37 @@
+# Source files (compiled to dist/)
+src/**
+webview/**
+tsconfig.json
+tsconfig.webview.json
+esbuild.js
+
+# Development files
+.vscode/**
+.idea/**
+.claude/**
+.git/**
+.gitignore
+.cursorrules
+
+# Test files
+tests/**
+test-files/**
+test-results/**
+playwright-report/**
+playwright.config.ts
+
+# Documentation (not needed in extension)
+docs/**
+AGENTS.md
+CLAUDE.md
+scripts/**
+
+# Node modules (bundled into dist/)
+node_modules/**
+
+# Package files
+*.vsix
+
+# Misc
+.DS_Store
+*.log
