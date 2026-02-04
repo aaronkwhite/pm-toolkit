@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/aaronkwhite/pm-toolkit/blob/main/LICENSE)
 [![Changelog](https://img.shields.io/badge/changelog-view-blue)](https://github.com/aaronkwhite/pm-toolkit/blob/main/CHANGELOG.md)
 
-**A rich editing experience for Cursor.** WYSIWYG markdown, kanban boards, and file viewers—built for product managers and teams who work alongside AI.
+**Obsidian-like editing experience for Cursor.** WYSIWYG markdown, kanban boards, and file viewers—built for product managers and teams who work alongside AI.
 
 Draft specs with Cursor's agent, then polish them visually. Keep planning docs, task boards, and reference files next to your code. Everything stays in plain text—portable, version-controlled, and yours.
 
@@ -20,8 +20,6 @@ If PM Toolkit saves you time, consider buying me a coffee. Your support helps ke
   <img src="https://github.com/user-attachments/assets/fa213bf0-9dc1-4c94-b5d2-3e0612ccb37d" width="128" alt="Buy A-A-Ron a Coffee" />
 </a>
 
----
-
 ## 🚀 Features
 
 ### ✍️ WYSIWYG Markdown Editor
@@ -30,7 +28,8 @@ Edit markdown files visually. What you see is what you get—no more switching b
 
 - **Slash commands** — Type `/` to insert headings, lists, tables, code blocks, and more
 - **Templates** — Create reusable templates and insert them via `/` commands
-- **Rich formatting** — Bold, italic, links, and images with familiar keyboard shortcuts
+- **Rich formatting** — Bold, italic, links with familiar keyboard shortcuts
+- **Image support** — Paste images from clipboard or drag and drop into your document
 - **Tables** — Create and edit tables visually with Tab/Shift+Tab navigation
 - **Task lists** — Interactive checkboxes that save to standard markdown
 - **Mermaid diagrams** — Flowcharts, sequence diagrams, and more render inline
@@ -201,6 +200,12 @@ npm run test:e2e:ui
 - **Questions** — [Start a discussion](https://github.com/aaronkwhite/pm-toolkit/discussions)
 
 ## License
+
+**PM Toolkit is Free Forever!** No read-only modes, no purchasing a license, pure unadulterated rich editing in your IDE.
+
+- No trial period
+- No yearly fee
+- No read-only mode
 
 MIT — see [LICENSE](LICENSE) for details.
 

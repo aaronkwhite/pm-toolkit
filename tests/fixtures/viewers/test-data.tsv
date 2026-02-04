@@ -1,5 +1,13 @@
-Product	Price	Quantity	Total
-Widget A	19.99	5	99.95
-Widget B	24.99	3	74.97
-Gadget X	49.99	2	99.98
-Gadget Y	29.99	10	299.90
+Project Name	Lead	Department	Status	Budget	Start Date	End Date
+Lot 48 Development	Leslie Knope	Parks	In Progress	150000	2024-01-15	2024-12-31
+Harvest Festival	Leslie Knope	Parks	Completed	75000	2024-06-01	2024-10-15
+Unity Concert	Andy Dwyer	Parks	Planning	25000	2024-08-01	2024-09-30
+Pawnee Commons	Leslie Knope	Parks	In Progress	500000	2024-03-01	2025-06-30
+Ramsett Park Renovation	Ron Swanson	Parks	On Hold	45000	2024-04-15	2024-11-30
+Li'l Sebastian Memorial	Ben Wyatt	Parks	Completed	12000	2024-02-01	2024-05-15
+Sweetums Sponsorship Deal	Tom Haverford	Admin	Negotiating	100000	2024-07-01	2024-12-31
+Pawnee Goddess Program	Leslie Knope	Parks	Active	8000	2024-01-01	2024-12-31
+Snake Hole Lounge Permits	April Ludgate	Permits	Completed	500	2024-05-01	2024-05-15
+JJ's Diner Landmark Status	Leslie Knope	Historic	In Progress	2500	2024-06-15	2024-12-01
+Rec Center Basketball League	Chris Traeger	Recreation	Active	15000	2024-09-01	2025-03-31
+Wamapoke Trail Restoration	Ron Swanson	Parks	Planning	35000	2024-10-01	2025-04-30

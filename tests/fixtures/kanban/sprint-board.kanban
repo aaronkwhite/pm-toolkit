@@ -1,0 +1,36 @@
+# Q4 Sprint: Digital Pawnee
+
+## Backlog
+- [ ] Design permit system database schema
+  Ben needs to review the entity relationships before we proceed
+- [ ] Create API documentation
+- [ ] Set up staging environment
+- [ ] Write user acceptance test cases
+- [ ] Accessibility audit for web portal
+- [ ] Load testing plan
+
+## In Progress
+- [ ] Build permit submission form
+  Working on validation logic. Need to handle the 12 different permit types.
+- [ ] Implement file upload for documents
+  Using S3. Tom wants to add filters to the photos.
+- [ ] Design notification email templates
+  Leslie has reviewed 4 drafts so far. Getting close.
+
+## Review
+- [ ] API authentication middleware
+  Code complete. April is reviewing.
+- [ ] Permit status tracking endpoint
+  Needs security review from Ben
+- [ ] Mobile-responsive CSS updates
+  Donna tested on her Mercedes tablet. Looks good.
+
+## Done
+- [x] Set up project repository
+- [x] Define permit data model
+- [x] Create database migrations
+- [x] Build API gateway infrastructure
+- [x] Design system wireframes
+  Leslie approved after only 3 rounds of revisions!
+- [x] Stakeholder kickoff meeting
+- [x] Security requirements document
