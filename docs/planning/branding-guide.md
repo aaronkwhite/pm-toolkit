@@ -207,6 +207,88 @@ The kanban file icons (`icons/kanban-light.svg`, `icons/kanban-dark.svg`) use a 
 
 ---
 
+## AI Image Generation Prompts
+
+### Logo Prompt
+
+```
+Design a minimal, modern logo for "PM Toolkit" - a visual editing extension for code editors.
+
+Style: Clean, geometric, professional. Similar aesthetic to Notion, Linear, or Figma logos.
+
+Concept: Abstract representation combining a document/page shape with visual blocks or cards, suggesting visual editing and organization. Should feel approachable to non-developers.
+
+Colors: Use calm blue (#4A90D9) as primary. Single color or two-tone maximum.
+
+Requirements:
+- Simple enough to work at 32px
+- No text/wordmark in the icon itself
+- No code symbols (brackets, terminal)
+- No literal tools (wrench, gear)
+- Flat design, no gradients or shadows
+- Square aspect ratio
+
+Output: Vector-style icon on transparent background, suitable for app icon use.
+```
+
+### Extension Icon Prompt
+
+```
+Create an app icon for "PM Toolkit", a VS Code extension for visual markdown editing and kanban boards.
+
+Style: Minimal, geometric, modern productivity tool aesthetic. Think Notion, Linear, Craft.
+
+Visual concept: A stylized document or page with 2-3 abstract rectangular blocks/cards arranged in a layout pattern - suggesting visual organization and WYSIWYG editing. NOT a literal kanban board, but hints at structured content.
+
+Colors:
+- Primary: Calm blue (#4A90D9)
+- Optional accent: Soft green (#5CB85C) or keep monochromatic
+- Background: Solid color or transparent
+
+Technical requirements:
+- 256x256 pixels, PNG format
+- Must be legible at 16x16 (very simple shapes)
+- No fine lines or small details
+- No text
+- Flat design, no gradients
+
+Mood: Professional, approachable, productivity-focused. Should feel welcoming to non-developers while fitting in with developer tool aesthetics.
+```
+
+### Hero Image Prompt
+
+```
+Create a hero image for PM Toolkit - visual editing tools for Cursor/VS Code.
+
+Scene: A clean, modern workspace showing the concept of visual editing within a code editor. Abstract representation, not a literal screenshot.
+
+Elements to suggest (stylized, not literal):
+- A document with formatted content blocks (headings, lists, cards)
+- Kanban-style cards or task organization
+- Clean typography and visual hierarchy
+- Optional: subtle flowchart/diagram element
+
+Style:
+- Modern, minimal illustration style
+- Soft gradients allowed for background
+- Color palette: Blues (#4A90D9), soft greens (#5CB85C), warm accents (#F0AD4E)
+- Light, airy feel - NOT dark/techy
+- Abstract and conceptual, not photorealistic
+
+Composition:
+- Landscape orientation (16:9 or similar)
+- Central focal point with breathing room
+- Works on both light and dark website backgrounds
+
+Mood: Productive, organized, approachable. Should appeal to product managers and non-developers. Conveys "visual tools that simplify your workflow."
+
+Do NOT include: Code syntax, terminal windows, complex UI chrome, dark hacker aesthetics, or overly corporate stock-photo feel.
+
+Output: High resolution (1920x1080 or larger), suitable for website hero section.
+```
+
+---
+
 ## Asset Checklist
 
 ### Required for Launch
