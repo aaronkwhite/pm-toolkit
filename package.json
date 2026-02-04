@@ -5,6 +5,7 @@
   "version": "0.4.1",
   "publisher": "pm-toolkit",
   "license": "MIT",
+  "icon": "images/icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
