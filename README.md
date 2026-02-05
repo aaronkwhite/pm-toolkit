@@ -5,6 +5,8 @@
 [![Changelog](https://img.shields.io/badge/changelog-view-blue)](https://github.com/aaronkwhite/pm-toolkit/blob/main/CHANGELOG.md)
 [![Website](https://img.shields.io/badge/website-getpmtoolkit.netlify.app-4A90D9)](https://getpmtoolkit.netlify.app)
 
+> **Free Forever.** No trial period. No yearly fee. No read-only mode. Just pure, unadulterated rich editing in your IDE.
+
 **Obsidian-like editing experience for Cursor.** WYSIWYG markdown, kanban boards, and file viewers—built for product managers and teams who work alongside AI.
 
 Draft specs with Cursor's agent, then polish them visually. Keep planning docs, task boards, and reference files next to your code. Everything stays in plain text—portable, version-controlled, and yours.
