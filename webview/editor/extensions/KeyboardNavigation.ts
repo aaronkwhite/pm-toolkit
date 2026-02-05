@@ -9,13 +9,33 @@
 
 import { Extension } from '@tiptap/core';
 import { TextSelection } from '@tiptap/pm/state';
+import { CellSelection } from '@tiptap/pm/tables';
 
 /**
- * Check if selection spans a table and delete it if so
+ * Check if selection is a CellSelection and handle column/row deletion.
+ * Also handles selection spanning across a table.
  */
 function deleteSelectionWithTable(editor: any): boolean {
   const { state } = editor;
   const { selection } = state;
+
+  // Handle CellSelection (column/row selection within a table)
+  if (selection instanceof CellSelection) {
+    // Check if entire column(s) selected
+    if (selection.isColSelection()) {
+      editor.commands.deleteColumn();
+      return true;
+    }
+    // Check if entire row(s) selected
+    if (selection.isRowSelection()) {
+      editor.commands.deleteRow();
+      return true;
+    }
+    // Multiple cells selected but not full row/column - delete contents
+    editor.commands.deleteSelection();
+    return true;
+  }
+
   const { $from, $to } = selection;
 
   // Only handle non-empty selections
