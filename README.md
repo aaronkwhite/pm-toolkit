@@ -3,6 +3,7 @@
 [![Latest Release](https://img.shields.io/github/v/release/aaronkwhite/pm-toolkit?label=version)](https://github.com/aaronkwhite/pm-toolkit/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/aaronkwhite/pm-toolkit/blob/main/LICENSE)
 [![Changelog](https://img.shields.io/badge/changelog-view-blue)](https://github.com/aaronkwhite/pm-toolkit/blob/main/CHANGELOG.md)
+[![Website](https://img.shields.io/badge/website-getpmtoolkit.netlify.app-4A90D9)](https://getpmtoolkit.netlify.app)
 
 **Obsidian-like editing experience for Cursor.** WYSIWYG markdown, kanban boards, and file viewers—built for product managers and teams who work alongside AI.
 
@@ -57,6 +58,8 @@ View common file types without leaving your editor:
 - **CSV/TSV** — Sortable tables with auto-detected delimiters
 
 ## Installation
+
+**[Visit the website →](https://getpmtoolkit.netlify.app)**
 
 ### From Cursor Marketplace
 
