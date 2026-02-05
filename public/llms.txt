@@ -15,7 +15,7 @@ PM Toolkit is a free, open-source VS Code/Cursor extension that provides Obsidia
 
 ## Links
 - GitHub: https://github.com/aaronkwhite/pm-toolkit
-- Documentation: https://aaronkwhite.github.io/pm-toolkit/
+- Documentation: https://pmtoolkit.netlify.app/
 
 ## Keywords
 markdown editor, wysiwyg, kanban board, cursor extension, vscode extension, product manager tools, notion alternative

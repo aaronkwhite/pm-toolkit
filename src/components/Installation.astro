@@ -1,0 +1,97 @@
+---
+const steps = [
+  {
+    number: 1,
+    title: 'Open Extensions',
+    description: 'Press Cmd+Shift+X (Mac) or Ctrl+Shift+X (Windows/Linux)',
+  },
+  {
+    number: 2,
+    title: 'Search for "PM Toolkit"',
+    description: 'Find the extension by Aaron White',
+  },
+  {
+    number: 3,
+    title: 'Click Install',
+    description: 'That\'s it! Open any .md, .pdf, or .kanban file to get started',
+  },
+];
+
+const marketplaces = [
+  {
+    name: 'Open VSX (Cursor)',
+    href: 'https://open-vsx.org/extension/aaronkwhite/pm-toolkit',
+    description: 'For Cursor users',
+    badge: 'Recommended',
+  },
+  {
+    name: 'VS Code Marketplace',
+    href: 'https://marketplace.visualstudio.com/items?itemName=aaronkwhite.pm-toolkit',
+    description: 'For VS Code users',
+    badge: null,
+  },
+];
+---
+
+<section id="install" class="py-20 sm:py-28 bg-gradient-to-b from-white to-gray-50">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Section header -->
+    <div class="text-center mb-16">
+      <h2 class="text-3xl sm:text-4xl font-bold text-charcoal mb-4">
+        Get started in seconds
+      </h2>
+      <p class="text-lg text-gray-600">
+        Install from the extension marketplace, no configuration required.
+      </p>
+    </div>
+
+    <!-- Steps -->
+    <div class="grid sm:grid-cols-3 gap-8 mb-16">
+      {
+        steps.map((step) => (
+          <div class="text-center">
+            <div class="w-10 h-10 rounded-full bg-primary text-white font-bold flex items-center justify-center mx-auto mb-4">
+              {step.number}
+            </div>
+            <h3 class="text-lg font-semibold text-charcoal mb-2">{step.title}</h3>
+            <p class="text-sm text-gray-600">{step.description}</p>
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- Marketplace links -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-8">
+      <h3 class="text-lg font-semibold text-charcoal text-center mb-6">
+        Or install directly from a marketplace
+      </h3>
+      <div class="grid sm:grid-cols-2 gap-4">
+        {
+          marketplaces.map((marketplace) => (
+            <a
+              href={marketplace.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-primary/30 hover:bg-primary/5 transition-all duration-200"
+            >
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-charcoal">{marketplace.name}</span>
+                  {marketplace.badge && (
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-secondary/10 text-secondary font-medium">
+                      {marketplace.badge}
+                    </span>
+                  )}
+                </div>
+                <span class="text-sm text-gray-500">{marketplace.description}</span>
+              </div>
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>

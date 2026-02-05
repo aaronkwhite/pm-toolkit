@@ -1,0 +1,47 @@
+---
+const navLinks = [
+  { href: '#features', label: 'Features' },
+  { href: '#install', label: 'Install' },
+  { href: 'https://github.com/aaronkwhite/pm-toolkit', label: 'GitHub', external: true },
+];
+---
+
+<header class="sticky top-0 z-50 bg-offwhite/95 backdrop-blur-sm border-b border-gray-200">
+  <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <img
+          src="/images/logo.svg"
+          alt="PM Toolkit"
+          class="h-8 w-auto"
+        />
+      </a>
+
+      <!-- Navigation -->
+      <div class="flex items-center gap-6">
+        <ul class="hidden sm:flex items-center gap-6">
+          {
+            navLinks.map((link) => (
+              <li>
+                <a
+                  href={link.href}
+                  class="text-gray-600 hover:text-charcoal transition-colors text-sm font-medium"
+                  target={link.external ? '_blank' : undefined}
+                  rel={link.external ? 'noopener noreferrer' : undefined}
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+
+        <!-- Free Forever Badge -->
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-secondary/10 text-secondary border border-secondary/20">
+          Free Forever
+        </span>
+      </div>
+    </div>
+  </nav>
+</header>

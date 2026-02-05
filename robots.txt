@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://aaronkwhite.github.io/pm-toolkit/sitemap-index.xml
