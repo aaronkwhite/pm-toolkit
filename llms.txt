@@ -1,0 +1,24 @@
+# PM Toolkit
+
+## Summary
+PM Toolkit is a free, open-source VS Code/Cursor extension that provides Obsidian-like visual editing tools for product managers.
+
+## Features
+- WYSIWYG Markdown Editor with slash commands and templates
+- Kanban boards backed by plain markdown files
+- File viewers for PDF, Word, Excel, and CSV
+- Mermaid diagram rendering
+
+## Installation
+- VS Code Marketplace: https://marketplace.visualstudio.com/items?itemName=aaronkwhite.pm-toolkit
+- Open VSX (Cursor): https://open-vsx.org/extension/aaronkwhite/pm-toolkit
+
+## Links
+- GitHub: https://github.com/aaronkwhite/pm-toolkit
+- Documentation: https://aaronkwhite.github.io/pm-toolkit/
+
+## Keywords
+markdown editor, wysiwyg, kanban board, cursor extension, vscode extension, product manager tools, notion alternative
+
+## License
+MIT
