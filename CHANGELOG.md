@@ -5,6 +5,14 @@ All notable changes to PM Toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.7] - 2026-02-05
+
+### Fixed
+
+- Image markdown now converts to rendered image when pressing Enter (not just Space)
+- Image markdown now converts when pasted from clipboard
+- External image URLs (https://) now render immediately after editing via `/image` command
+
 ## [0.4.6] - 2026-02-05
 
 ### Changed

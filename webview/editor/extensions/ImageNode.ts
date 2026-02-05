@@ -159,75 +159,128 @@ export const ImageNode = Image.extend({
   addProseMirrorPlugins() {
     const imageType = this.type;
 
+    // Helper function to convert image markdown to image node
+    const convertImageMarkdown = (view: any, addNewline: boolean): boolean => {
+      const { state } = view;
+      const { selection } = state;
+      const { $from } = selection;
+
+      // Get the text content of the current text block (paragraph)
+      const textBlock = $from.parent;
+      if (!textBlock.isTextblock) return false;
+
+      // Get the text from the start of the block to cursor
+      const textBeforeCursor = textBlock.textBetween(0, $from.parentOffset, undefined, '\ufffc');
+
+      // Check if the text ends with image markdown pattern
+      const match = textBeforeCursor.match(imageMarkdownRegex);
+      if (!match) return false;
+
+      // Make sure the match is at the end of the text
+      const matchEnd = match.index! + match[0].length;
+      if (matchEnd !== textBeforeCursor.length) return false;
+
+      const [fullMatch, rawAlt, src, title] = match;
+
+      // Parse alt text for dimensions
+      const { alt, width, height } = parseAltWithDimensions(rawAlt);
+
+      // Calculate positions in the document
+      const blockStart = $from.start();
+      const matchStart = blockStart + match.index!;
+      const matchEndPos = blockStart + matchEnd;
+
+      // Create and dispatch transaction
+      const tr = state.tr;
+
+      // Delete the matched text
+      tr.delete(matchStart, matchEndPos);
+
+      // Create the image node with dimensions
+      // Store originalSrc for user-friendly display/editing
+      const imageNode = imageType.create({
+        src,
+        originalSrc: src, // User typed this path, preserve it
+        alt: alt || null,
+        title: title || null,
+        width: width || null,
+        height: height || null,
+      });
+
+      // Insert the image
+      tr.insert(matchStart, imageNode);
+
+      // Position after the image
+      const posAfterImage = matchStart + 1;
+
+      if (addNewline) {
+        // For Enter: add a new paragraph after the image
+        const paragraph = state.schema.nodes.paragraph.create();
+        tr.insert(posAfterImage, paragraph);
+        tr.setSelection(TextSelection.create(tr.doc, posAfterImage + 1));
+      } else {
+        // For Space: add a space after the image
+        tr.insertText(' ', posAfterImage);
+        tr.setSelection(TextSelection.create(tr.doc, posAfterImage + 1));
+      }
+
+      view.dispatch(tr);
+      return true;
+    };
+
     return [
       new Plugin({
         key: new PluginKey('imageMarkdownConverter'),
         props: {
           handleKeyDown(view, event) {
-            // Only trigger on space (Enter will just create a new line with the text)
-            if (event.key !== ' ') {
-              return false;
+            // Trigger on space or Enter
+            if (event.key === ' ') {
+              if (convertImageMarkdown(view, false)) {
+                event.preventDefault();
+                return true;
+              }
+            } else if (event.key === 'Enter') {
+              if (convertImageMarkdown(view, true)) {
+                event.preventDefault();
+                return true;
+              }
             }
+            return false;
+          },
+          handlePaste(view, event, slice) {
+            // Check if pasted content is plain text that looks like image markdown
+            const text = event.clipboardData?.getData('text/plain');
+            if (!text) return false;
 
-            const { state } = view;
-            const { selection } = state;
-            const { $from } = selection;
-
-            // Get the text content of the current text block (paragraph)
-            const textBlock = $from.parent;
-            if (!textBlock.isTextblock) return false;
-
-            // Get the text from the start of the block to cursor
-            const textBeforeCursor = textBlock.textBetween(0, $from.parentOffset, undefined, '\ufffc');
-
-            // Check if the text ends with image markdown pattern
-            const match = textBeforeCursor.match(imageMarkdownRegex);
+            // Check if the entire pasted text is an image markdown
+            const trimmed = text.trim();
+            const match = trimmed.match(/^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)$/);
             if (!match) return false;
 
-            // Make sure the match is at the end of the text
-            const matchEnd = match.index! + match[0].length;
-            if (matchEnd !== textBeforeCursor.length) return false;
-
-            const [fullMatch, rawAlt, src, title] = match;
-
-            // Parse alt text for dimensions
+            const [, rawAlt, src, title] = match;
             const { alt, width, height } = parseAltWithDimensions(rawAlt);
 
-            // Calculate positions in the document
-            const blockStart = $from.start();
-            const matchStart = blockStart + match.index!;
-            const matchEndPos = blockStart + matchEnd;
-
-            // Create and dispatch transaction
+            // Create and insert the image node
+            const { state } = view;
             const tr = state.tr;
 
-            // Delete the matched text
-            tr.delete(matchStart, matchEndPos);
+            // Delete any selected content first
+            if (!state.selection.empty) {
+              tr.deleteSelection();
+            }
 
-            // Create the image node with dimensions
-            // Store originalSrc for user-friendly display/editing
             const imageNode = imageType.create({
               src,
-              originalSrc: src, // User typed this path, preserve it
+              originalSrc: src,
               alt: alt || null,
               title: title || null,
               width: width || null,
               height: height || null,
             });
 
-            // Insert the image
-            tr.insert(matchStart, imageNode);
-
-            // Position after the image
-            const posAfterImage = matchStart + 1;
-
-            // Add a space after the image and position cursor
-            tr.insertText(' ', posAfterImage);
-            tr.setSelection(TextSelection.create(tr.doc, posAfterImage + 1));
-
+            tr.replaceSelectionWith(imageNode);
             view.dispatch(tr);
 
-            // Prevent default behavior
             event.preventDefault();
             return true;
           },
@@ -453,10 +506,15 @@ export const ImageNode = Image.extend({
               };
 
               if (srcChanged) {
-                // User changed the path - update originalSrc and request URL conversion
+                // User changed the path - update originalSrc
                 newAttrs.originalSrc = newSrc || null;
-                // Request conversion of the new path to webview URL
-                if (newSrc && !isWebviewUrl(newSrc)) {
+
+                if (newSrc && isWebviewUrl(newSrc)) {
+                  // For http/https/data URLs, set src directly
+                  newAttrs.src = newSrc;
+                  img.src = newSrc;
+                } else if (newSrc) {
+                  // For relative paths, request URL conversion
                   pendingPath = newSrc;
                   requestUrlConversion(newSrc);
                 }
