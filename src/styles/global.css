@@ -35,13 +35,13 @@ body {
   background-color: var(--color-offwhite);
 }
 
-/* Link styles */
-a {
+/* Link styles - only apply to plain links, not buttons */
+a:not([class*="bg-"]) {
   color: var(--color-primary);
   transition: color 0.2s ease;
 }
 
-a:hover {
+a:not([class*="bg-"]):hover {
   color: var(--color-primary-dark);
 }
 
