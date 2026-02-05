@@ -3,7 +3,7 @@
 [![Latest Release](https://img.shields.io/github/v/release/aaronkwhite/pm-toolkit?label=version)](https://github.com/aaronkwhite/pm-toolkit/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/aaronkwhite/pm-toolkit/blob/main/LICENSE)
 [![Changelog](https://img.shields.io/badge/changelog-view-blue)](https://github.com/aaronkwhite/pm-toolkit/blob/main/CHANGELOG.md)
-[![Website](https://img.shields.io/badge/website-getpmtoolkit.netlify.app-4A90D9)](https://getpmtoolkit.netlify.app)
+[![Website](https://img.shields.io/badge/website-getpmtoolkit.com-4A90D9)](https://getpmtoolkit.com)
 
 > **Free Forever.** No trial period. No yearly fee. No read-only mode. Just pure, unadulterated rich editing in your IDE.
 
@@ -61,7 +61,7 @@ View common file types without leaving your editor:
 
 ## Installation
 
-**[Visit the website →](https://getpmtoolkit.netlify.app)**
+**[Visit the website →](https://getpmtoolkit.com)**
 
 ### From Cursor Marketplace
 

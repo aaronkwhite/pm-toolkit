@@ -2,11 +2,11 @@
   "name": "pm-toolkit",
   "displayName": "PM Toolkit",
   "description": "Obsidian-like editing experience for Cursor. WYSIWYG markdown, kanban boards, and file viewers—built for product managers and teams who work alongside AI.",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "publisher": "aaronkwhite",
   "license": "MIT",
   "icon": "images/pm-toolkit-icon-light.png",
-  "homepage": "https://getpmtoolkit.netlify.app",
+  "homepage": "https://getpmtoolkit.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/aaronkwhite/pm-toolkit"
