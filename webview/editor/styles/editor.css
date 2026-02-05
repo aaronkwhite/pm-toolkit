@@ -236,7 +236,7 @@ html, body {
 
 .ProseMirror table {
   border-collapse: collapse;
-  width: 100%;
+  width: calc(100% - 24px);
   margin: 0.5em 0;
   margin-bottom: 1em;
   overflow: hidden;
@@ -291,6 +291,48 @@ html, body {
   width: 4px;
   background-color: var(--vscode-focusBorder);
   cursor: col-resize;
+}
+
+/* Table add row/column buttons (fixed position, appended to body) */
+.table-add-column-btn,
+.table-add-row-btn {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1.5px solid var(--vscode-panel-border);
+  border-radius: 50%;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  z-index: 1000;
+}
+
+.table-add-column-btn svg,
+.table-add-row-btn svg {
+  width: 10px;
+  height: 10px;
+  stroke: currentColor;
+}
+
+/* Show button when near edge */
+.table-add-column-btn.visible,
+.table-add-row-btn.visible {
+  opacity: 0.6;
+}
+
+/* Highlight on hover */
+.table-add-column-btn:hover,
+.table-add-row-btn:hover {
+  opacity: 1;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border-color: var(--vscode-button-background);
 }
 
 /* ===== Images (Obsidian-style) ===== */

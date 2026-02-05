@@ -20,6 +20,7 @@ import { Markdown } from 'tiptap-markdown';
 import { SlashCommand, setTemplates } from './extensions/SlashCommand';
 import { KeyboardNavigation } from './extensions/KeyboardNavigation';
 import { CustomParagraph } from './extensions/CustomParagraph';
+import { TableControls } from './extensions/TableControls';
 
 // VS Code webview API
 interface VSCodeAPI {
@@ -133,6 +134,7 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
       TableRow,
       TableHeader,
       TableCell,
+      TableControls,
       ImageNode.configure({
         inline: true,
         allowBase64: true,
