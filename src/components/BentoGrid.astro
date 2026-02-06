@@ -87,54 +87,54 @@ const bentoItems = [
           >
             {/* Header with icon and title */}
             <div class="flex items-start gap-4 mb-4">
-              <div class:list={[
-                'w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300',
-                item.featured
-                  ? 'bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] text-white group-hover:scale-110'
-                  : 'bg-[var(--color-primary)]/10 group-hover:bg-[var(--color-primary)]/20'
-              ]}>
-                <svg
-                  class:list={[
-                    'w-6 h-6',
-                    item.featured ? 'text-white' : 'text-[var(--color-primary)]'
-                  ]}
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  viewBox="0 0 24 24"
-                  set:html={icons[item.icon as keyof typeof icons]}
-                />
-              </div>
-              <div>
-                <h3 class:list={[
-                  'font-semibold mb-1',
-                  item.featured ? 'text-xl' : 'text-lg'
-                ]} style="color: var(--text-primary);">
-                  {item.title}
-                </h3>
-                <p class="text-sm" style="color: var(--text-secondary);">
-                  {item.description}
-                </p>
-              </div>
-            </div>
-
-            {/* Optional image - grows to fill remaining space */}
-            {item.image && (
-              <div class="mt-auto pt-4 flex-1 flex items-end">
-                <div class="relative w-full overflow-hidden rounded-lg">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    loading="lazy"
-                    class="w-full h-auto rounded-lg transition-transform duration-500 group-hover:scale-[1.02]"
-                  />
-                  {/* Subtle overlay on hover */}
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none"></div>
+                  <div class:list={[
+                    'w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300',
+                    item.featured
+                      ? 'bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] text-white group-hover:scale-110'
+                      : 'bg-[var(--color-primary)]/10 group-hover:bg-[var(--color-primary)]/20'
+                  ]}>
+                    <svg
+                      class:list={[
+                        'w-6 h-6',
+                        item.featured ? 'text-white' : 'text-[var(--color-primary)]'
+                      ]}
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      viewBox="0 0 24 24"
+                      set:html={icons[item.icon as keyof typeof icons]}
+                    />
+                  </div>
+                  <div>
+                    <h3 class:list={[
+                      'font-semibold mb-1',
+                      item.featured ? 'text-xl' : 'text-lg'
+                    ]} style="color: var(--text-primary);">
+                      {item.title}
+                    </h3>
+                    <p class="text-sm" style="color: var(--text-secondary);">
+                      {item.description}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+
+                {/* Optional image - grows to fill remaining space */}
+                {item.image && (
+                  <div class="mt-auto pt-4 flex-1 flex items-end">
+                    <div class="relative w-full overflow-hidden rounded-lg">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        loading="lazy"
+                        class="w-full h-auto rounded-lg transition-transform duration-500 group-hover:scale-[1.02]"
+                      />
+                      {/* Subtle overlay on hover */}
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none"></div>
+                    </div>
+                  </div>
+                )}
 
             {/* For cards without images, add visual interest */}
             {!item.image && (
@@ -156,6 +156,31 @@ const bentoItems = [
           </div>
         ))
       }
+
+      {/* Chris Traeger Quote Card - inside grid */}
+      <div
+        class="card group p-6 flex flex-col scroll-animate lg:col-span-1 lg:row-span-1 relative overflow-hidden"
+        data-animation="animate-fade-in-up"
+        style="animation-delay: 660ms;"
+      >
+        {/* Energetic gradient background */}
+        <div class="absolute inset-0 bg-gradient-to-br from-[var(--color-primary)]/12 via-[var(--color-secondary)]/8 to-[var(--color-primary)]/12"></div>
+
+        {/* Decorative quote marks */}
+        <div class="absolute top-2 left-4 text-6xl font-serif opacity-[0.08] gradient-text select-none leading-none">"</div>
+        <div class="absolute bottom-2 right-4 text-6xl font-serif opacity-[0.08] gradient-text select-none leading-none">"</div>
+
+        <div class="relative z-10 flex flex-col justify-center h-full text-center px-4">
+          <blockquote>
+            <p class="text-lg sm:text-xl font-medium mb-3" style="color: var(--text-primary);">
+              "This is <span class="gradient-text font-extrabold tracking-wide">LITERALLY</span> the most beautiful markdown I have ever written."
+            </p>
+            <footer style="color: var(--text-muted);">
+              <cite class="not-italic font-medium text-sm">— Chris Traeger</cite>
+            </footer>
+          </blockquote>
+        </div>
+      </div>
     </div>
   </div>
 </section>
