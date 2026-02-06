@@ -1,4 +1,9 @@
 ---
+// Fetch latest release version from GitHub at build time
+const releaseRes = await fetch('https://api.github.com/repos/aaronkwhite/pm-toolkit/releases/latest');
+const release = await releaseRes.json();
+const version = release.tag_name || 'v0.5.0';
+
 const marketplaceLinks = [
   {
     href: 'https://open-vsx.org/extension/aaronkwhite/pm-toolkit',
@@ -43,7 +48,7 @@ const marketplaceLinks = [
       </p>
 
       <!-- CTAs -->
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 animate-fade-in-up delay-300">
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6 animate-fade-in-up delay-300">
         {
           marketplaceLinks.map((link) => (
             <a
@@ -63,6 +68,11 @@ const marketplaceLinks = [
           ))
         }
       </div>
+
+      <!-- Version -->
+      <p class="text-sm mb-12 animate-fade-in-up delay-300" style="color: var(--text-muted);">
+        {version}
+      </p>
 
     </div>
 
