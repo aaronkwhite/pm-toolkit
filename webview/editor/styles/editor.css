@@ -1146,3 +1146,171 @@ html, body {
   width: 16px;
   height: 16px;
 }
+
+/* ===== Editor Layout with Sidebar ===== */
+
+#editor-wrapper {
+  position: relative;
+  height: 100%;
+  /* Reserve space for block handles on the left */
+  padding-left: 48px;
+}
+
+/* ===== Block Handle ===== */
+
+.block-handle-container {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 100;
+  pointer-events: auto;
+  opacity: 0.4;
+  transition: opacity 0.15s ease;
+}
+
+.block-handle-container:hover {
+  opacity: 1;
+}
+
+.block-handle-plus,
+.block-handle-drag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.block-handle-plus:hover,
+.block-handle-drag:hover {
+  background-color: var(--vscode-toolbar-hoverBackground, rgba(127, 127, 127, 0.2));
+  color: var(--vscode-foreground);
+}
+
+.block-handle-drag {
+  cursor: grab;
+  font-size: 14px;
+  letter-spacing: -2px;
+}
+
+.block-handle-drag:active {
+  cursor: grabbing;
+}
+
+/* Block being dragged */
+.ProseMirror .is-dragging {
+  opacity: 0.5;
+}
+
+/* ===== Document Outline Sidebar ===== */
+
+.document-outline {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 120px;
+  background-color: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 50;
+}
+
+.outline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.outline-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--vscode-foreground);
+}
+
+.outline-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 8px;
+}
+
+.outline-toggle:hover {
+  background-color: var(--vscode-toolbar-hoverBackground, rgba(127, 127, 127, 0.15));
+  color: var(--vscode-foreground);
+}
+
+.outline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+/* Horizontal bars representing headings */
+.outline-bar {
+  display: block;
+  height: 3px;
+  border: none;
+  border-radius: 2px;
+  background-color: var(--vscode-foreground);
+  cursor: pointer;
+  transition: opacity 0.1s ease, background-color 0.1s ease;
+  opacity: 0.25;
+  padding: 0;
+  margin: 0;
+}
+
+.outline-bar:hover {
+  opacity: 0.6;
+  background-color: var(--vscode-focusBorder);
+}
+
+/* Width based on heading level - wider = higher level */
+.outline-level-1 { width: 100%; opacity: 0.5; }
+.outline-level-2 { width: 85%; margin-left: 0; opacity: 0.4; }
+.outline-level-3 { width: 70%; margin-left: 0; opacity: 0.35; }
+.outline-level-4 { width: 55%; margin-left: 0; opacity: 0.3; }
+.outline-level-5 { width: 40%; margin-left: 0; opacity: 0.25; }
+.outline-level-6 { width: 25%; margin-left: 0; opacity: 0.2; }
+
+/* Scrollbar styling for outline */
+.outline-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.outline-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.outline-content::-webkit-scrollbar-thumb {
+  background-color: var(--vscode-scrollbarSlider-background);
+  border-radius: 2px;
+}
+
+.outline-content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--vscode-scrollbarSlider-hoverBackground);
+}

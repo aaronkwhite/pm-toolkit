@@ -37,7 +37,8 @@ declare global {
   }
 }
 
-const vscode = window.vscode
+// Get vscode API - it should be set by index.tsx before this component mounts
+const getVSCode = () => window.vscode
 
 interface EditorProps {
   initialContent?: string
@@ -45,10 +46,13 @@ interface EditorProps {
 }
 
 export function Editor({ initialContent = '', filename = 'untitled.md' }: EditorProps) {
+  console.log('[PM Toolkit] Editor component rendering')
+
   const isUpdatingFromExtension = useRef(false)
   const updateTimeout = useRef<number | null>(null)
   const lastKnownContent = useRef(initialContent)
 
+  console.log('[PM Toolkit] About to call useEditor')
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -108,8 +112,8 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
         const markdown = editor.storage.markdown.getMarkdown()
         if (markdown !== lastKnownContent.current) {
           lastKnownContent.current = markdown
-          vscode.postMessage({ type: 'update', payload: { content: markdown } })
-          vscode.setState({ content: markdown })
+          getVSCode().postMessage({ type: 'update', payload: { content: markdown } })
+          getVSCode().setState({ content: markdown })
         }
       }, 150)
     },
@@ -158,7 +162,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
     window._getEditorContent = () => editor.storage.markdown.getMarkdown()
 
     // Signal ready only after the message handler is set up
-    vscode.postMessage({ type: 'ready' })
+    getVSCode().postMessage({ type: 'ready' })
 
     return () => {
       window.removeEventListener('message', handleMessage)
@@ -166,16 +170,18 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
     }
   }, [editor])
 
+  console.log('[PM Toolkit] editor instance:', editor ? 'created' : 'null')
+
   if (!editor) {
-    return null
+    return <div className="editor-loading" style={{ color: 'white', padding: '20px' }}>Loading editor...</div>
   }
 
+  console.log('[PM Toolkit] Rendering full editor UI')
+
   return (
-    <div id="editor-container" style={{ display: 'flex' }}>
-      <div id="editor" style={{ flex: 1 }}>
-        <BlockHandle editor={editor} />
-        <EditorContent editor={editor} />
-      </div>
+    <div id="editor-wrapper">
+      <BlockHandle editor={editor} />
+      <EditorContent editor={editor} />
       <DocumentOutline editor={editor} />
     </div>
   )

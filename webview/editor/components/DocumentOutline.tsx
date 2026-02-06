@@ -46,10 +46,19 @@ export function DocumentOutline({ editor }: DocumentOutlineProps) {
       }
     }
 
+    // Run immediately
     updateHeadings()
+
+    // Listen for updates (user edits)
     editor.on('update', updateHeadings)
+
+    // Also listen for transaction events to catch external content loads
+    // (like when VS Code sends the 'init' message with document content)
+    editor.on('transaction', updateHeadings)
+
     return () => {
       editor.off('update', updateHeadings)
+      editor.off('transaction', updateHeadings)
     }
   }, [editor])
 
@@ -81,16 +90,16 @@ export function DocumentOutline({ editor }: DocumentOutlineProps) {
   }
 
   return (
-    <div className={`document-outline ${isCollapsed ? 'collapsed' : ''}`}>
+    <div className="document-outline">
       <div className="outline-header">
-        <span className="outline-title">Outline</span>
+        <span className="outline-title">OUTLINE</span>
         <button
           className="outline-toggle"
           onClick={toggleCollapsed}
           title={isCollapsed ? 'Expand outline' : 'Collapse outline'}
           type="button"
         >
-          {isCollapsed ? '◀' : '▶'}
+          ▶
         </button>
       </div>
       {!isCollapsed && (
@@ -98,12 +107,12 @@ export function DocumentOutline({ editor }: DocumentOutlineProps) {
           {headings.map(heading => (
             <button
               key={heading.id}
-              className={`outline-item outline-level-${heading.level}`}
+              className={`outline-bar outline-level-${heading.level}`}
               onClick={() => scrollToHeading(heading.pos)}
+              title={heading.text || 'Untitled'}
               type="button"
-            >
-              {heading.text || 'Untitled'}
-            </button>
+              aria-label={heading.text || 'Untitled'}
+            />
           ))}
         </nav>
       )}

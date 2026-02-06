@@ -181,8 +181,19 @@ function exitCodeBlockAbove(editor: any): boolean {
       .setTextSelection(codeBlockBefore + 1)
       .run();
   } else {
-    // Move cursor to the position before code block
-    editor.commands.setTextSelection(codeBlockBefore);
+    // Check what node is before the code block
+    const nodeBefore = state.doc.nodeAt(codeBlockBefore - 1);
+    if (nodeBefore) {
+      // Move cursor to the end of the node before code block
+      // codeBlockBefore - 1 places us at the end of the previous node's content
+      editor.commands.setTextSelection(codeBlockBefore - 1);
+    } else {
+      // Insert a paragraph before the code block
+      editor.chain()
+        .insertContentAt(codeBlockBefore, { type: 'paragraph' })
+        .setTextSelection(codeBlockBefore + 1)
+        .run();
+    }
   }
 
   return true;

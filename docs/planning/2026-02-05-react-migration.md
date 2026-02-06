@@ -4,6 +4,44 @@
 
 **Goal:** Migrate the PM Toolkit editor from vanilla TypeScript to React with @tiptap/react, enabling use of Tiptap UI Components and adding new features (drag handles, insert plus button, document outline, enhanced image handling).
 
+---
+
+## Progress Status (2026-02-06)
+
+### Completed Milestones ✅
+
+| Milestone | Status | Notes |
+|-----------|--------|-------|
+| M1: React Foundation | ✅ Complete | React 18, @tiptap/react, esbuild JSX config |
+| M2: SlashCommand React | ✅ Complete | SlashCommandMenu component working |
+| M3: ImageNode React | ✅ Complete | ReactNodeViewRenderer integration |
+| M4: MermaidNode React | ✅ Complete | Async rendering, theme detection |
+| M5: BubbleMenu React | ✅ Complete | Block type dropdown, formatting marks |
+| M6: UI Components | ✅ Complete | CSS variables integration |
+| M7: Block Handles | ✅ Complete | Plus button + drag handle (hover to show) |
+| M9: Document Outline | ✅ Complete | Horizontal bar style, click to scroll |
+
+### Test Results
+- **188/192 tests passing** (4 flaky tests that pass on retry)
+- All core functionality verified in VS Code Extension Development Host
+
+### Key Fixes Applied
+1. **vscode API timing**: Changed from module-level `const vscode = window.vscode` to `getVSCode()` function to handle async initialization
+2. **Document Outline**: Added `transaction` event listener to catch external content loads (init messages)
+3. **Block Handle CSS**: Proper positioning with `position: absolute` and left margin spacing
+4. **Outline bar style**: Horizontal bars with width indicating heading level (matching reference screenshot)
+
+### Remaining Work
+- [ ] M8: Enhanced image handling (upload to assets/, resize handles) - **DEFERRED**
+- [ ] New E2E tests for block handles and outline
+- [ ] Performance verification
+- [ ] Final code cleanup (remove debug console.logs)
+
+### Branch
+All work is on `feature/react-migration` branch.
+
+---
+
 **Architecture:** Incremental migration in 9 milestones. Each milestone converts a component/extension to React while keeping all E2E tests passing. Uses @tiptap/react for editor integration, React NodeViews for custom nodes, and plain CSS (no Tailwind).
 
 **Tech Stack:** React 18, @tiptap/react ^2.x, esbuild with JSX, plain CSS with VS Code variables
