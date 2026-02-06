@@ -130,9 +130,18 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
             isUpdatingFromExtension.current = true
             lastKnownContent.current = content
 
-            // Parse and set content
+            // Parse the content
             const doc = editor.storage.markdown.parser.parse(content)
-            editor.commands.setContent(doc)
+
+            // Use chain command to set content without adding to history
+            // This ensures external updates don't pollute the undo stack
+            editor.chain()
+              .command(({ tr }) => {
+                tr.setMeta('addToHistory', false)
+                return true
+              })
+              .setContent(doc, false, { preserveWhitespace: 'full' })
+              .run()
 
             isUpdatingFromExtension.current = false
           }
