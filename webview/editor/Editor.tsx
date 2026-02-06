@@ -29,6 +29,7 @@ declare global {
       getState: () => unknown
       setState: (state: unknown) => void
     }
+    _getEditorContent?: () => string
   }
 }
 
@@ -110,11 +111,12 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
     },
   })
 
-  // Handle messages from extension
+  // Handle messages from extension and signal ready when editor is available
   useEffect(() => {
+    if (!editor) return
+
     const handleMessage = (event: MessageEvent) => {
       const message = event.data
-      if (!editor) return
 
       switch (message.type) {
         case 'init':
@@ -137,13 +139,18 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
     }
 
     window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
-  }, [editor])
 
-  // Signal ready
-  useEffect(() => {
+    // Expose a method to get content directly (for testing)
+    window._getEditorContent = () => editor.storage.markdown.getMarkdown()
+
+    // Signal ready only after the message handler is set up
     vscode.postMessage({ type: 'ready' })
-  }, [])
+
+    return () => {
+      window.removeEventListener('message', handleMessage)
+      delete window._getEditorContent
+    }
+  }, [editor])
 
   if (!editor) {
     return null
