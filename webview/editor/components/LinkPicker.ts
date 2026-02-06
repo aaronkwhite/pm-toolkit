@@ -55,9 +55,17 @@ export interface FileInfo {
 }
 
 /**
+ * Link data returned when a link is selected
+ */
+export interface LinkData {
+  text: string;
+  href: string;
+}
+
+/**
  * Callback when a link is selected
  */
-export type OnLinkSelect = (markdown: string) => void;
+export type OnLinkSelect = (linkData: LinkData) => void;
 
 /**
  * Link Picker options
@@ -91,6 +99,15 @@ export class LinkPicker {
   constructor() {
     this.element = document.createElement('div');
     this.element.className = 'link-picker';
+
+    // Only stop propagation in bubbling phase (not capturing)
+    // This allows clicks to reach child elements first
+    this.element.addEventListener('mousedown', (e) => e.stopPropagation());
+    this.element.addEventListener('mouseup', (e) => e.stopPropagation());
+    this.element.addEventListener('click', (e) => e.stopPropagation());
+    this.element.addEventListener('keydown', (e) => e.stopPropagation());
+    this.element.addEventListener('keyup', (e) => e.stopPropagation());
+
     document.body.appendChild(this.element);
 
     // Listen for file list from extension
@@ -134,9 +151,22 @@ export class LinkPicker {
     // Prevent mousedown from stealing focus from picker
     this.element.addEventListener('mousedown', this.handleMouseDown);
 
+    // Immediately block Enter key to prevent it creating new list items
+    // The slash menu's Enter triggers this command, and the keyup might leak through
+    const blockEnter = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    document.addEventListener('keydown', blockEnter, true);
+    document.addEventListener('keyup', blockEnter, true);
+
     // Add keyboard and click handlers after a short delay
     // This prevents the Enter key from the slash menu from immediately selecting
     setTimeout(() => {
+      document.removeEventListener('keydown', blockEnter, true);
+      document.removeEventListener('keyup', blockEnter, true);
       document.addEventListener('keydown', this.handleKeyDown);
       document.addEventListener('mousedown', this.handleClickOutside);
     }, 100);
@@ -152,9 +182,13 @@ export class LinkPicker {
   };
 
   private handleMouseDown = (e: MouseEvent) => {
-    // Prevent editor from stealing focus
-    if (this.element.contains(e.target as Node)) {
-      e.preventDefault();
+    // Prevent editor from stealing focus, but allow inputs and buttons to work
+    const target = e.target as HTMLElement;
+    if (this.element.contains(target)) {
+      // Allow inputs and buttons to receive focus/clicks normally
+      if (target.tagName !== 'INPUT' && target.tagName !== 'BUTTON' && !target.closest('button')) {
+        e.preventDefault();
+      }
     }
   };
 
@@ -271,7 +305,8 @@ export class LinkPicker {
       </div>
     `;
 
-    // Focus search input
+    // Auto-focus the search input for keyboard navigation
+    // (Editor should be frozen with setEditable(false) so blur is safe)
     const input = this.element.querySelector('.link-picker-search-input') as HTMLInputElement;
     if (input) {
       input.focus();
@@ -339,10 +374,7 @@ export class LinkPicker {
     const currentDir = pathDirname(this.currentFilePath);
     const relativePath = pathRelative(currentDir, file.path);
 
-    // Create markdown link
-    const markdown = `[${file.name}](${relativePath})`;
-
-    this.options.onSelect(markdown);
+    this.options.onSelect({ text: file.name, href: relativePath });
     this.destroy();
   }
 
@@ -425,10 +457,7 @@ export class LinkPicker {
     // Use URL as text if text is empty
     const displayText = text || url;
 
-    // Create markdown link
-    const markdown = `[${displayText}](${url})`;
-
-    this.options.onSelect(markdown);
+    this.options.onSelect({ text: displayText, href: url });
     this.destroy();
   }
 

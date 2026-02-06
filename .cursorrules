@@ -35,7 +35,6 @@ Uses CalVer: `YYYY.MM.MICRO` (e.g., `2026.02.0`)
 
 ## Important
 
-- Project name is "PM Toolkit" - never "PM Toolbox"
 - Target Cursor, not VS Code
 - Keep data in plain markdown
 - User-focused documentation

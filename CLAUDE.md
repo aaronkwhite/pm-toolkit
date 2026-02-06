@@ -102,7 +102,6 @@ npm run test:e2e:ui  # Run tests with Playwright UI
 
 ## Important Notes
 
-- **Never mention "PM Toolbox"** - the project is called "PM Toolkit"
 - **Target Cursor**, not VS Code (though it's compatible with both)
 - **User-focused**: Write for PMs, not developers
 - **Plain text first**: Kanban and editor data stays in markdown

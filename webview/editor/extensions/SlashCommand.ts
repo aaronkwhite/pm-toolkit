@@ -333,24 +333,45 @@ export const defaultCommands: SlashCommandItem[] = [
     icon: '🔗',
     searchTerms: ['link', 'url', 'file', 'document', 'reference'],
     command: ({ editor, range }) => {
-      // Get cursor position for picker placement BEFORE deleting
       const { view } = editor;
       const coords = view.coordsAtPos(range.from);
       const rect = new DOMRect(coords.left, coords.top, 0, coords.bottom - coords.top);
 
-      // Delete the slash command text immediately (closes the slash menu)
+      // Delete the slash command text and save the position
       editor.chain().focus().deleteRange(range).run();
+      const insertPos = editor.state.selection.from;
 
-      // Show link picker
+      // Freeze the editor to prevent any changes while picker is open
+      editor.setEditable(false);
+
       const picker = new LinkPicker();
       picker.show({
         rect,
-        onSelect: (markdown) => {
-          editor.chain().focus().insertContent(markdown).run();
+        onSelect: (linkData: { text: string; href: string }) => {
+          // Re-enable editor before making changes
+          editor.setEditable(true);
+
+          // Use setTimeout to ensure editor is fully re-enabled before inserting
+          setTimeout(() => {
+            editor
+              .chain()
+              .focus()
+              .insertContentAt(insertPos, {
+                type: 'text',
+                marks: [{ type: 'link', attrs: { href: linkData.href } }],
+                text: linkData.text,
+              })
+              .run();
+          }, 0);
+
           picker.destroy();
         },
         onCancel: () => {
-          editor.chain().focus().run();
+          // Re-enable editor
+          editor.setEditable(true);
+          setTimeout(() => {
+            editor.chain().focus().run();
+          }, 0);
           picker.destroy();
         },
       });
