@@ -8,6 +8,9 @@ import { Extension } from '@tiptap/core';
 import { PluginKey } from '@tiptap/pm/state';
 import Suggestion, { SuggestionOptions, SuggestionProps } from '@tiptap/suggestion';
 import { Editor, Range } from '@tiptap/core';
+import { createElement } from 'react';
+import { createRoot, Root } from 'react-dom/client';
+import { SlashCommandMenu, SlashCommandMenuRef } from '../components/SlashCommandMenu';
 import { TableSizePicker } from '../components/TableSizePicker';
 import { LinkPicker } from '../components/LinkPicker';
 
@@ -385,173 +388,44 @@ export const defaultCommands: SlashCommandItem[] = [
 export const SlashCommandPluginKey = new PluginKey('slashCommand');
 
 /**
- * Slash Command Menu - vanilla JS component
+ * Position the menu container relative to the cursor
  */
-class SlashCommandMenu {
-  private element: HTMLElement;
-  private items: SlashCommandItem[] = [];
-  private selectedIndex = 0;
-  private command: ((item: SlashCommandItem) => void) | null = null;
-
-  constructor() {
-    this.element = document.createElement('div');
-    this.element.className = 'slash-command-menu';
-    document.body.appendChild(this.element);
+function updateMenuPosition(
+  element: HTMLElement,
+  clientRect: (() => DOMRect | null) | null
+): void {
+  if (!clientRect) {
+    element.style.display = 'none';
+    return;
   }
 
-  update(props: {
-    items: SlashCommandItem[];
-    command: (item: SlashCommandItem) => void;
-    clientRect: (() => DOMRect | null) | null;
-  }) {
-    this.items = props.items;
-    this.command = props.command;
-    this.selectedIndex = 0;
-
-    this.render();
-    this.updatePosition(props.clientRect);
+  const rect = clientRect();
+  if (!rect) {
+    element.style.display = 'none';
+    return;
   }
 
-  private render() {
-    if (this.items.length === 0) {
-      this.element.innerHTML = `
-        <div class="slash-command-empty">No results</div>
-      `;
-      return;
-    }
+  element.style.display = 'block';
 
-    // Group items by category
-    const blockItems = this.items.filter((item) => item.category !== 'templates');
-    const templateItems = this.items.filter((item) => item.category === 'templates');
+  // Position below the cursor
+  const menuRect = element.getBoundingClientRect();
+  const { innerHeight, innerWidth } = window;
 
-    let html = '';
-    let globalIndex = 0;
+  let top = rect.bottom + 8;
+  let left = rect.left;
 
-    // Render block items
-    if (blockItems.length > 0) {
-      html += this.renderItems(blockItems, globalIndex);
-      globalIndex += blockItems.length;
-    }
-
-    // Render template items with category header
-    if (templateItems.length > 0) {
-      if (blockItems.length > 0) {
-        html += '<div class="slash-command-separator"></div>';
-      }
-      html += '<div class="slash-command-category">Templates</div>';
-      html += this.renderItems(templateItems, globalIndex);
-    }
-
-    this.element.innerHTML = html;
-
-    // Add click handlers
-    this.element.querySelectorAll('.slash-command-item').forEach((el) => {
-      el.addEventListener('click', () => {
-        const index = parseInt(el.getAttribute('data-index') || '0', 10);
-        this.selectItem(index);
-      });
-    });
+  // Flip up if near bottom
+  if (top + menuRect.height > innerHeight - 20) {
+    top = rect.top - menuRect.height - 8;
   }
 
-  private renderItems(items: SlashCommandItem[], startIndex: number): string {
-    return items
-      .map(
-        (item, i) => `
-        <button
-          class="slash-command-item ${startIndex + i === this.selectedIndex ? 'is-selected' : ''}"
-          data-index="${startIndex + i}"
-        >
-          <span class="slash-command-icon">${item.icon}</span>
-          <div class="slash-command-content">
-            <span class="slash-command-title">${item.title}</span>
-            <span class="slash-command-description">${item.description}</span>
-          </div>
-        </button>
-      `
-      )
-      .join('');
+  // Keep within horizontal bounds
+  if (left + menuRect.width > innerWidth - 20) {
+    left = innerWidth - menuRect.width - 20;
   }
 
-  private updatePosition(clientRect: (() => DOMRect | null) | null) {
-    if (!clientRect) {
-      this.element.style.display = 'none';
-      return;
-    }
-
-    const rect = clientRect();
-    if (!rect) {
-      this.element.style.display = 'none';
-      return;
-    }
-
-    this.element.style.display = 'block';
-
-    // Position below the cursor
-    const menuRect = this.element.getBoundingClientRect();
-    const { innerHeight, innerWidth } = window;
-
-    let top = rect.bottom + 8;
-    let left = rect.left;
-
-    // Flip up if near bottom
-    if (top + menuRect.height > innerHeight - 20) {
-      top = rect.top - menuRect.height - 8;
-    }
-
-    // Keep within horizontal bounds
-    if (left + menuRect.width > innerWidth - 20) {
-      left = innerWidth - menuRect.width - 20;
-    }
-
-    this.element.style.top = `${top}px`;
-    this.element.style.left = `${left}px`;
-  }
-
-  onKeyDown(event: KeyboardEvent): boolean {
-    if (event.key === 'ArrowDown') {
-      this.selectedIndex = (this.selectedIndex + 1) % this.items.length;
-      this.render();
-      return true;
-    }
-
-    if (event.key === 'ArrowUp') {
-      this.selectedIndex =
-        (this.selectedIndex - 1 + this.items.length) % this.items.length;
-      this.render();
-      return true;
-    }
-
-    if (event.key === 'Enter') {
-      this.selectItem(this.selectedIndex);
-      return true;
-    }
-
-    if (event.key === 'Escape') {
-      this.hide();
-      return true;
-    }
-
-    return false;
-  }
-
-  private selectItem(index: number) {
-    const item = this.items[index];
-    if (item && this.command) {
-      this.command(item);
-    }
-  }
-
-  show() {
-    this.element.style.display = 'block';
-  }
-
-  hide() {
-    this.element.style.display = 'none';
-  }
-
-  destroy() {
-    this.element.remove();
-  }
+  element.style.top = `${top}px`;
+  element.style.left = `${left}px`;
 }
 
 /**
@@ -591,41 +465,60 @@ export const SlashCommand = Extension.create({
           return [...filteredCommands, ...templateCommands];
         },
         render: () => {
-          let menu: SlashCommandMenu | null = null;
+          let container: HTMLElement | null = null;
+          let root: Root | null = null;
+          let menuRef: SlashCommandMenuRef | null = null;
+
+          const renderMenu = (props: SuggestionProps<SlashCommandItem>) => {
+            if (!container || !root) return;
+
+            root.render(
+              createElement(SlashCommandMenu, {
+                ref: (ref: SlashCommandMenuRef | null) => {
+                  menuRef = ref;
+                },
+                items: props.items,
+                editor: props.editor,
+                range: props.range,
+                onSelect: (item: SlashCommandItem) => {
+                  props.command(item);
+                },
+                onClose: () => {
+                  if (container) {
+                    container.style.display = 'none';
+                  }
+                },
+              })
+            );
+
+            // Position after render
+            updateMenuPosition(container, props.clientRect);
+          };
 
           return {
             onStart: (props: SuggestionProps<SlashCommandItem>) => {
-              menu = new SlashCommandMenu();
-              menu.update({
-                items: props.items,
-                command: (item) => {
-                  props.command(item);
-                },
-                clientRect: props.clientRect,
-              });
+              container = document.createElement('div');
+              container.className = 'slash-command-menu-container';
+              document.body.appendChild(container);
+              root = createRoot(container);
+
+              renderMenu(props);
             },
 
             onUpdate: (props: SuggestionProps<SlashCommandItem>) => {
-              menu?.update({
-                items: props.items,
-                command: (item) => {
-                  props.command(item);
-                },
-                clientRect: props.clientRect,
-              });
+              renderMenu(props);
             },
 
             onKeyDown: (props: { event: KeyboardEvent }) => {
-              if (props.event.key === 'Escape') {
-                menu?.hide();
-                return true;
-              }
-              return menu?.onKeyDown(props.event) || false;
+              return menuRef?.onKeyDown(props.event) || false;
             },
 
             onExit: () => {
-              menu?.destroy();
-              menu = null;
+              root?.unmount();
+              container?.remove();
+              root = null;
+              container = null;
+              menuRef = null;
             },
           };
         },
