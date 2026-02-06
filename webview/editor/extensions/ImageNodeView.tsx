@@ -72,6 +72,9 @@ export function ImageNodeView({
   const pendingPathRef = useRef<string>('');
   const [liveWidth, setLiveWidth] = useState<number | null>(null);
   const [isResizing, setIsResizing] = useState(false);
+  const [isReplacing, setIsReplacing] = useState(false);
+  const [showCaption, setShowCaption] = useState(!!alt);
+  const captionRef = useRef<HTMLInputElement>(null);
 
   // Resize hook
   const { handleMouseDown, handleTouchStart } = useImageResize({
@@ -121,10 +124,10 @@ export function ImageNodeView({
     const handleImageSaved = (event: Event) => {
       const customEvent = event as CustomEvent<{ originalPath: string; webviewUrl: string }>;
       const { originalPath, webviewUrl } = customEvent.detail;
-      console.log('[ImageNodeView] image-saved event received, src:', src, 'originalPath:', originalPath);
 
-      // Only accept if this node currently has no src (is showing drop zone)
-      if (!src) {
+      // Accept if showing drop zone (no src) or in replace mode
+      if (!src || isReplacing) {
+        setIsReplacing(false);
         updateAttributes({ src: webviewUrl, originalSrc: originalPath });
       }
     };
@@ -133,16 +136,16 @@ export function ImageNodeView({
     return () => {
       window.removeEventListener('image-saved', handleImageSaved);
     };
-  }, [src, updateAttributes]);
+  }, [src, isReplacing, updateAttributes]);
 
   // Handle file picker result
   useEffect(() => {
     const handleFilePickerResult = (event: Event) => {
       const customEvent = event as CustomEvent<{ originalPath: string; webviewUrl: string }>;
       const { originalPath, webviewUrl } = customEvent.detail;
-      console.log('[ImageNodeView] file-picker-result event received, src:', src, 'originalPath:', originalPath, 'webviewUrl:', webviewUrl);
 
-      if (!src) {
+      if (!src || isReplacing) {
+        setIsReplacing(false);
         updateAttributes({ src: webviewUrl, originalSrc: originalPath });
       }
     };
@@ -151,7 +154,7 @@ export function ImageNodeView({
     return () => {
       window.removeEventListener('file-picker-result', handleFilePickerResult);
     };
-  }, [src, updateAttributes]);
+  }, [src, isReplacing, updateAttributes]);
 
   // Request URL conversion for relative paths on mount
   useEffect(() => {
@@ -170,12 +173,10 @@ export function ImageNodeView({
 
   // Drop zone handlers
   const handleUrlSubmit = useCallback((url: string) => {
-    console.log('[ImageNodeView] handleUrlSubmit called with:', url);
+    setIsReplacing(false);
     if (isRenderableUrl(url)) {
-      console.log('[ImageNodeView] URL is renderable, setting src directly');
       updateAttributes({ src: url, originalSrc: url });
     } else {
-      console.log('[ImageNodeView] URL is relative, requesting conversion');
       updateAttributes({ originalSrc: url });
       pendingPathRef.current = url;
       requestUrlConversion(url);
@@ -203,18 +204,70 @@ export function ImageNodeView({
     updateAttributes({ textAlign: align === 'left' ? null : align });
   }, [updateAttributes]);
 
-  const handleReplace = useCallback(() => {
-    updateAttributes({ src: '', originalSrc: '' });
+  const handleToggleCaption = useCallback(() => {
+    if (showCaption) {
+      // Remove caption
+      setShowCaption(false);
+      updateAttributes({ alt: '' });
+    } else {
+      // Show caption and focus it
+      setShowCaption(true);
+      setTimeout(() => captionRef.current?.focus(), 0);
+    }
+  }, [showCaption, updateAttributes]);
+
+  const handleCaptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    updateAttributes({ alt: e.target.value });
   }, [updateAttributes]);
 
-  // Drop Zone state — src is empty
-  if (!src) {
+  const handleCaptionKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (e.key === 'Enter' || e.key === 'Escape') {
+      e.preventDefault();
+      captionRef.current?.blur();
+    }
+    // Handle Cmd/Ctrl+V — request clipboard from VS Code extension
+    if (e.key === 'v' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      window.vscode?.postMessage({ type: 'requestClipboard' });
+    }
+  }, []);
+
+  // Listen for clipboard data for caption input
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'clipboardData' && event.data.payload?.text) {
+        if (document.activeElement === captionRef.current) {
+          const input = captionRef.current!;
+          const start = input.selectionStart ?? input.value.length;
+          const end = input.selectionEnd ?? input.value.length;
+          const newVal = input.value.slice(0, start) + event.data.payload.text + input.value.slice(end);
+          updateAttributes({ alt: newVal });
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [updateAttributes]);
+
+  const handleReplace = useCallback(() => {
+    setIsReplacing(true);
+  }, []);
+
+  const handleCancelReplace = useCallback(() => {
+    setIsReplacing(false);
+  }, []);
+
+  // Drop Zone state — src is empty or replacing
+  if (!src || isReplacing) {
     return (
       <NodeViewWrapper className="image-node-view" data-text-align={textAlign || undefined}>
         <ImageDropZone
           onUrlSubmit={handleUrlSubmit}
           onFileDrop={handleFileDrop}
           onBrowseClick={handleBrowseClick}
+          onCancel={isReplacing ? handleCancelReplace : undefined}
         />
       </NodeViewWrapper>
     );
@@ -249,7 +302,9 @@ export function ImageNodeView({
         {selected && !isResizing && (
           <ImagePopoverToolbar
             textAlign={textAlign}
+            hasCaption={showCaption}
             onAlignChange={handleAlignChange}
+            onToggleCaption={handleToggleCaption}
             onReplace={handleReplace}
             onDelete={deleteNode}
           />
@@ -279,6 +334,21 @@ export function ImageNodeView({
               onTouchStart={(e) => handleTouchStart(e, 'se')}
             />
           </>
+        )}
+
+        {/* Caption — editable alt text shown below image */}
+        {showCaption && (
+          <input
+            ref={captionRef}
+            type="text"
+            className="image-caption"
+            value={alt || ''}
+            onChange={handleCaptionChange}
+            onKeyDown={handleCaptionKeyDown}
+            onMouseDown={(e) => e.stopPropagation()}
+            onPaste={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            placeholder="Add a caption..."
+          />
         )}
       </div>
     </NodeViewWrapper>

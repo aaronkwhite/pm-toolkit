@@ -23,9 +23,10 @@ interface ImageDropZoneProps {
   onUrlSubmit: (url: string) => void;
   onFileDrop: (file: File) => void;
   onBrowseClick: () => void;
+  onCancel?: () => void;
 }
 
-export function ImageDropZone({ onUrlSubmit, onFileDrop, onBrowseClick }: ImageDropZoneProps) {
+export function ImageDropZone({ onUrlSubmit, onFileDrop, onBrowseClick, onCancel }: ImageDropZoneProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [urlValue, setUrlValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -75,7 +76,11 @@ export function ImageDropZone({ onUrlSubmit, onFileDrop, onBrowseClick }: ImageD
 
     if (e.key === 'Escape') {
       e.preventDefault();
-      inputRef.current?.blur();
+      if (onCancel) {
+        onCancel();
+      } else {
+        inputRef.current?.blur();
+      }
     }
 
     // Handle Cmd/Ctrl+V — request clipboard from VS Code extension
@@ -117,6 +122,22 @@ export function ImageDropZone({ onUrlSubmit, onFileDrop, onBrowseClick }: ImageD
     e.stopPropagation();
   }, []);
 
+  // Global Escape key to cancel replace mode (when input isn't focused)
+  useEffect(() => {
+    if (!onCancel) return;
+
+    const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onCancel();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [onCancel]);
+
   // Prevent ProseMirror from stealing focus when clicking inside the drop zone
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -141,7 +162,7 @@ export function ImageDropZone({ onUrlSubmit, onFileDrop, onBrowseClick }: ImageD
         </svg>
       </div>
       <div className="image-drop-zone-text">
-        Paste a URL or browse for an image
+        {onCancel ? 'Replace image — paste a URL or browse (Esc to cancel)' : 'Paste a URL or browse for an image'}
       </div>
       <div className="image-drop-zone-url-row">
         <input

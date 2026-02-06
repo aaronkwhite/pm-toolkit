@@ -7,7 +7,9 @@
 
 interface ImagePopoverToolbarProps {
   textAlign: string | null;
+  hasCaption: boolean;
   onAlignChange: (align: 'left' | 'center' | 'right') => void;
+  onToggleCaption: () => void;
   onReplace: () => void;
   onDelete: () => void;
 }
@@ -56,9 +58,18 @@ const TrashIcon = () => (
   </svg>
 );
 
+const CaptionIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="4" width="20" height="12" rx="2" />
+    <path d="M7 20h10" />
+  </svg>
+);
+
 export function ImagePopoverToolbar({
   textAlign,
+  hasCaption,
   onAlignChange,
+  onToggleCaption,
   onReplace,
   onDelete,
 }: ImagePopoverToolbarProps) {
@@ -100,6 +111,15 @@ export function ImagePopoverToolbar({
 
       <div className="image-popover-separator" />
 
+      <button
+        type="button"
+        className={`image-popover-btn ${hasCaption ? 'is-active' : ''}`}
+        onClick={onToggleCaption}
+        title="Toggle caption"
+        aria-label="Toggle caption"
+      >
+        <CaptionIcon />
+      </button>
       <button
         type="button"
         className="image-popover-btn"
