@@ -1000,3 +1000,147 @@ html, body {
 .mermaid-textarea:focus {
   outline: none;
 }
+
+/* ===== Bubble Menu ===== */
+
+.bubble-menu {
+  position: fixed;
+  z-index: 9999;
+  display: none;
+  background-color: var(--vscode-menu-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  padding: 4px;
+}
+
+.bubble-menu-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Block type dropdown */
+.bubble-menu-block-dropdown {
+  position: relative;
+}
+
+.bubble-menu-block-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  color: var(--vscode-foreground);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.bubble-menu-block-btn:hover {
+  background-color: var(--vscode-toolbar-hoverBackground, rgba(127, 127, 127, 0.1));
+}
+
+.bubble-menu-block-btn svg {
+  opacity: 0.6;
+  transition: transform 0.15s ease;
+}
+
+.bubble-menu-block-dropdown.is-open .bubble-menu-block-btn svg {
+  transform: rotate(180deg);
+}
+
+.bubble-menu-block-label {
+  min-width: 80px;
+  text-align: left;
+}
+
+/* Dropdown menu */
+.bubble-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background-color: var(--vscode-menu-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  min-width: 140px;
+  z-index: 10000;
+}
+
+.bubble-menu-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  background: none;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.bubble-menu-dropdown-item:hover {
+  background-color: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
+}
+
+.bubble-menu-dropdown-item.is-active {
+  background-color: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
+  font-weight: 500;
+}
+
+/* Separator */
+.bubble-menu-separator {
+  width: 1px;
+  height: 20px;
+  background-color: var(--vscode-menu-border, var(--vscode-panel-border));
+  margin: 0 2px;
+}
+
+/* Mark buttons */
+.bubble-menu-marks {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.bubble-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.bubble-menu-btn:hover {
+  background-color: var(--vscode-toolbar-hoverBackground, rgba(127, 127, 127, 0.1));
+}
+
+.bubble-menu-btn.is-active {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.bubble-menu-btn.is-active:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+.bubble-menu-btn svg {
+  width: 16px;
+  height: 16px;
+}
