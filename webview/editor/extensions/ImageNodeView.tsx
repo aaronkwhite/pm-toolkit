@@ -84,17 +84,27 @@ function formatAltWithDimensions(
 }
 
 /**
- * Check if a URL can be rendered in the webview
+ * Check if a URL can be rendered directly (no conversion needed)
+ * This includes:
+ * - http/https URLs
+ * - data: URLs
+ * - VS Code webview resource URLs
+ * - Absolute paths (starting with /) - works in browser/test environments
  */
-function isWebviewUrl(url: string): boolean {
-  return url.startsWith('http') || url.startsWith('data:') || url.includes('vscode-resource');
+function isRenderableUrl(url: string): boolean {
+  return (
+    url.startsWith('http') ||
+    url.startsWith('data:') ||
+    url.includes('vscode-resource') ||
+    url.startsWith('/')
+  );
 }
 
 /**
  * Request URL conversion from the VS Code extension
  */
 function requestUrlConversion(relativePath: string): void {
-  if (window.vscode && relativePath && !isWebviewUrl(relativePath)) {
+  if (window.vscode && relativePath && !isRenderableUrl(relativePath)) {
     window.vscode.postMessage({ type: 'requestImageUrl', payload: { path: relativePath } });
   }
 }
@@ -241,6 +251,12 @@ export function ImageNodeView({
       const [, rawAlt, newSrc] = match;
       const { alt: parsedAlt, width: parsedWidth, height: parsedHeight } = parseAltWithDimensions(rawAlt);
 
+      // If the parsed result is an empty image (no src), delete the node
+      if (!newSrc) {
+        deleteNode();
+        return;
+      }
+
       // Compare against originalSrc (what user sees) not src (webview URL)
       const currentDisplaySrc = originalSrc || src || '';
 
@@ -262,7 +278,7 @@ export function ImageNodeView({
           // User changed the path - update originalSrc
           newAttrs.originalSrc = newSrc || null;
 
-          if (newSrc && isWebviewUrl(newSrc)) {
+          if (newSrc && isRenderableUrl(newSrc)) {
             // For http/https/data URLs, set src directly
             newAttrs.src = newSrc;
           } else if (newSrc) {
@@ -274,8 +290,8 @@ export function ImageNodeView({
 
         updateAttributes(newAttrs);
       }
-    } else if (text === '' || text === '![]()') {
-      // Empty or cleared - delete the node
+    } else if (text === '') {
+      // Empty content - delete the node
       deleteNode();
     }
     // If text doesn't match pattern, the edit field will revert to original on next update
@@ -500,20 +516,20 @@ export function ImageNodeView({
 
   // Effect: Request URL conversion for initial relative paths
   useEffect(() => {
-    if (!isWebviewUrl(src) && src && !pendingPathRef.current) {
+    if (!isRenderableUrl(src) && src && !pendingPathRef.current) {
       pendingPathRef.current = src;
       requestUrlConversion(src);
     }
   }, [src]);
 
-  // Effect: Sync selection state with edit mode
+  // Effect: Exit edit mode when node is deselected
+  // Note: We only exit edit mode when deselected. Entering edit mode is handled
+  // explicitly by handleImageClick to avoid entering edit mode during document load.
   useEffect(() => {
-    if (selected && !isEditing) {
-      enterEditMode();
-    } else if (!selected && isEditing) {
+    if (!selected && isEditing) {
       exitEditMode();
     }
-  }, [selected, isEditing, enterEditMode, exitEditMode]);
+  }, [selected, isEditing, exitEditMode]);
 
   // Effect: Cleanup timeout on unmount
   useEffect(() => {
@@ -525,7 +541,7 @@ export function ImageNodeView({
   }, []);
 
   // Determine image src for display
-  const imageSrc = isWebviewUrl(src) ? src : '';
+  const imageSrc = isRenderableUrl(src) ? src : '';
 
   return (
     <NodeViewWrapper
