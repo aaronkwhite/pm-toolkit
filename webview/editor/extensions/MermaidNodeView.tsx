@@ -579,7 +579,6 @@ export function MermaidNodeView({
         <div
           ref={diagramContainerRef}
           className={`mermaid-diagram ${viewMode === 'scroll' ? 'mermaid-scroll-mode' : 'mermaid-fit-mode'}`}
-          onClick={enterEditMode}
         >
           {!content.trim() ? (
             <div className="mermaid-placeholder">Click to add diagram</div>
