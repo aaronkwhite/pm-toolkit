@@ -335,91 +335,187 @@ html, body {
   border-color: var(--vscode-button-background);
 }
 
-/* ===== Images (Obsidian-style) ===== */
+/* ===== Images ===== */
 
-.ProseMirror img {
+/* NodeView wrapper */
+.image-node-view {
+  display: block;
+  position: relative;
+  margin: 8px 0;
+}
+
+/* Alignment via data attribute */
+.image-node-view[data-text-align="center"] {
+  text-align: center;
+}
+.image-node-view[data-text-align="center"] .image-container {
+  margin: 0 auto;
+}
+.image-node-view[data-text-align="right"] {
+  text-align: right;
+}
+.image-node-view[data-text-align="right"] .image-container {
+  margin-left: auto;
+}
+
+/* Image container (holds img + resize handles) */
+.image-container {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.image-container img.editor-image {
+  display: block;
   max-width: 100%;
   height: auto;
   border-radius: 4px;
-}
-
-.image-node-view {
-  display: inline-block;
-  position: relative;
-  /* Add generous padding for click targets between/around images */
-  padding: 4px 8px 4px 0;
-  vertical-align: bottom;
-  /* Prevent images from touching */
-  margin-bottom: 4px;
-}
-
-/* Clickable area extends beyond the visible image */
-.image-node-view::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 8px;
-  cursor: text;
-  z-index: 1;
-}
-
-/* Visual indicator when hovering the gap between images */
-.image-node-view:not(.is-editing):not(.is-selected):hover::before {
-  background: linear-gradient(to right, transparent, var(--vscode-editor-selectionBackground));
-  opacity: 0.3;
-  border-radius: 0 2px 2px 0;
-}
-
-.image-node-view img {
   cursor: pointer;
   transition: opacity 0.15s ease;
-  display: block;
-  /* Ensure consistent sizing */
-  max-width: 100%;
-  height: auto;
 }
 
-.image-node-view img:hover {
+.image-container img.editor-image:hover {
   opacity: 0.9;
 }
 
-.image-node-view.is-selected img,
-.image-node-view.is-editing img {
+/* Selected state */
+.image-node-view.is-selected .image-container {
   outline: 2px solid var(--vscode-focusBorder);
   outline-offset: 2px;
-}
-
-/* When editing, expand to show the edit field properly */
-.image-node-view.is-editing {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* Markdown edit field - shown above image when editing */
-.image-markdown-edit {
-  display: none;
-  font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, Menlo, Consolas, monospace);
-  font-size: 0.85em;
-  background-color: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.1));
-  padding: 6px 10px;
   border-radius: 4px;
-  color: var(--vscode-textLink-foreground);
-  outline: none;
-  white-space: nowrap;
-  overflow-x: auto;
-  max-width: 100%;
 }
 
-/* When editing, show markdown above the image */
-.image-node-view.is-editing .image-markdown-edit {
-  display: block;
+/* Resize handles */
+.image-resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--vscode-focusBorder);
+  border-radius: 50%;
+  background: var(--vscode-editor-background);
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s;
 }
+.image-node-view.is-selected .image-resize-handle {
+  opacity: 1;
+}
+.image-resize-nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.image-resize-ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.image-resize-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.image-resize-se { bottom: -5px; right: -5px; cursor: nwse-resize; }
 
-.image-placeholder-text {
+/* Drop Zone */
+.image-drop-zone {
+  border: 2px dashed var(--vscode-panel-border, rgba(128,128,128,0.4));
+  border-radius: 8px;
+  padding: 32px 24px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.image-drop-zone:hover,
+.image-drop-zone.is-drag-over {
+  border-color: var(--vscode-focusBorder);
+  background: var(--vscode-list-hoverBackground);
+}
+.image-drop-zone-icon {
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+.image-drop-zone-icon svg {
+  width: 32px;
+  height: 32px;
+}
+.image-drop-zone-text {
   font-size: 13px;
+  margin-bottom: 12px;
+}
+.image-drop-zone-url-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+.image-drop-zone-input {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.4));
+  background: var(--vscode-input-background, var(--vscode-editor-background));
+  color: var(--vscode-input-foreground, var(--vscode-foreground));
+  border-radius: 6px;
+  width: 280px;
+  font-family: inherit;
+}
+.image-drop-zone-input:focus {
+  outline: none;
+  border-color: var(--vscode-focusBorder);
+}
+.image-drop-zone-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+.image-drop-zone-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  border: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.4));
+  background: var(--vscode-button-secondaryBackground, var(--vscode-editor-background));
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.image-drop-zone-btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground, var(--vscode-list-hoverBackground));
+}
+
+/* Popover Toolbar */
+.image-popover-toolbar {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border, rgba(128,128,128,0.35)));
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 20;
+  white-space: nowrap;
+}
+.image-popover-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  color: var(--vscode-foreground);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  padding: 0;
+}
+.image-popover-btn:hover {
+  background: var(--vscode-list-hoverBackground);
+  opacity: 1;
+}
+.image-popover-btn.is-active {
+  background: var(--vscode-list-activeSelectionBackground);
+  color: var(--vscode-list-activeSelectionForeground);
+  opacity: 1;
+}
+.image-popover-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.image-popover-separator {
+  width: 1px;
+  background: var(--vscode-panel-border, rgba(128,128,128,0.3));
+  margin: 4px 2px;
 }
 
 /* ===== Selection ===== */
@@ -430,6 +526,15 @@ html, body {
 
 .ProseMirror .ProseMirror-selectednode {
   outline: 2px solid var(--vscode-focusBorder);
+}
+/* Images and mermaid nodes handle their own selection styling */
+.ProseMirror .image-node-view.ProseMirror-selectednode,
+.ProseMirror .ProseMirror-selectednode .image-node-view,
+.ProseMirror .ProseMirror-selectednode:has(.image-node-view),
+.ProseMirror .mermaid-node.ProseMirror-selectednode,
+.ProseMirror .ProseMirror-selectednode .mermaid-node,
+.ProseMirror .ProseMirror-selectednode:has(.mermaid-node) {
+  outline: none !important;
 }
 
 /* ===== Gap cursor ===== */
@@ -1153,7 +1258,7 @@ html, body {
   position: relative;
   height: 100%;
   /* Reserve space for block handles on the left */
-  padding-left: 48px;
+  padding-left: 28px;
 }
 
 /* ===== Block Handle ===== */
@@ -1210,67 +1315,40 @@ html, body {
   opacity: 0.5;
 }
 
-/* ===== Document Outline Sidebar ===== */
+/* Drop indicator line shown during block drag */
+.block-drop-indicator {
+  position: fixed;
+  height: 2px;
+  background: var(--vscode-focusBorder, #007fd4);
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 200;
+  display: none;
+  transform: translateY(-1px);
+}
+
+/* ===== Document Outline (Minimap Bars + Hover Popover) ===== */
 
 .document-outline {
   position: fixed;
-  right: 16px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  width: 120px;
-  background-color: var(--vscode-editorWidget-background, var(--vscode-editor-background));
-  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
   z-index: 50;
-}
-
-.outline-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--vscode-panel-border);
 }
 
-.outline-title {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: var(--vscode-foreground);
-}
-
-.outline-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--vscode-descriptionForeground);
-  cursor: pointer;
-  border-radius: 3px;
-  font-size: 8px;
-}
-
-.outline-toggle:hover {
-  background-color: var(--vscode-toolbar-hoverBackground, rgba(127, 127, 127, 0.15));
-  color: var(--vscode-foreground);
-}
-
-.outline-content {
+/* Vertical stack of thin bars (always visible) */
+.outline-bars {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 12px;
-  max-height: 50vh;
-  overflow-y: auto;
+  align-items: flex-end;
+  gap: 6px;
+  width: 32px;
+  padding: 8px 6px;
 }
 
-/* Horizontal bars representing headings */
 .outline-bar {
   display: block;
   height: 3px;
@@ -1278,8 +1356,8 @@ html, body {
   border-radius: 2px;
   background-color: var(--vscode-foreground);
   cursor: pointer;
-  transition: opacity 0.1s ease, background-color 0.1s ease;
-  opacity: 0.25;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  opacity: 0.2;
   padding: 0;
   margin: 0;
 }
@@ -1289,28 +1367,99 @@ html, body {
   background-color: var(--vscode-focusBorder);
 }
 
-/* Width based on heading level - wider = higher level */
-.outline-level-1 { width: 100%; opacity: 0.5; }
-.outline-level-2 { width: 85%; margin-left: 0; opacity: 0.4; }
-.outline-level-3 { width: 70%; margin-left: 0; opacity: 0.35; }
-.outline-level-4 { width: 55%; margin-left: 0; opacity: 0.3; }
-.outline-level-5 { width: 40%; margin-left: 0; opacity: 0.25; }
-.outline-level-6 { width: 25%; margin-left: 0; opacity: 0.2; }
+.outline-bar-active {
+  opacity: 0.7;
+  background-color: var(--vscode-focusBorder);
+}
 
-/* Scrollbar styling for outline */
-.outline-content::-webkit-scrollbar {
+/* Bar widths by heading level */
+.outline-bar-level-1 { width: 100%; }
+.outline-bar-level-2 { width: 75%; }
+.outline-bar-level-3 { width: 55%; }
+.outline-bar-level-4 { width: 40%; }
+.outline-bar-level-5 { width: 30%; }
+.outline-bar-level-6 { width: 25%; }
+
+/* Popover with heading text (appears on hover, to the left of bars) */
+.outline-popover {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 4px;
+  min-width: 140px;
+  max-width: 220px;
+  max-height: 50vh;
+  overflow-y: auto;
+  background-color: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 6px 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.outline-popover-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Individual heading items in popover */
+.outline-item {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--vscode-foreground);
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 3px 12px;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.7;
+  transition: opacity 0.1s ease, background-color 0.1s ease;
+}
+
+.outline-item:hover {
+  opacity: 1;
+  background-color: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.1));
+}
+
+.outline-item-active {
+  opacity: 1;
+  color: var(--vscode-focusBorder);
+  font-weight: 500;
+}
+
+/* Indent by heading level */
+.outline-item-level-1 { padding-left: 12px; }
+.outline-item-level-2 { padding-left: 24px; }
+.outline-item-level-3 { padding-left: 36px; }
+.outline-item-level-4 { padding-left: 48px; }
+.outline-item-level-5 { padding-left: 60px; }
+.outline-item-level-6 { padding-left: 72px; }
+
+/* Popover scrollbar */
+.outline-popover::-webkit-scrollbar {
   width: 4px;
 }
 
-.outline-content::-webkit-scrollbar-track {
+.outline-popover::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.outline-content::-webkit-scrollbar-thumb {
+.outline-popover::-webkit-scrollbar-thumb {
   background-color: var(--vscode-scrollbarSlider-background);
   border-radius: 2px;
 }
 
-.outline-content::-webkit-scrollbar-thumb:hover {
+.outline-popover::-webkit-scrollbar-thumb:hover {
   background-color: var(--vscode-scrollbarSlider-hoverBackground);
 }

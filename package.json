@@ -217,6 +217,11 @@
           "default": "Backlog, In Progress, Done",
           "description": "Comma-separated list of default columns for new kanban boards"
         },
+        "pmtoolkit.imageAssetsPath": {
+          "type": "string",
+          "default": "assets",
+          "description": "Directory where uploaded images are saved (relative to the document)"
+        },
         "pmtoolkit.kanbanShowThumbnails": {
           "type": "boolean",
           "default": true,

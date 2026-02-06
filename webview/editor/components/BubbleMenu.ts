@@ -6,6 +6,7 @@
  */
 
 import { Editor } from '@tiptap/core';
+import { NodeSelection } from '@tiptap/pm/state';
 import { LinkPicker } from './LinkPicker';
 
 /**
@@ -181,6 +182,12 @@ export class BubbleMenu {
       this.hide();
       this.lastFrom = -1;
       this.lastTo = -1;
+      return;
+    }
+
+    // Don't show for node selections (images, etc. have their own toolbars)
+    if (selection instanceof NodeSelection) {
+      this.hide();
       return;
     }
 

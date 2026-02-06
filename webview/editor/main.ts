@@ -441,6 +441,28 @@ window.addEventListener('message', (event) => {
         }));
       }
       break;
+
+    case 'imageSaved':
+      if (message.payload?.originalPath && message.payload?.webviewUrl) {
+        window.dispatchEvent(new CustomEvent('image-saved', {
+          detail: {
+            originalPath: message.payload.originalPath,
+            webviewUrl: message.payload.webviewUrl,
+          },
+        }));
+      }
+      break;
+
+    case 'filePickerResult':
+      if (message.payload?.originalPath && message.payload?.webviewUrl) {
+        window.dispatchEvent(new CustomEvent('file-picker-result', {
+          detail: {
+            originalPath: message.payload.originalPath,
+            webviewUrl: message.payload.webviewUrl,
+          },
+        }));
+      }
+      break;
   }
 });
 

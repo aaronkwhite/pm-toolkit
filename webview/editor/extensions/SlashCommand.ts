@@ -259,9 +259,9 @@ export const defaultCommands: SlashCommandItem[] = [
   },
   {
     title: 'Image',
-    description: 'Insert an image',
+    description: 'Insert or upload an image',
     icon: '🖼',
-    searchTerms: ['image', 'img', 'picture', 'photo'],
+    searchTerms: ['image', 'img', 'picture', 'photo', 'upload'],
     command: ({ editor, range }) => {
       editor
         .chain()
@@ -271,13 +271,12 @@ export const defaultCommands: SlashCommandItem[] = [
         .run();
 
       // The image will be inserted with empty src, and the node view
-      // will show the edit field. User can then type the path.
-      // We need to select the image node to enter edit mode.
-      // Use setTimeout to let the node be inserted first.
+      // will show the drop zone UI for uploading/linking an image.
+      // Select the node so the drop zone is interactive.
       setTimeout(() => {
         const { state } = editor;
         const { selection } = state;
-        const pos = selection.from - 1; // Position of the just-inserted image
+        const pos = selection.from - 1;
 
         if (pos >= 0) {
           const node = state.doc.nodeAt(pos);
@@ -414,9 +413,14 @@ function updateMenuPosition(
   let top = rect.bottom + 8;
   let left = rect.left;
 
-  // Flip up if near bottom
+  // If menu overflows the bottom, flip above cursor
   if (top + menuRect.height > innerHeight - 20) {
     top = rect.top - menuRect.height - 8;
+  }
+
+  // Never go above the viewport
+  if (top < 8) {
+    top = 8;
   }
 
   // Keep within horizontal bounds
@@ -426,6 +430,8 @@ function updateMenuPosition(
 
   element.style.top = `${top}px`;
   element.style.left = `${left}px`;
+  element.style.maxHeight = `${innerHeight - top - 20}px`;
+  element.style.overflow = 'auto';
 }
 
 /**

@@ -152,7 +152,32 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
           }
           break
         }
-        // Add other message handlers as we convert components
+        // Image URL resolution — dispatch as custom event for ImageNodeView
+        case 'imageUrl': {
+          const { originalPath, webviewUrl } = message.payload
+          window.dispatchEvent(
+            new CustomEvent('image-url-resolved', { detail: { originalPath, webviewUrl } })
+          )
+          break
+        }
+
+        // Image file saved to assets — dispatch for ImageNodeView drop zone
+        case 'imageSaved': {
+          const { originalPath, webviewUrl } = message.payload
+          window.dispatchEvent(
+            new CustomEvent('image-saved', { detail: { originalPath, webviewUrl } })
+          )
+          break
+        }
+
+        // File picker result — dispatch for ImageNodeView drop zone
+        case 'filePickerResult': {
+          const { originalPath, webviewUrl } = message.payload
+          window.dispatchEvent(
+            new CustomEvent('file-picker-result', { detail: { originalPath, webviewUrl } })
+          )
+          break
+        }
       }
     }
 

@@ -101,6 +101,7 @@ export class SettingsPanel {
       templateFolder: config.get<string>('templateFolder', ''),
       templateWatchEnabled: config.get<boolean>('templateWatchEnabled', true),
       editorFontSize: config.get<number>('editorFontSize', 14),
+      imageAssetsPath: config.get<string>('imageAssetsPath', 'assets'),
       kanbanSaveDelay: config.get<number>('kanbanSaveDelay', 150),
       kanbanDefaultColumns: config.get<string>('kanbanDefaultColumns', 'Backlog, In Progress, Done'),
       kanbanShowThumbnails: config.get<boolean>('kanbanShowThumbnails', true),
@@ -119,6 +120,7 @@ export class SettingsPanel {
       templateFolder: string;
       templateWatchEnabled: boolean;
       editorFontSize: number;
+      imageAssetsPath: string;
       kanbanSaveDelay: number;
       kanbanDefaultColumns: string;
       kanbanShowThumbnails: boolean;
@@ -429,6 +431,15 @@ export class SettingsPanel {
         <span class="input-suffix">px</span>
       </div>
     </div>
+    <div class="setting-row">
+      <div class="setting-content">
+        <div class="setting-title">Image Assets Path</div>
+        <p class="setting-description">Directory where uploaded images are saved (relative to the document)</p>
+      </div>
+      <div class="setting-control">
+        <input type="text" class="text-input" id="imageAssetsPath" value="${escapeHtml(settings.imageAssetsPath || 'assets')}" placeholder="assets" />
+      </div>
+    </div>
   </div>
 
   <div class="section-label">Templates</div>
@@ -530,6 +541,14 @@ export class SettingsPanel {
           value: value
         });
       }
+    });
+
+    document.getElementById('imageAssetsPath').addEventListener('change', (e) => {
+      vscode.postMessage({
+        type: 'updateSetting',
+        key: 'imageAssetsPath',
+        value: e.target.value.trim() || 'assets'
+      });
     });
 
     document.getElementById('kanbanDefaultColumns').addEventListener('change', (e) => {

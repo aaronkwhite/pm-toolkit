@@ -1,12 +1,16 @@
 /**
- * Custom Image Extension with Obsidian-style editing
+ * Custom Image Extension
  *
- * When an image is selected/focused, it shows the raw markdown syntax
- * for direct editing. When deselected, it renders the image.
+ * Extends Tiptap's Image extension with:
+ * - textAlign attribute for alignment (left/center/right)
+ * - width attribute for persisting resize
+ * - Drop zone UI when src is empty (via ReactNodeViewRenderer)
+ * - Resize handles on selection (forked from tiptap-extension-resize-image)
+ * - Popover toolbar for alignment, replace, delete
+ * - Standard markdown serialization: ![alt](url)
  *
- * Supports Obsidian-style dimensions: ![alt|300](url) or ![alt|300x200](url)
- *
- * Also includes an input rule to convert typed markdown ![alt](url) to images.
+ * Also includes an input rule to convert typed markdown ![alt](url) to images,
+ * and a paste handler for image markdown text.
  */
 
 import Image from '@tiptap/extension-image';
@@ -15,63 +19,8 @@ import { TextSelection } from '@tiptap/pm/state';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import ImageNodeView from './ImageNodeView';
 
-// Regex to match image markdown: ![alt](url) or ![alt|width](url) or ![alt|widthxheight](url)
+// Regex to match image markdown: ![alt](url)
 const imageMarkdownRegex = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/;
-
-/**
- * Parse Obsidian-style alt text to extract actual alt and dimensions
- * Examples:
- *   "my image" -> { alt: "my image", width: null, height: null }
- *   "my image|300" -> { alt: "my image", width: 300, height: null }
- *   "my image|300x200" -> { alt: "my image", width: 300, height: 200 }
- *   "|300" -> { alt: "", width: 300, height: null }
- */
-function parseAltWithDimensions(altText: string): {
-  alt: string;
-  width: number | null;
-  height: number | null;
-} {
-  if (!altText) {
-    return { alt: '', width: null, height: null };
-  }
-
-  // Check for pipe separator
-  const pipeIndex = altText.lastIndexOf('|');
-  if (pipeIndex === -1) {
-    return { alt: altText, width: null, height: null };
-  }
-
-  const alt = altText.substring(0, pipeIndex);
-  const dimensionPart = altText.substring(pipeIndex + 1);
-
-  // Try to parse dimensions: "300" or "300x200"
-  const dimensionMatch = dimensionPart.match(/^(\d+)(?:x(\d+))?$/);
-  if (!dimensionMatch) {
-    // Not valid dimensions, treat entire string as alt
-    return { alt: altText, width: null, height: null };
-  }
-
-  const width = parseInt(dimensionMatch[1], 10);
-  const height = dimensionMatch[2] ? parseInt(dimensionMatch[2], 10) : null;
-
-  return { alt, width, height };
-}
-
-/**
- * Format alt text with dimensions for markdown output
- */
-function formatAltWithDimensions(
-  alt: string,
-  width: number | null,
-  height: number | null
-): string {
-  if (!width && !height) {
-    return alt;
-  }
-
-  const dimensionStr = height ? `${width}x${height}` : `${width}`;
-  return alt ? `${alt}|${dimensionStr}` : `|${dimensionStr}`;
-}
 
 export const ImageNode = Image.extend({
   addAttributes() {
@@ -96,15 +45,12 @@ export const ImageNode = Image.extend({
           return { width: attributes.width };
         },
       },
-      height: {
+      textAlign: {
         default: null,
-        parseHTML: (element) => {
-          const height = element.getAttribute('height');
-          return height ? parseInt(height, 10) : null;
-        },
+        parseHTML: (element) => element.getAttribute('data-text-align'),
         renderHTML: (attributes) => {
-          if (!attributes.height) return {};
-          return { height: attributes.height };
+          if (!attributes.textAlign) return {};
+          return { 'data-text-align': attributes.textAlign };
         },
       },
     };
@@ -118,40 +64,68 @@ export const ImageNode = Image.extend({
           // Use originalSrc for serialization (the user-friendly path), falling back to src
           const src = node.attrs.originalSrc || node.attrs.src || '';
           const width = node.attrs.width;
-          const height = node.attrs.height;
+          const textAlign = node.attrs.textAlign;
 
-          // Format with Obsidian-style dimensions
-          const altWithDimensions = formatAltWithDimensions(alt, width, height);
-
-          // Escape special characters in URL
           const escapedSrc = src.replace(/[()]/g, '\\$&');
 
-          // Ensure image is on its own line (block element)
           state.ensureNewLine();
-          state.write(`![${altWithDimensions}](${escapedSrc})`);
+
+          // Store width/alignment as a HTML comment before the image.
+          // This avoids HTML block parsing issues that break surrounding markdown.
+          if (width || textAlign) {
+            const parts: string[] = [];
+            if (width) parts.push(`width=${width}`);
+            if (textAlign) parts.push(`align=${textAlign}`);
+            state.write(`<!-- image: ${parts.join(' ')} -->\n`);
+          }
+
+          state.write(`![${alt}](${escapedSrc})`);
           state.ensureNewLine();
         },
         parse: {
-          // Hook into DOM parsing to extract dimensions from alt text
           updateDOM(element: HTMLElement) {
-            // Find all images and process their alt text for dimensions
-            element.querySelectorAll('img').forEach((img) => {
-              const rawAlt = img.getAttribute('alt') || '';
-              const { alt, width, height } = parseAltWithDimensions(rawAlt);
+            // Find <!-- image: width=N align=X --> comments and apply to following <img>
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_COMMENT);
+            const commentsToRemove: Comment[] = [];
 
-              // Update the alt to remove dimension syntax
-              if (alt !== rawAlt) {
-                img.setAttribute('alt', alt);
+            while (walker.nextNode()) {
+              const comment = walker.currentNode as Comment;
+              const match = comment.textContent?.trim().match(
+                /^image:\s*(.*)/
+              );
+              if (!match) continue;
+
+              const attrs = match[1];
+              // Find the next <img> sibling (may be inside a <p>)
+              let next: Node | null = comment.nextSibling;
+              // Skip whitespace text nodes
+              while (next && next.nodeType === Node.TEXT_NODE && !next.textContent?.trim()) {
+                next = next.nextSibling;
               }
 
-              // Set width/height attributes if present
-              if (width) {
-                img.setAttribute('width', String(width));
+              let img: HTMLImageElement | null = null;
+              if (next instanceof HTMLImageElement) {
+                img = next;
+              } else if (next instanceof HTMLElement) {
+                img = next.querySelector('img');
               }
-              if (height) {
-                img.setAttribute('height', String(height));
+
+              if (img) {
+                const widthMatch = attrs.match(/width=(\d+)/);
+                const alignMatch = attrs.match(/align=(\w+)/);
+                if (widthMatch) {
+                  img.setAttribute('width', widthMatch[1]);
+                }
+                if (alignMatch) {
+                  img.setAttribute('data-text-align', alignMatch[1]);
+                }
               }
-            });
+
+              commentsToRemove.push(comment);
+            }
+
+            // Remove processed comments so they don't become text nodes
+            commentsToRemove.forEach((c) => c.remove());
           },
         },
       },
@@ -182,10 +156,7 @@ export const ImageNode = Image.extend({
       const matchEnd = match.index! + match[0].length;
       if (matchEnd !== textBeforeCursor.length) return false;
 
-      const [fullMatch, rawAlt, src, title] = match;
-
-      // Parse alt text for dimensions
-      const { alt, width, height } = parseAltWithDimensions(rawAlt);
+      const [fullMatch, alt, src, title] = match;
 
       // Calculate positions in the document
       const blockStart = $from.start();
@@ -198,15 +169,12 @@ export const ImageNode = Image.extend({
       // Delete the matched text
       tr.delete(matchStart, matchEndPos);
 
-      // Create the image node with dimensions
-      // Store originalSrc for user-friendly display/editing
+      // Create the image node
       const imageNode = imageType.create({
         src,
-        originalSrc: src, // User typed this path, preserve it
+        originalSrc: src,
         alt: alt || null,
         title: title || null,
-        width: width || null,
-        height: height || null,
       });
 
       // Insert the image
@@ -259,8 +227,7 @@ export const ImageNode = Image.extend({
             const match = trimmed.match(/^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)$/);
             if (!match) return false;
 
-            const [, rawAlt, src, title] = match;
-            const { alt, width, height } = parseAltWithDimensions(rawAlt);
+            const [, alt, src, title] = match;
 
             // Create and insert the image node
             const { state } = view;
@@ -276,8 +243,6 @@ export const ImageNode = Image.extend({
               originalSrc: src,
               alt: alt || null,
               title: title || null,
-              width: width || null,
-              height: height || null,
             });
 
             tr.replaceSelectionWith(imageNode);
