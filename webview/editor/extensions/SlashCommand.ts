@@ -468,9 +468,11 @@ export const SlashCommand = Extension.create({
           let container: HTMLElement | null = null;
           let root: Root | null = null;
           let menuRef: SlashCommandMenuRef | null = null;
+          let currentProps: SuggestionProps<SlashCommandItem> | null = null;
 
           const renderMenu = (props: SuggestionProps<SlashCommandItem>) => {
             if (!container || !root) return;
+            currentProps = props;
 
             root.render(
               createElement(SlashCommandMenu, {
@@ -484,8 +486,13 @@ export const SlashCommand = Extension.create({
                   props.command(item);
                 },
                 onClose: () => {
-                  if (container) {
-                    container.style.display = 'none';
+                  // Delete the slash command range to properly exit the suggestion
+                  if (currentProps) {
+                    currentProps.editor
+                      .chain()
+                      .focus()
+                      .deleteRange(currentProps.range)
+                      .run();
                   }
                 },
               })

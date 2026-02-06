@@ -470,9 +470,12 @@ html, body {
 
 /* ===== Slash Command Menu ===== */
 
-.slash-command-menu {
+.slash-command-menu-container {
   position: fixed;
   z-index: 9999;
+}
+
+.slash-command-menu {
   background-color: var(--vscode-menu-background, var(--vscode-editor-background));
   border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
   border-radius: 8px;
@@ -481,7 +484,6 @@ html, body {
   min-width: 240px;
   overflow-y: auto;
   padding: 6px;
-  display: none;
 }
 
 .slash-command-item {
