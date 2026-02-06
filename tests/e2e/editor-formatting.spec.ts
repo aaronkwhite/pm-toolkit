@@ -239,9 +239,10 @@ test.describe('Formatting', () => {
     await editor.toggleBold();
     await editor.waitForSync();
 
-    // Add more text on a new line using selectAll + End approach
-    // First deselect by pressing arrow key
+    // Add more text on a new line
+    // First deselect by pressing arrow key, then toggle bold OFF before adding new line
     await editor.pressKey('ArrowRight');
+    await editor.toggleBold(); // Exit bold mode
     await editor.pressKey('Enter');
     await editor.type('More text');
     await editor.waitForSync();
