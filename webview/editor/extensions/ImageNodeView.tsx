@@ -206,15 +206,12 @@ export function ImageNodeView({
 
   const handleToggleCaption = useCallback(() => {
     if (showCaption) {
-      // Remove caption
       setShowCaption(false);
-      updateAttributes({ alt: '' });
     } else {
-      // Show caption and focus it
       setShowCaption(true);
       setTimeout(() => captionRef.current?.focus(), 0);
     }
-  }, [showCaption, updateAttributes]);
+  }, [showCaption]);
 
   const handleCaptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     updateAttributes({ alt: e.target.value });
