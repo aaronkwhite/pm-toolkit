@@ -1,4 +1,13 @@
 /**
+ * File info for link picker
+ */
+export interface FileInfo {
+  name: string;
+  path: string;
+  relativePath: string;
+}
+
+/**
  * Messages sent from Extension to Webview
  */
 export type ExtensionToWebviewMessage =
@@ -6,7 +15,8 @@ export type ExtensionToWebviewMessage =
   | { type: 'update'; payload: { content: string } }
   | { type: 'templates'; payload: { templates: Template[] } }
   | { type: 'clipboardData'; payload: { text: string } }
-  | { type: 'imageUrl'; payload: { originalPath: string; webviewUrl: string } };
+  | { type: 'imageUrl'; payload: { originalPath: string; webviewUrl: string } }
+  | { type: 'files'; payload: { files: FileInfo[]; currentFilePath: string } };
 
 /**
  * Messages sent from Webview to Extension
@@ -17,7 +27,9 @@ export type WebviewToExtensionMessage =
   | { type: 'requestTemplates' }
   | { type: 'requestClipboard' }
   | { type: 'copyToClipboard'; payload: { text: string } }
-  | { type: 'requestImageUrl'; payload: { path: string } };
+  | { type: 'requestImageUrl'; payload: { path: string } }
+  | { type: 'requestFiles'; payload: { search?: string } }
+  | { type: 'openFile'; payload: { path: string } };
 
 /**
  * Template definition from YAML frontmatter

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { HTMLBuilder } from './HTMLBuilder';
-import { ExtensionToWebviewMessage, WebviewToExtensionMessage } from '../types';
+import { ExtensionToWebviewMessage, WebviewToExtensionMessage, FileInfo } from '../types';
 import { TemplateManager } from '../templates/TemplateManager';
 
 /**
@@ -229,6 +230,92 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
               }
             } catch (err) {
               console.error('Failed to convert image path:', err);
+            }
+            break;
+
+          case 'openFile':
+            // Webview is requesting to open a file or URL
+            try {
+              const filePath = message.payload?.path;
+              if (filePath) {
+                if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+                  // External URL - open in browser
+                  await vscode.env.openExternal(vscode.Uri.parse(filePath));
+                } else {
+                  // Internal file - resolve relative path from current document
+                  const fileUri = vscode.Uri.joinPath(documentDir, filePath);
+                  // Open in a new tab
+                  await vscode.commands.executeCommand('vscode.open', fileUri, {
+                    viewColumn: vscode.ViewColumn.Beside,
+                  });
+                }
+              }
+            } catch (err) {
+              console.error('Failed to open file:', err);
+            }
+            break;
+
+          case 'requestFiles':
+            // Webview is requesting list of workspace files for link picker
+            try {
+              const searchQuery = message.payload?.search?.toLowerCase() || '';
+              const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+
+              if (workspaceFolder) {
+                // Find all files in workspace
+                const files = await vscode.workspace.findFiles(
+                  '**/*',
+                  '**/node_modules/**',
+                  100 // Limit to 100 files for performance
+                );
+
+                // Get file stats and filter/sort
+                const fileInfos: (FileInfo & { mtime: number })[] = [];
+
+                for (const file of files) {
+                  try {
+                    const stat = await vscode.workspace.fs.stat(file);
+                    const relativePath = vscode.workspace.asRelativePath(file, false);
+                    const fileName = path.basename(file.fsPath, path.extname(file.fsPath));
+
+                    // Filter by search query if provided
+                    if (searchQuery) {
+                      const searchTarget = `${fileName} ${relativePath}`.toLowerCase();
+                      if (!searchTarget.includes(searchQuery)) {
+                        continue;
+                      }
+                    }
+
+                    fileInfos.push({
+                      name: fileName,
+                      path: file.fsPath,
+                      relativePath,
+                      mtime: stat.mtime,
+                    });
+                  } catch {
+                    // Skip files we can't stat
+                  }
+                }
+
+                // Sort by modification time (most recent first) and limit to 20
+                fileInfos.sort((a, b) => b.mtime - a.mtime);
+                const limitedFiles = fileInfos.slice(0, 20).map(({ name, path, relativePath }) => ({
+                  name,
+                  path,
+                  relativePath,
+                }));
+
+                const filesMessage: ExtensionToWebviewMessage = {
+                  type: 'files',
+                  payload: {
+                    files: limitedFiles,
+                    currentFilePath: document.uri.fsPath,
+                  },
+                };
+                webviewPanel.webview.postMessage(filesMessage);
+              }
+            } catch (err) {
+              console.error('Failed to get workspace files:', err);
             }
             break;
         }

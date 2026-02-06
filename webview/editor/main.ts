@@ -173,6 +173,30 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
       isHistoryOperation = !!transaction.getMeta('history$');
     },
     onCreate: ({ editor }) => {
+      // Handle clicks on links - open internal links in new tab
+      editor.view.dom.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const link = target.closest('a');
+        if (link) {
+          const href = link.getAttribute('href');
+          if (href && !href.startsWith('http') && !href.startsWith('mailto:')) {
+            // Internal link - open file
+            e.preventDefault();
+            vscode.postMessage({
+              type: 'openFile',
+              payload: { path: href },
+            });
+          } else if (href && href.startsWith('http')) {
+            // External link - let the extension handle it or open in browser
+            e.preventDefault();
+            vscode.postMessage({
+              type: 'openFile',
+              payload: { path: href },
+            });
+          }
+        }
+      });
+
       // Listen for paste events and move cursor out of block elements after paste
       editor.view.dom.addEventListener('paste', () => {
         // Use setTimeout to run after the paste has been processed

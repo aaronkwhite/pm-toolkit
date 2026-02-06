@@ -618,6 +618,189 @@ html, body {
   font-weight: 500;
 }
 
+/* ===== Link Picker ===== */
+
+.link-picker {
+  position: fixed;
+  z-index: 9999;
+  background-color: var(--vscode-menu-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  min-width: 280px;
+  max-width: 400px;
+  max-height: 320px;
+  overflow-y: auto;
+  display: none;
+}
+
+.link-picker-header {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vscode-descriptionForeground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.link-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: none;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.link-picker-item:hover,
+.link-picker-item.is-selected {
+  background-color: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
+  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground));
+}
+
+.link-picker-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.1));
+  border-radius: 4px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.link-picker-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.link-picker-title {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-picker-description {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-picker-search {
+  padding: 8px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.link-picker-search-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  background-color: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  border-radius: 4px;
+  outline: none;
+}
+
+.link-picker-search-input:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.link-picker-search-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.link-picker-files {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.link-picker-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+  font-size: 13px;
+}
+
+.link-picker-form {
+  padding: 12px;
+}
+
+.link-picker-form-group {
+  margin-bottom: 10px;
+}
+
+.link-picker-form-group:last-of-type {
+  margin-bottom: 12px;
+}
+
+.link-picker-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  background-color: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  border-radius: 4px;
+  outline: none;
+}
+
+.link-picker-input:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.link-picker-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.link-picker-form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.link-picker-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+}
+
+.link-picker-btn-cancel {
+  background-color: transparent;
+  color: var(--vscode-foreground);
+}
+
+.link-picker-btn-cancel:hover {
+  background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+.link-picker-btn-submit {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.link-picker-btn-submit:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
 /* ===== Mermaid Diagrams ===== */
 
 .mermaid-node {

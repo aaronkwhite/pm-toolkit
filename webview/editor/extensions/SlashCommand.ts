@@ -9,6 +9,7 @@ import { PluginKey } from '@tiptap/pm/state';
 import Suggestion, { SuggestionOptions, SuggestionProps } from '@tiptap/suggestion';
 import { Editor, Range } from '@tiptap/core';
 import { TableSizePicker } from '../components/TableSizePicker';
+import { LinkPicker } from '../components/LinkPicker';
 
 /**
  * Template interface (matches src/types/index.ts)
@@ -324,6 +325,35 @@ export const defaultCommands: SlashCommandItem[] = [
         .deleteRange(range)
         .insertMermaidBlock('sequenceDiagram\n    Alice->>Bob: Hello\n    Bob-->>Alice: Hi')
         .run();
+    },
+  },
+  {
+    title: 'Link',
+    description: 'Link to file or URL',
+    icon: '🔗',
+    searchTerms: ['link', 'url', 'file', 'document', 'reference'],
+    command: ({ editor, range }) => {
+      // Get cursor position for picker placement BEFORE deleting
+      const { view } = editor;
+      const coords = view.coordsAtPos(range.from);
+      const rect = new DOMRect(coords.left, coords.top, 0, coords.bottom - coords.top);
+
+      // Delete the slash command text immediately (closes the slash menu)
+      editor.chain().focus().deleteRange(range).run();
+
+      // Show link picker
+      const picker = new LinkPicker();
+      picker.show({
+        rect,
+        onSelect: (markdown) => {
+          editor.chain().focus().insertContent(markdown).run();
+          picker.destroy();
+        },
+        onCancel: () => {
+          editor.chain().focus().run();
+          picker.destroy();
+        },
+      });
     },
   },
 ];
