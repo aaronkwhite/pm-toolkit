@@ -12,6 +12,10 @@ import TableCell from '@tiptap/extension-table-cell'
 import { Markdown } from 'tiptap-markdown'
 import { useEffect, useRef, useCallback } from 'react'
 
+// Components
+import { BlockHandle } from './components/BlockHandle'
+import { DocumentOutline } from './components/DocumentOutline'
+
 // Keep existing extensions for now (will convert later)
 import { CustomParagraph } from './extensions/CustomParagraph'
 import { KeyboardNavigation } from './extensions/KeyboardNavigation'
@@ -157,8 +161,12 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
   }
 
   return (
-    <div id="editor">
-      <EditorContent editor={editor} />
+    <div id="editor-container" style={{ display: 'flex' }}>
+      <div id="editor" style={{ flex: 1 }}>
+        <BlockHandle editor={editor} />
+        <EditorContent editor={editor} />
+      </div>
+      <DocumentOutline editor={editor} />
     </div>
   )
 }
