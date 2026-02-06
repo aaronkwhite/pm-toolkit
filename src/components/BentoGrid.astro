@@ -1,0 +1,161 @@
+---
+// Lucide icons as inline SVG paths
+const icons = {
+  slash: `<path d="m5 19 14-14" /><circle cx="17" cy="7" r="2" /><circle cx="7" cy="17" r="2" />`,
+  mousePointer: `<path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z" /><path d="m13 13 6 6" />`,
+  gitBranch: `<line x1="6" y1="3" x2="6" y2="15" /><circle cx="18" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M18 9a9 9 0 0 1-9 9" />`,
+  fileText: `<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><line x1="10" y1="9" x2="8" y2="9" />`,
+  code: `<polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />`,
+  settings: `<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" />`,
+};
+
+// Asymmetric bento grid items with varied sizes
+const bentoItems = [
+  {
+    title: 'Slash Commands',
+    description: 'Type / for headings, lists, tables, links, images, diagrams — everything.',
+    icon: 'slash',
+    image: '/images/pm-toolkit-markdown-slash-commands.png',
+    gridClass: 'lg:col-span-2 lg:row-span-2', // Large featured card
+    featured: true,
+  },
+  {
+    title: 'Bubble Menu',
+    description: 'Select text, format instantly.',
+    icon: 'mousePointer',
+    gridClass: 'lg:col-span-1 lg:row-span-1', // Small
+    featured: false,
+  },
+  {
+    title: 'Mermaid Diagrams',
+    description: 'Flowcharts and sequences rendered inline.',
+    icon: 'gitBranch',
+    image: '/images/pm-toolkit-mermaid-chart.png',
+    gridClass: 'lg:col-span-1 lg:row-span-2', // Tall
+    featured: false,
+  },
+  {
+    title: 'Templates',
+    description: 'Reusable docs with dynamic variables.',
+    icon: 'fileText',
+    gridClass: 'lg:col-span-1 lg:row-span-1', // Small
+    featured: false,
+  },
+  {
+    title: 'View Source',
+    description: 'One click to see the raw markdown.',
+    icon: 'code',
+    image: '/images/pm-toolkit-markdown-view-source.png',
+    gridClass: 'lg:col-span-2 lg:row-span-1', // Wide
+    featured: false,
+  },
+  {
+    title: 'Settings',
+    description: 'Font size, templates, kanban defaults — all configurable.',
+    icon: 'settings',
+    image: '/images/pm-toolkit-settings.png',
+    gridClass: 'lg:col-span-1 lg:row-span-1', // Small
+    featured: false,
+  },
+];
+---
+
+<section class="section noise-overlay" style="background-color: var(--bg-primary);">
+  <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Section header -->
+    <div class="text-center mb-16 scroll-animate" data-animation="animate-fade-in-up">
+      <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4" style="color: var(--text-primary);">
+        Everything you <span class="gradient-text">need</span>
+      </h2>
+      <p class="text-lg max-w-xl mx-auto" style="color: var(--text-secondary);">
+        Every detail crafted for a seamless editing experience.
+      </p>
+    </div>
+
+    <!-- Asymmetric Bento Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 auto-rows-[minmax(180px,auto)] gap-4 lg:gap-5">
+      {
+        bentoItems.map((item, index) => (
+          <div
+            class:list={[
+              'card group p-6 flex flex-col scroll-animate',
+              item.gridClass,
+              item.featured && 'card-featured',
+            ]}
+            data-animation="animate-fade-in-up"
+            style={`animation-delay: ${100 + index * 80}ms;`}
+          >
+            {/* Header with icon and title */}
+            <div class="flex items-start gap-4 mb-4">
+              <div class:list={[
+                'w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300',
+                item.featured
+                  ? 'bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] text-white group-hover:scale-110'
+                  : 'bg-[var(--color-primary)]/10 group-hover:bg-[var(--color-primary)]/20'
+              ]}>
+                <svg
+                  class:list={[
+                    'w-6 h-6',
+                    item.featured ? 'text-white' : 'text-[var(--color-primary)]'
+                  ]}
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  set:html={icons[item.icon as keyof typeof icons]}
+                />
+              </div>
+              <div>
+                <h3 class:list={[
+                  'font-semibold mb-1',
+                  item.featured ? 'text-xl' : 'text-lg'
+                ]} style="color: var(--text-primary);">
+                  {item.title}
+                </h3>
+                <p class="text-sm" style="color: var(--text-secondary);">
+                  {item.description}
+                </p>
+              </div>
+            </div>
+
+            {/* Optional image - grows to fill remaining space */}
+            {item.image && (
+              <div class="mt-auto pt-4 flex-1 flex items-end">
+                <div class="relative w-full overflow-hidden rounded-lg">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    loading="lazy"
+                    class="w-full h-auto rounded-lg transition-transform duration-500 group-hover:scale-[1.02]"
+                  />
+                  {/* Subtle overlay on hover */}
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg pointer-events-none"></div>
+                </div>
+              </div>
+            )}
+
+            {/* For cards without images, add visual interest */}
+            {!item.image && (
+              <div class="mt-auto pt-4 flex-1 flex items-end">
+                <div class="w-full h-full min-h-[60px] rounded-lg bg-gradient-to-br from-[var(--color-primary)]/5 to-[var(--color-secondary)]/5 flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity duration-300">
+                  <svg
+                    class="w-8 h-8 text-[var(--color-primary)]/30"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    viewBox="0 0 24 24"
+                    set:html={icons[item.icon as keyof typeof icons]}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

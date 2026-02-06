@@ -11,79 +11,78 @@ const marketplaceLinks = [
     primary: false,
   },
 ];
+
 ---
 
-<section class="relative overflow-hidden bg-gradient-to-b from-offwhite to-gray-100 py-20 sm:py-28 lg:py-32">
-  <!-- Background decoration -->
+<section class="relative overflow-hidden py-24 sm:py-32 lg:py-40 gradient-mesh noise-overlay">
+  <!-- Background gradient accent -->
   <div class="absolute inset-0 overflow-hidden pointer-events-none">
-    <div class="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
-    <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary/5 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--color-primary)]/20 rounded-full blur-[100px]"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[var(--color-secondary)]/15 rounded-full blur-[80px]"></div>
   </div>
 
-  <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-    <!-- Badge -->
-    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent-dark border border-accent/20 mb-8">
-      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-      </svg>
-      <span class="text-sm font-medium">FREE FOREVER</span>
+  <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <!-- Badge -->
+      <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/20 border border-[var(--color-primary)]/30 mb-8 animate-fade-in">
+        <svg class="w-5 h-5 text-[var(--color-primary)]" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+        </svg>
+        <span class="text-sm font-semibold gradient-text">FREE FOREVER</span>
+      </div>
+
+      <!-- Headline -->
+      <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tighter mb-6 animate-fade-in-up" style="color: var(--text-primary);">
+        Your docs.<br class="sm:hidden" />
+        <span class="gradient-text">Your editor.</span>
+      </h1>
+
+      <!-- Subheadline -->
+      <p class="text-xl sm:text-2xl mb-12 animate-fade-in-up delay-150" style="color: var(--text-secondary);">
+        Visual markdown, kanban boards, and diagrams — right where you code.
+      </p>
+
+      <!-- CTAs -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 animate-fade-in-up delay-300">
+        {
+          marketplaceLinks.map((link) => (
+            <a
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              class:list={[
+                'btn gap-2',
+                link.primary ? 'btn-primary' : 'btn-secondary',
+              ]}
+            >
+              {link.label}
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          ))
+        }
+      </div>
+
     </div>
 
-    <!-- Headline -->
-    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-charcoal tracking-tight mb-6">
-      Obsidian-like editing for
-      <span class="text-primary">Cursor</span>
-    </h1>
+    <!-- Hero Screenshot - Floating with glow -->
+    <div class="relative max-w-5xl mx-auto animate-fade-in-up delay-500">
+      <!-- Glow backdrop -->
+      <div class="absolute inset-0 -inset-x-8 -inset-y-8 bg-gradient-to-br from-[var(--color-primary)]/30 via-[var(--color-secondary)]/20 to-[var(--color-primary)]/10 rounded-3xl blur-3xl opacity-60"></div>
 
-    <!-- Subheadline -->
-    <p class="text-xl sm:text-2xl text-gray-600 max-w-2xl mx-auto mb-10">
-      Visual editing tools for the AI-powered workflow. Notion-like editing in Cursor/VS Code — markdown, kanban, and diagrams in one extension.
-    </p>
+      <!-- Screenshot container with 3D transform -->
+      <div class="relative screenshot-floating animate-float animate-glow-pulse rounded-xl overflow-hidden">
+        <img
+          src="/images/pm-toolkit-markdown-editor.png"
+          alt="PM Toolkit visual markdown editor in Cursor"
+          loading="eager"
+          class="w-full rounded-xl shadow-2xl"
+        />
 
-    <!-- CTAs -->
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-      {
-        marketplaceLinks.map((link) => (
-          <a
-            href={link.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            class:list={[
-              'inline-flex items-center justify-center px-6 py-3 rounded-lg text-base font-semibold transition-all duration-200 shadow-sm hover:shadow-md',
-              link.primary
-                ? 'bg-primary text-[#ffffff] hover:bg-primary-dark'
-                : 'bg-white text-charcoal border border-gray-300 hover:border-gray-400',
-            ]}
-          >
-            {link.label}
-            <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </a>
-        ))
-      }
-    </div>
-
-    <!-- Trust badges -->
-    <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
-      <span class="flex items-center gap-2">
-        <svg class="w-5 h-5 text-secondary" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-        </svg>
-        No trial, no fees
-      </span>
-      <span class="flex items-center gap-2">
-        <svg class="w-5 h-5 text-secondary" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-        </svg>
-        Plain markdown files
-      </span>
-      <span class="flex items-center gap-2">
-        <svg class="w-5 h-5 text-secondary" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-        </svg>
-        Built by a PM, for PMs
-      </span>
+        <!-- Subtle reflection overlay -->
+        <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none rounded-xl"></div>
+      </div>
     </div>
   </div>
 </section>

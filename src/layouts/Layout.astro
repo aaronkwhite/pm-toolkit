@@ -8,7 +8,7 @@ interface Props {
 
 const {
   title = 'PM Toolkit - Visual Markdown Editor for Cursor',
-  description = 'Obsidian-like editing experience for Cursor. WYSIWYG markdown, kanban boards, and file viewers—built for product managers and teams who work alongside AI.',
+  description = 'Your docs. Your editor. A visual editor for markdown, kanban boards, and diagrams — right where you code. Free forever.',
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -25,17 +25,17 @@ const jsonLd = {
     price: '0',
     priceCurrency: 'USD',
   },
-  description: 'Obsidian-like visual editing tools for Cursor/VS Code',
+  description: 'Visual editing tools for Cursor/VS Code - markdown, kanban, diagrams',
   author: {
     '@type': 'Person',
     name: 'Aaron White',
   },
-  url: 'https://pmtoolkit.netlify.app/',
+  url: 'https://getpmtoolkit.com/',
   downloadUrl: [
     'https://marketplace.visualstudio.com/items?itemName=aaronkwhite.pm-toolkit',
     'https://open-vsx.org/extension/aaronkwhite/pm-toolkit',
   ],
-  softwareVersion: '0.4.3',
+  softwareVersion: '0.5.0',
   aggregateRating: {
     '@type': 'AggregateRating',
     ratingValue: '5',
@@ -61,6 +61,8 @@ const jsonLd = {
       content="markdown editor, wysiwyg markdown, kanban board, visual editor, mermaid diagrams, pdf viewer, notion alternative, slash commands, product manager tools, cursor extension, vscode extension, documentation"
     />
     <meta name="author" content="Aaron White" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#6366F1" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -80,8 +82,115 @@ const jsonLd = {
     <!-- JSON-LD Structured Data -->
     <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
+    <!-- Dark mode script - runs before page renders to prevent flash -->
+    <script is:inline>
+      (function() {
+        const stored = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (stored === 'dark' || (!stored && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
-  <body class="min-h-screen flex flex-col">
+  <body class="min-h-screen flex flex-col" style="background-color: var(--bg-primary);">
     <slot />
+
+    <!-- Theme toggle and scroll animation scripts -->
+    <script>
+      // Theme toggle functionality
+      function initTheme() {
+        const toggle = document.getElementById('theme-toggle');
+        if (!toggle) return;
+
+        toggle.addEventListener('click', () => {
+          const isDark = document.documentElement.classList.toggle('dark');
+          localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        // Listen for system preference changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+          if (!localStorage.getItem('theme')) {
+            document.documentElement.classList.toggle('dark', e.matches);
+          }
+        });
+      }
+
+      // Header background on scroll
+      function initHeaderScroll() {
+        const header = document.getElementById('main-header');
+        if (!header) return;
+
+        let ticking = false;
+
+        function updateHeader() {
+          if (!header) return;
+          const scrollY = window.scrollY;
+          const threshold = 200; // pixels before header bg appears
+
+          if (scrollY > threshold) {
+            header.classList.add('header-scrolled');
+          } else {
+            header.classList.remove('header-scrolled');
+          }
+
+          ticking = false;
+        }
+
+        window.addEventListener('scroll', () => {
+          if (!ticking) {
+            requestAnimationFrame(updateHeader);
+            ticking = true;
+          }
+        }, { passive: true });
+
+        // Initial check
+        updateHeader();
+      }
+
+      // Scroll animation with Intersection Observer
+      function initScrollAnimations() {
+        const elements = document.querySelectorAll('.scroll-animate');
+
+        if (!elements.length) return;
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                // Get animation class from data attribute
+                const animationClass = (entry.target as HTMLElement).dataset.animation;
+                if (animationClass) {
+                  entry.target.classList.add(animationClass);
+                }
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          {
+            threshold: 0.1,
+            rootMargin: '0px 0px -80px 0px',
+          }
+        );
+
+        elements.forEach((el) => observer.observe(el));
+      }
+
+      // Initialize on page load
+      document.addEventListener('DOMContentLoaded', () => {
+        initTheme();
+        initHeaderScroll();
+        initScrollAnimations();
+      });
+
+      // Re-initialize on Astro page transitions
+      document.addEventListener('astro:page-load', () => {
+        initTheme();
+        initHeaderScroll();
+        initScrollAnimations();
+      });
+    </script>
   </body>
 </html>
