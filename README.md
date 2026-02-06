@@ -29,9 +29,10 @@ If PM Toolkit saves you time, consider buying me a coffee. Your support helps ke
 
 Edit markdown files visually. What you see is what you get—no more switching between raw text and preview.
 
-- **Slash commands** — Type `/` to insert headings, lists, tables, code blocks, and more
+- **Slash commands** — Type `/` to insert headings, lists, tables, code blocks, links, and more
+- **Bubble menu** — Select text to see a floating toolbar for quick formatting
 - **Templates** — Create reusable templates and insert them via `/` commands
-- **Rich formatting** — Bold, italic, links with familiar keyboard shortcuts
+- **Rich formatting** — Bold, italic, strikethrough, code, links with familiar keyboard shortcuts
 - **Image support** — Paste images from clipboard or drag and drop into your document
 - **Tables** — Create and edit tables visually with Tab/Shift+Tab navigation
 - **Task lists** — Interactive checkboxes that save to standard markdown
@@ -79,6 +80,7 @@ Search for "PM Toolkit" in the Extensions view (`Cmd+Shift+X` / `Ctrl+Shift+X`).
 **Keyboard shortcuts:**
 - `Cmd/Ctrl + B` — Bold
 - `Cmd/Ctrl + I` — Italic
+- `Cmd/Ctrl + K` — Insert link
 - `Cmd/Ctrl + Z` — Undo
 - `Cmd/Ctrl + Shift + Z` — Redo
 - `Cmd/Ctrl + Enter` — Exit code block or table (insert paragraph below)

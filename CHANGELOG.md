@@ -5,6 +5,16 @@ All notable changes to PM Toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-02-05
+
+### Added
+
+- **Bubble menu**: Floating toolbar appears when text is selected with quick access to:
+  - Block type dropdown (Text, Headings 1-3, Bullet/Numbered/Task lists, Quote, Code block)
+  - Formatting buttons: Bold, Italic, Strikethrough, Inline code
+  - Link button (integrates with file picker and URL form)
+- Link slash command (`/link`) for inserting links to workspace files or URLs
+
 ## [0.4.7] - 2026-02-05
 
 ### Fixed
