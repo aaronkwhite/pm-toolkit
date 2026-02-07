@@ -5,6 +5,43 @@ All notable changes to PM Toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Table drag-to-reorder**: Grip handles on rows (left edge) and columns (top edge) for drag-and-drop reordering with drop indicator lines
+- **Table context menus**: Right-click on row/column grips for insert/delete operations
+- **Table add bars**: Full-width/height pill bars on last row/column for quick table expansion
+- **Table column widths**: Persisted column widths with horizontal scroll for wide tables
+- **Image redesign**: Complete image system overhaul with React NodeView
+  - Drop zone for empty images (file drop, URL input, browse button)
+  - Resize handles with pointer-event-based dragging
+  - Popover toolbar for alignment (left/center/right), replace, and delete
+  - Width and alignment persisted as HTML comments in markdown
+  - VS Code file picker integration for browsing local images
+  - Relative path resolution via VS Code webview URI conversion
+- **Image captions**: Toggle captions on images via the popover toolbar
+- **Block handles**: Drag handles in the editor gutter for reordering any block
+- **Document outline**: Floating outline panel for quick heading navigation
+- **H4 support**: Added Heading 4 to slash commands and bubble menu
+- **`imageAssetsPath` setting**: Configure where uploaded images are saved (relative to the document)
+- **React migration**: Editor UI migrated to React components (SlashCommand, ImageNode, MermaidNode, BlockHandle, DocumentOutline)
+- **277 E2E tests**: Comprehensive test coverage for images, tables, serialization, VS Code handlers, and settings
+
+### Changed
+
+- **Floating menus aligned**: All floating menus (slash command, bubble menu, image popover, table context menu) use consistent 12px font, 4px 8px padding, 6px border-radius
+- **Branding cleanup**: Removed "Obsidian" and "Notion" references from descriptions and UI
+- **Settings panel**: Toggle switches now use theme variables instead of hardcoded colors
+- **Add-row/column bars**: Only show when hovering the last row/column (less visual noise)
+
+### Fixed
+
+- Block handle drag-and-drop works correctly with ProseMirror's native drag system
+- Image serialization preserves width and alignment through markdown round-trips
+- External content updates no longer pollute the undo history
+- Mermaid diagrams no longer enter edit mode on initial click
+
 ## [0.5.0] - 2026-02-05
 
 ### Added

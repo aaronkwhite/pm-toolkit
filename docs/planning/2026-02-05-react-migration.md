@@ -14,28 +14,56 @@
 |-----------|--------|-------|
 | M1: React Foundation | ✅ Complete | React 18, @tiptap/react, esbuild JSX config |
 | M2: SlashCommand React | ✅ Complete | SlashCommandMenu component working |
-| M3: ImageNode React | ✅ Complete | ReactNodeViewRenderer integration |
+| M3: ImageNode React | ✅ Complete | ReactNodeViewRenderer, complete redesign (see below) |
 | M4: MermaidNode React | ✅ Complete | Async rendering, theme detection |
 | M5: BubbleMenu React | ✅ Complete | Block type dropdown, formatting marks |
 | M6: UI Components | ✅ Complete | CSS variables integration |
 | M7: Block Handles | ✅ Complete | Plus button + drag handle (hover to show) |
+| M8: Enhanced Image Handling | ✅ Complete | Full redesign (see Image System Redesign below) |
 | M9: Document Outline | ✅ Complete | Horizontal bar style, click to scroll |
+| Table Controls | ✅ Complete | Grips, drag-to-reorder, context menus (see below) |
 
 ### Test Results
-- **188/192 tests passing** (4 flaky tests that pass on retry)
-- All core functionality verified in VS Code Extension Development Host
+- **277/277 tests passing** (0 failures)
+- Comprehensive E2E coverage for images, tables, serialization, VS Code handlers, settings
 
 ### Key Fixes Applied
 1. **vscode API timing**: Changed from module-level `const vscode = window.vscode` to `getVSCode()` function to handle async initialization
 2. **Document Outline**: Added `transaction` event listener to catch external content loads (init messages)
 3. **Block Handle CSS**: Proper positioning with `position: absolute` and left margin spacing
 4. **Outline bar style**: Horizontal bars with width indicating heading level (matching reference screenshot)
+5. **ProseMirror drag system**: Block handles use PM native drag (NodeSelection + view.dragging) instead of custom DnD
+6. **DOM mutation observer**: Must stop/start PM's MutationObserver when toggling CSS classes on PM-rendered elements
+7. **Undo history**: External content updates use `setMeta('addToHistory', false)` to avoid polluting undo stack
 
-### Remaining Work
-- [ ] M8: Enhanced image handling (upload to assets/, resize handles) - **DEFERRED**
-- [ ] New E2E tests for block handles and outline
-- [ ] Performance verification
-- [ ] Final code cleanup (remove debug console.logs)
+### Image System Redesign (M8 - Complete)
+The original plan deferred M8. It was later implemented with a complete redesign:
+- **ImageNode.ts** — Extension with `width`, `textAlign`, `originalSrc` attributes
+- **ImageNodeView.tsx** — React NodeView with 3 states: drop zone, display, selected (resize+popover)
+- **ImageDropZone.tsx** — Component for empty images (file drop, URL input, browse button)
+- **ImagePopoverToolbar.tsx** — Floating toolbar (alignment, replace, delete)
+- **useImageResize.ts** — Hook forked from `tiptap-extension-resize-image` (pointer events, not HTML5 DnD)
+- Width/alignment persisted as HTML comments: `<!-- image: width=300 align=center -->`
+- VS Code file picker integration (`saveImage`, `requestFilePicker` messages)
+- Relative path resolution via `requestImageUrl` / `image-url-resolved` custom events
+- `imageAssetsPath` setting for uploaded image directory
+- **No Obsidian dimension syntax** — uses standard `![alt](src)` with HTML comment metadata
+
+### Table Controls (Post-Migration - Complete)
+Originally listed as "Post-Refactor: Deferred", table controls were fully implemented:
+- **Add bars**: Full-width/height pill bars on last row/column for quick table expansion
+- **Column widths**: Persisted via `colwidth` attribute, horizontal scroll for wide tables
+- **Row grippers**: Left edge, one per body row (header row excluded), drag-to-reorder with drop indicator
+- **Column grippers**: Top edge, one per column, drag-to-reorder with drop indicator
+- **Context menus**: Right-click on row/column grips for insert/delete operations
+- Uses `prosemirror-tables` `addRow`/`addColumn`/`deleteRow`/`deleteColumn` commands
+- All implemented in `TableControls.ts` plugin (not React - uses fixed DOM elements)
+
+### UI Polish (Complete)
+- Consistent floating menu styles: 12px font, 4px 8px padding, 6px border-radius
+- Branding cleanup: removed "Obsidian" and "Notion" references from descriptions and UI
+- Settings panel toggle switches use theme variables (not hardcoded green)
+- H4 support in slash commands and bubble menu
 
 ### Branch
 All work is on `feature/react-migration` branch.
@@ -1805,72 +1833,36 @@ git commit -m "milestone: M9 complete - document outline sidebar"
 
 ---
 
-## Post-Refactor: Table UI Improvements (Deferred)
-
-The following features are deferred to a separate effort after the React migration:
-
-- Drag to reorder columns/rows
-- Better click-to-add column/row UI
-- Table cell selection improvements
-
-These require Tiptap's table UI components which are more complex and would extend the migration scope significantly.
-
----
-
-## Verification Checklist
-
-After each milestone:
-
-1. [ ] `npm run compile` succeeds
-2. [ ] Extension host launches (F5)
-3. [ ] Editor renders with content
-4. [ ] Milestone-specific tests pass
-5. [ ] All previous tests still pass
-6. [ ] Dark/light theme works
-7. [ ] Commit with milestone tag
-
----
-
 ## Milestone Summary
 
-| Milestone | Scope | Tests Must Pass |
-|-----------|-------|-----------------|
-| **M1** | React foundation + main editor | editor-basic, editor-formatting |
-| **M2** | SlashCommand as React + categories | editor-slash |
-| **M3** | ImageNode as React NodeView | editor-images |
-| **M4** | MermaidNode as React NodeView | editor-mermaid |
-| **M5** | BubbleMenu + LinkPicker as React | editor-cursor |
-| **M6** | UI Components integration | all existing |
-| **M7** | Block handles (drag + insert plus) | editor-block-handles (new) |
-| **M8** | Enhanced image handling (upload, resize) | editor-image-upload (new) |
-| **M9** | Document outline sidebar | editor-outline (new) |
-| **POST** | Table UI improvements | future |
+| Milestone | Scope | Status |
+|-----------|-------|--------|
+| **M1** | React foundation + main editor | ✅ Complete |
+| **M2** | SlashCommand as React + categories | ✅ Complete |
+| **M3** | ImageNode as React NodeView | ✅ Complete |
+| **M4** | MermaidNode as React NodeView | ✅ Complete |
+| **M5** | BubbleMenu + LinkPicker as React | ✅ Complete |
+| **M6** | UI Components integration | ✅ Complete |
+| **M7** | Block handles (drag + insert plus) | ✅ Complete |
+| **M8** | Image redesign (drop zone, resize, popover, VS Code integration) | ✅ Complete |
+| **M9** | Document outline sidebar | ✅ Complete |
+| **Table** | Grips, drag-to-reorder, context menus, add bars, column widths | ✅ Complete |
+| **Polish** | Menu alignment, branding cleanup, settings theming | ✅ Complete |
 
 ---
 
-## Rollback Plan
+## Pre-Merge Checklist
 
-If migration fails at any milestone:
-
-1. Git revert to last working milestone commit
-2. All code is in single feature branch (`feature/react-migration`)
-3. Can abandon branch and return to main if needed
-4. Keep main branch stable throughout
-
----
-
-## Final Checklist
-
-- [ ] All 192+ E2E tests pass (including new M7-M9 tests)
-- [ ] Bundle size increase < 60KB
+- [x] All 277 E2E tests pass
 - [ ] No performance regressions
-- [ ] Dark/light theme works
-- [ ] All existing features work
-- [ ] New features work:
-  - [ ] Block drag handles
-  - [ ] Insert plus button
-  - [ ] Image paste/drop to assets/
-  - [ ] Image resize handles
-  - [ ] Document outline sidebar
-- [ ] Documentation updated
-- [ ] Version bumped (0.6.0 - minor version for new features)
+- [x] Dark/light theme works
+- [x] All existing features work
+- [x] New features work:
+  - [x] Block drag handles
+  - [x] Insert plus button
+  - [x] Image drop zone, resize, popover toolbar
+  - [x] Image upload to assets/ via VS Code
+  - [x] Document outline sidebar
+  - [x] Table grips, drag-to-reorder, context menus
+- [x] Documentation updated (README, CHANGELOG, CHECKLIST)
+- [ ] Version bumped for release

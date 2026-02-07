@@ -35,6 +35,7 @@ const BLOCK_SELECTORS = [
   'ol',
   'blockquote',
   'pre',
+  'table',
   '.image-node-view',
   '.mermaid-node',
 ].join(', ');
@@ -163,11 +164,23 @@ export function BlockHandle({ editor }: BlockHandleProps) {
       }
 
       // Find the closest block-level node, then lift to the top-level list if nested
-      const rawBlock = target.closest(BLOCK_SELECTORS);
+      let rawBlock = target.closest(BLOCK_SELECTORS);
       if (!rawBlock || !editorEl.contains(rawBlock)) {
         scheduleHide();
         return;
       }
+
+      // If inside a table cell, use the table itself as the block
+      if (rawBlock.closest('td, th')) {
+        const table = rawBlock.closest('table');
+        if (table && editorEl.contains(table)) {
+          rawBlock = table;
+        } else {
+          scheduleHide();
+          return;
+        }
+      }
+
       const blockNode = toTopLevelBlock(rawBlock, editorEl);
 
       // Cancel any pending hide since we found a valid block

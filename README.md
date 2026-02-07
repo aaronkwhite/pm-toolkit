@@ -7,7 +7,7 @@
 
 > **Free Forever.** No trial period. No yearly fee. No read-only mode. Just pure, unadulterated rich editing in your IDE.
 
-**Obsidian-like editing experience for Cursor.** WYSIWYG markdown, kanban boards, and file viewers—built for product managers and teams who work alongside AI.
+**Visual markdown editor, kanban boards, and file viewers for Cursor** — built for product managers and teams who work alongside AI.
 
 Draft specs with Cursor's agent, then polish them visually. Keep planning docs, task boards, and reference files next to your code. Everything stays in plain text—portable, version-controlled, and yours.
 
@@ -33,8 +33,8 @@ Edit markdown files visually. What you see is what you get—no more switching b
 - **Bubble menu** — Select text to see a floating toolbar for quick formatting
 - **Templates** — Create reusable templates and insert them via `/` commands
 - **Rich formatting** — Bold, italic, strikethrough, code, links with familiar keyboard shortcuts
-- **Image support** — Paste images from clipboard or drag and drop into your document
-- **Tables** — Create and edit tables visually with Tab/Shift+Tab navigation
+- **Image support** — Paste, drag and drop, or browse for images; resize with handles; align left/center/right via popover toolbar
+- **Tables** — Create and edit tables visually with Tab/Shift+Tab navigation, drag-to-reorder rows and columns, right-click context menu
 - **Task lists** — Interactive checkboxes that save to standard markdown
 - **Mermaid diagrams** — Flowcharts, sequence diagrams, and more render inline
 - **Smart navigation** — Escape code blocks and tables with arrow keys or Cmd+Enter
@@ -149,6 +149,7 @@ Access settings via the **PM Toolkit Settings** command (from the editor `...` m
 | `pmtoolkit.kanbanDefaultColumns` | Comma-separated list of columns for new boards | Backlog, In Progress, Done |
 | `pmtoolkit.kanbanShowThumbnails` | Show image thumbnails on kanban cards | true |
 | `pmtoolkit.kanbanSaveDelay` | Delay before saving kanban changes (50-2000ms) | 150 |
+| `pmtoolkit.imageAssetsPath` | Directory where uploaded images are saved (relative to the document) | assets |
 
 ## Built With
 

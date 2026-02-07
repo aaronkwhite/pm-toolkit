@@ -1,8 +1,8 @@
 # PM Toolkit - Implementation Checklist
 
-> **Last Updated**: 2026-02-02
-> **Current Version**: 0.4.1
-> **Current Phase**: Phase 8 Complete (Settings Panel)
+> **Last Updated**: 2026-02-06
+> **Current Version**: 0.5.0 (React migration branch)
+> **Current Phase**: Phase 11 Complete (Table Controls & Image Redesign)
 
 This checklist tracks all implementation tasks. Update status as work progresses.
 
@@ -110,7 +110,7 @@ This checklist tracks all implementation tasks. Update status as work progresses
 - [x] Install @tiptap/extension-table packages
 - [x] Configure table extension
 - [x] Add Tab/Shift+Tab navigation
-- [ ] Create table context menu
+- [x] Create table context menu (via grip handles in Phase 11)
 - [x] Test table markdown serialization
 
 **Phase 2 Commit Checkpoints:**
@@ -429,7 +429,7 @@ This checklist tracks all implementation tasks. Update status as work progresses
 - [x] WebviewPanel with inline HTML/CSS/JS
 - [x] Card-based section layout (Editor, Templates, Kanban, Support)
 - [x] Match Cursor's settings UI aesthetic
-- [x] Green toggle switches
+- [x] Toggle switches (theme-variable styling)
 - [x] VS Code CSS variable theming
 
 ### 8.2 New Configuration Options
@@ -469,7 +469,7 @@ This checklist tracks all implementation tasks. Update status as work progresses
 - [x] Create settings harness HTML
 - [x] EditorHelper page object (`tests/utils/editor-helper.ts`)
 
-### 9.2 Editor Tests (170 tests)
+### 9.2 Editor Tests
 - [x] Basic editor loading and content
 - [x] Cursor positioning and movement
 - [x] Text formatting (bold, italic, code, etc.)
@@ -497,8 +497,7 @@ This checklist tracks all implementation tasks. Update status as work progresses
 - [ ] Pre-commit hooks
 
 **Phase 9 Status:**
-- 194 total tests (192 passing, 2 skipped)
-- Skipped: local image tests (need local files)
+- 277 total tests (277 passing, 0 failed)
 
 **Phase 9 Commit Checkpoints:**
 - [x] `test: add settings panel E2E tests and fix flaky test`
@@ -506,38 +505,129 @@ This checklist tracks all implementation tasks. Update status as work progresses
 
 ---
 
-## Phase 10: Polish & Release
+## Phase 9.5: Bubble Menu & Links (v0.5.0) ✅
 
-### 10.1 Documentation
+### 9.5.1 Bubble Menu
+- [x] Floating toolbar on text selection
+- [x] Block type dropdown (Text, H1-H3, lists, quote, code block)
+- [x] Formatting buttons: Bold, Italic, Strikethrough, Inline code
+- [x] Link button with file picker and URL form
+
+### 9.5.2 Link Slash Command
+- [x] `/link` command for inserting links to workspace files or URLs
+
+**Phase 9.5 Commit Checkpoints:**
+- [x] `feat: bubble menu with formatting and block type dropdown`
+- [x] `feat: link slash command`
+
+---
+
+## Phase 10.5: React Migration ✅
+
+### 10.5.1 Foundation
+- [x] Install React and @tiptap/react dependencies
+- [x] Configure esbuild for React JSX
+- [x] Create `webview/editor/Editor.tsx` React entry point
+
+### 10.5.2 Component Migration
+- [x] Migrate SlashCommand menu to React component
+- [x] Migrate ImageNode to React NodeView renderer
+- [x] Migrate MermaidNode to React NodeView renderer
+- [x] Create BlockHandle React component
+- [x] Create DocumentOutline React component
+
+### 10.5.3 Bug Fixes
+- [x] Fix undo history pollution from external content updates
+- [x] Fix mermaid edit mode triggering on click
+- [x] Fix slash command menu visibility in E2E tests
+- [x] Fix editor ready signal timing
+
+**Phase 10.5 Commit Checkpoints:**
+- [x] `feat: add React-based editor component with Tiptap integration`
+- [x] `feat: migrate SlashCommand, ImageNode, MermaidNode to React`
+- [x] `feat: add BlockHandle and DocumentOutline components`
+
+---
+
+## Phase 11: Image Redesign & Table Controls ✅
+
+### 11.1 Image System Redesign
+- [x] `ImageNode.ts` — Extension with `width`, `textAlign`, `originalSrc` attributes
+- [x] `ImageNodeView.tsx` — React NodeView with 3 states (drop zone, display, selected)
+- [x] `ImageDropZone.tsx` — File drop, URL input, browse button
+- [x] `ImagePopoverToolbar.tsx` — Floating toolbar (alignment, replace, delete)
+- [x] `useImageResize.ts` — Pointer-event-based resize handles
+- [x] Image captions with toggle
+- [x] Width/alignment persisted as HTML comments in markdown
+- [x] VS Code file picker integration (`saveImage`, `requestFilePicker`)
+- [x] Relative path resolution via `requestImageUrl` / `image-url-resolved`
+- [x] `imageAssetsPath` setting for uploaded image directory
+
+### 11.2 Table Controls
+- [x] Full-width/height pill bars for adding rows/columns
+- [x] Persisted column widths with horizontal scroll
+- [x] Row grippers (left edge) for drag-to-reorder
+- [x] Column grippers (top edge) for drag-to-reorder
+- [x] Drop indicator lines during drag
+- [x] Right-click context menus on grippers (insert/delete row/column)
+- [x] Add bars only visible on last row/column hover
+
+### 11.3 UI Polish
+- [x] Consistent floating menu styles (12px font, 4px 8px padding, 6px radius)
+- [x] Branding cleanup (removed "Obsidian" and "Notion" references)
+- [x] Settings panel toggle switches use theme variables
+- [x] Block handle drag-and-drop with ProseMirror native drag system
+- [x] H4 support in slash commands and bubble menu
+
+### 11.4 E2E Tests
+- [x] Image rendering, deletion, and local image tests
+- [x] Image serialization (standard markdown, metadata comments, round-trip)
+- [x] Image VS Code handler tests (saveImage, requestFilePicker, requestImageUrl)
+- [x] Table controls tests (grippers, context menus, drag-to-reorder)
+- [x] Settings panel branding tests
+- [x] Total: 277 tests passing
+
+**Phase 11 Commit Checkpoints:**
+- [x] `feat: redesign image system with drop zone, resize, popover toolbar`
+- [x] `feat: add table row/column drag-to-reorder grippers`
+- [x] `feat: add table grip context menu with row/column operations`
+- [x] `fix: tighten and align all floating menu styles`
+- [x] `test: fix and add comprehensive E2E tests, update branding`
+
+---
+
+## Phase 12: Polish & Release
+
+### 12.1 Documentation
 - [x] Update README.md
 - [x] Add CHANGELOG.md
 - [ ] Add CONTRIBUTING.md
 - [x] Add LICENSE (MIT)
 
-### 10.2 Accessibility
+### 12.2 Accessibility
 - [ ] Keyboard navigation audit
 - [ ] Screen reader testing
 - [ ] Focus indicator styling
 - [ ] ARIA labels
 
-### 10.3 Performance
+### 12.3 Performance
 - [ ] Large file handling
 - [ ] Lazy loading optimization
 - [ ] Bundle size analysis
 - [ ] Memory leak testing
 
-### 10.4 Cross-platform Testing
+### 12.4 Cross-platform Testing
 - [ ] Windows testing
 - [x] macOS testing
 - [ ] Linux testing
 
-### 10.5 Release
-- [x] SemVer versioning (v0.4.1)
+### 12.5 Release
+- [x] SemVer versioning (v0.5.0)
 - [ ] VS Code Marketplace submission
 - [ ] Open VSX submission
 - [ ] Release announcement
 
-**Phase 10 Commit Checkpoints:**
+**Phase 12 Commit Checkpoints:**
 - [x] `docs: README and documentation`
 - [ ] `a11y: accessibility improvements`
 - [ ] `perf: performance optimizations`
@@ -666,3 +756,26 @@ This checklist tracks all implementation tasks. Update status as work progresses
 - **v0.4.1 Release** - Testing & Documentation
   - README updated with new configuration options
   - CHANGELOG updated
+
+### 2026-02-05
+- **v0.5.0 Release** - Bubble Menu & Links
+- Phase 9.5: Bubble Menu (COMPLETE)
+  - Floating toolbar on text selection with block type dropdown
+  - Formatting buttons and link insertion
+  - Link slash command (`/link`)
+
+### 2026-02-06
+- **React Migration** (`feature/react-migration` branch)
+- Phase 10.5: React Migration (COMPLETE)
+  - Migrated editor UI to React: SlashCommand, ImageNode, MermaidNode
+  - Added BlockHandle (drag handles in gutter) and DocumentOutline
+  - Fixed undo history pollution from external content updates
+- Phase 11: Image Redesign & Table Controls (COMPLETE)
+  - Complete image system overhaul: drop zone, resize handles, popover toolbar
+  - Image captions, width/alignment metadata comments, VS Code file picker
+  - Table grippers for drag-to-reorder rows and columns
+  - Table context menus for insert/delete operations
+  - Consistent floating menu styling across all menus
+  - Branding cleanup: removed "Obsidian" and "Notion" references
+  - Settings toggles now use theme variables
+  - 277 E2E tests (all passing, up from 192)
