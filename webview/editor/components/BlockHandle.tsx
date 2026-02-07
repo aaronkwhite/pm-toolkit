@@ -110,18 +110,6 @@ export function BlockHandle({ editor }: BlockHandleProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimeoutRef = useRef<number | null>(null);
 
-  // Toggle block-hover class on the active block element
-  useEffect(() => {
-    if (activeNode instanceof HTMLElement) {
-      activeNode.classList.add('block-hover');
-    }
-    return () => {
-      if (activeNode instanceof HTMLElement) {
-        activeNode.classList.remove('block-hover');
-      }
-    };
-  }, [activeNode]);
-
   // Drag state refs (not React state — needs to be synchronous in event handlers)
   const dragStateRef = useRef<{
     sourceBlockEl: Element;
@@ -274,21 +262,15 @@ export function BlockHandle({ editor }: BlockHandleProps) {
         const pos = view.posAtDOM(pmNode, 0);
         const $pos = view.state.doc.resolve(pos);
 
-        // For top-level nodes (depth 1) use $pos.before(), but for
-        // atom/leaf nodes where posAtDOM resolves to depth 0 (the doc),
-        // the node sits directly at `pos` in the doc.
+        // Resolve to the top-level block (direct child of doc).
+        // Atom/leaf nodes resolve at depth 0 — the node sits at `pos`.
+        // Everything else is at depth >= 1 — use before(1) for the doc child.
         let blockPos: number;
         if ($pos.depth === 0) {
-          // posAtDOM landed at doc level — find the child node at this offset
           blockPos = pos;
-          // Walk back to find the actual node start if pos is inside the node
-          const node = view.state.doc.nodeAt(pos);
-          if (!node) {
-            // pos might be just past the node; try pos-1
+          if (!view.state.doc.nodeAt(pos)) {
             const prevNode = view.state.doc.nodeAt(pos - 1);
-            if (prevNode) {
-              blockPos = pos - 1;
-            }
+            if (prevNode) blockPos = pos - 1;
           }
         } else {
           blockPos = $pos.before($pos.depth);
@@ -302,9 +284,11 @@ export function BlockHandle({ editor }: BlockHandleProps) {
         indicator.className = 'block-drop-indicator';
         document.body.appendChild(indicator);
 
-        // Visual feedback on source
+        // Visual feedback on source — suppress PM observer to avoid invalidation
         if (activeNode instanceof HTMLElement) {
-          activeNode.classList.add('is-dragging');
+          view.domObserver.stop();
+          activeNode.classList.add('is-dragging', 'block-hover');
+          view.domObserver.start();
         }
 
         dragStateRef.current = {
@@ -349,9 +333,11 @@ export function BlockHandle({ editor }: BlockHandleProps) {
           const drag = dragStateRef.current;
           if (!drag) return;
 
-          // Clean up visual state
+          // Clean up visual state — suppress PM observer
           if (drag.sourceBlockEl instanceof HTMLElement) {
-            drag.sourceBlockEl.classList.remove('is-dragging');
+            view.domObserver.stop();
+            drag.sourceBlockEl.classList.remove('is-dragging', 'block-hover');
+            view.domObserver.start();
           }
           drag.indicatorEl.remove();
 
@@ -375,7 +361,6 @@ export function BlockHandle({ editor }: BlockHandleProps) {
               if (targetNode) {
                 insertPos = dropInfo.above ? targetPos : targetPos + targetNode.nodeSize;
               } else {
-                // Try pos-1
                 const prevNode = view.state.doc.nodeAt(targetPos - 1);
                 if (prevNode) {
                   insertPos = dropInfo.above ? targetPos - 1 : targetPos - 1 + prevNode.nodeSize;

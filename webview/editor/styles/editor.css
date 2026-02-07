@@ -1358,8 +1358,14 @@ html, body {
 
 /* Block hover highlight (shown when block handle is visible) */
 .ProseMirror .block-hover {
-  background-color: var(--vscode-editor-selectionBackground, rgba(127, 127, 255, 0.15));
+  background-color: var(--vscode-editor-hoverHighlightBackground, rgba(127, 127, 127, 0.08));
   border-radius: 6px;
+}
+/* Image and mermaid nodes handle their own hover/selection styling */
+.ProseMirror .image-node-view.block-hover,
+.ProseMirror .mermaid-node.block-hover,
+.ProseMirror [data-node-view-wrapper].block-hover {
+  background-color: transparent;
 }
 
 /* Block being dragged */

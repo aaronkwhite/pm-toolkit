@@ -80,7 +80,7 @@ export const ImageNode = Image.extend({
           }
 
           state.write(`![${alt}](${escapedSrc})`);
-          state.ensureNewLine();
+          state.closeBlock(node);
         },
         parse: {
           updateDOM(element: HTMLElement) {
