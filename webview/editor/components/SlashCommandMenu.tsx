@@ -195,10 +195,7 @@ export const SlashCommandMenu = forwardRef<SlashCommandMenuRef, SlashCommandMenu
                   type="button"
                 >
                   <span className="slash-command-icon">{item.icon}</span>
-                  <div className="slash-command-content">
-                    <span className="slash-command-title">{item.title}</span>
-                    <span className="slash-command-description">{item.description}</span>
-                  </div>
+                  <span className="slash-command-title">{item.title}</span>
                 </button>
               );
             })}

@@ -149,6 +149,15 @@ export const defaultCommands: SlashCommandItem[] = [
     },
   },
   {
+    title: 'Heading 4',
+    description: 'Smallest section heading',
+    icon: 'H4',
+    searchTerms: ['h4', 'heading4'],
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setHeading({ level: 4 }).run();
+    },
+  },
+  {
     title: 'Bullet List',
     description: 'Unordered list',
     icon: '•',
@@ -446,6 +455,7 @@ export const SlashCommand = Extension.create({
         char: '/',
         startOfLine: false,
         pluginKey: SlashCommandPluginKey,
+        decorationClass: 'slash-command-decoration',
         items: ({ query }: { query: string }) => {
           const search = query.toLowerCase();
 
@@ -504,8 +514,12 @@ export const SlashCommand = Extension.create({
               })
             );
 
-            // Position after render
-            updateMenuPosition(container, props.clientRect);
+            // Position after React paints (createRoot renders async)
+            requestAnimationFrame(() => {
+              if (container) {
+                updateMenuPosition(container, props.clientRect);
+              }
+            });
           };
 
           return {

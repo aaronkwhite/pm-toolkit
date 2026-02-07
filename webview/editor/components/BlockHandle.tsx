@@ -39,6 +39,26 @@ const BLOCK_SELECTORS = [
   '.mermaid-node',
 ].join(', ');
 
+/** List containers that should be treated as a single block */
+const LIST_SELECTORS = 'ul, ol';
+
+/**
+ * If the element is nested inside a list, return the outermost list
+ * that is still a direct child of the editor. This treats the entire
+ * list (including nested lists) as one block.
+ */
+function toTopLevelBlock(el: Element, editorEl: Element): Element {
+  let current: Element | null = el;
+  let topList: Element | null = null;
+  while (current && current !== editorEl) {
+    if (current.matches(LIST_SELECTORS)) {
+      topList = current;
+    }
+    current = current.parentElement;
+  }
+  return topList ?? el;
+}
+
 /**
  * For elements inside a React NodeView, return the NodeView wrapper element
  * which ProseMirror can resolve positions for. Otherwise return the element itself.
@@ -57,7 +77,18 @@ function blockAtY(editorEl: Element, y: number): Element | null {
   const scopedSelectors = BLOCK_SELECTORS.split(', ').map(s => `:scope > ${s}`).join(', ');
   // Also check inside NodeView wrappers (React NodeViews wrap content in [data-node-view-wrapper])
   const nodeViewSelectors = BLOCK_SELECTORS.split(', ').map(s => `:scope > [data-node-view-wrapper] > ${s}`).join(', ');
-  const blocks = editorEl.querySelectorAll(`${scopedSelectors}, ${nodeViewSelectors}`);
+  const rawBlocks = editorEl.querySelectorAll(`${scopedSelectors}, ${nodeViewSelectors}`);
+
+  // Deduplicate: lift nested list items to their top-level list
+  const seen = new Set<Element>();
+  const blocks: Element[] = [];
+  for (const block of rawBlocks) {
+    const top = toTopLevelBlock(block, editorEl);
+    if (!seen.has(top)) {
+      seen.add(top);
+      blocks.push(top);
+    }
+  }
 
   let closest: Element | null = null;
   let closestDist = Infinity;
@@ -78,6 +109,18 @@ export function BlockHandle({ editor }: BlockHandleProps) {
   const [activeNode, setActiveNode] = useState<Element | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimeoutRef = useRef<number | null>(null);
+
+  // Toggle block-hover class on the active block element
+  useEffect(() => {
+    if (activeNode instanceof HTMLElement) {
+      activeNode.classList.add('block-hover');
+    }
+    return () => {
+      if (activeNode instanceof HTMLElement) {
+        activeNode.classList.remove('block-hover');
+      }
+    };
+  }, [activeNode]);
 
   // Drag state refs (not React state — needs to be synchronous in event handlers)
   const dragStateRef = useRef<{
@@ -131,12 +174,13 @@ export function BlockHandle({ editor }: BlockHandleProps) {
         return;
       }
 
-      // Find the closest block-level node
-      const blockNode = target.closest(BLOCK_SELECTORS);
-      if (!blockNode || !editorEl.contains(blockNode)) {
+      // Find the closest block-level node, then lift to the top-level list if nested
+      const rawBlock = target.closest(BLOCK_SELECTORS);
+      if (!rawBlock || !editorEl.contains(rawBlock)) {
         scheduleHide();
         return;
       }
+      const blockNode = toTopLevelBlock(rawBlock, editorEl);
 
       // Cancel any pending hide since we found a valid block
       clearHideTimeout();
@@ -187,9 +231,11 @@ export function BlockHandle({ editor }: BlockHandleProps) {
       // Get the ProseMirror position for the DOM node
       const pos = editor.view.posAtDOM(activeNode, 0);
 
-      // Find the end of the current block
+      // Resolve to the top-level block (depth 1) so that lists, blockquotes
+      // etc. insert the new paragraph *after* the entire container, not inside it.
       const $pos = editor.state.doc.resolve(pos);
-      const after = $pos.after();
+      const topDepth = Math.min($pos.depth, 1);
+      const after = $pos.after(topDepth);
 
       // Insert an empty paragraph after the current block
       editor
