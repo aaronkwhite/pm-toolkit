@@ -234,22 +234,25 @@ html, body {
 
 /* ===== Tables ===== */
 
+.ProseMirror .tableWrapper {
+  overflow-x: auto;
+  margin: 0.5em 0 1em;
+  width: calc(100% - 24px);
+}
+
 .ProseMirror table {
   border-collapse: collapse;
-  width: calc(100% - 24px);
-  margin: 0.5em 0;
-  margin-bottom: 1em;
-  overflow: hidden;
   table-layout: fixed;
+  min-width: 100%;
 }
 
 /* Ensure clickable area after tables */
-.ProseMirror table + p {
+.ProseMirror .tableWrapper + p {
   min-height: 1.5em;
 }
 
-/* When table is last child, add pseudo-element for clicking */
-.ProseMirror table:last-child {
+/* When table is last child, add extra space for clicking */
+.ProseMirror .tableWrapper:last-child {
   margin-bottom: 2em;
 }
 
