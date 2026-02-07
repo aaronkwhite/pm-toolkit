@@ -293,46 +293,60 @@ html, body {
   cursor: col-resize;
 }
 
-/* Table add row/column buttons (fixed position, appended to body) */
-.table-add-column-btn,
-.table-add-row-btn {
+/* Table add row/column bars (fixed position, appended to body) */
+.table-add-row-bar {
   position: fixed;
+  height: 14px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
   padding: 0;
-  border: 1.5px solid var(--vscode-panel-border);
-  border-radius: 50%;
-  background: var(--vscode-editor-background);
+  border: none;
+  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.08));
   color: var(--vscode-descriptionForeground);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
   z-index: 1000;
 }
 
-.table-add-column-btn svg,
-.table-add-row-btn svg {
+.table-add-column-bar {
+  position: fixed;
+  width: 14px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.08));
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  z-index: 1000;
+}
+
+.table-add-row-bar svg,
+.table-add-column-bar svg {
   width: 10px;
   height: 10px;
   stroke: currentColor;
+  flex-shrink: 0;
 }
 
-/* Show button when near edge */
-.table-add-column-btn.visible,
-.table-add-row-btn.visible {
+/* Show bars on table hover */
+.table-add-row-bar.visible,
+.table-add-column-bar.visible {
   opacity: 0.6;
 }
 
-/* Highlight on hover */
-.table-add-column-btn:hover,
-.table-add-row-btn:hover {
+/* Highlight on bar hover */
+.table-add-row-bar:hover,
+.table-add-column-bar:hover {
   opacity: 1;
-  background: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
-  border-color: var(--vscode-button-background);
+  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.15));
 }
 
 /* ===== Images ===== */

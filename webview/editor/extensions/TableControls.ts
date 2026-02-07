@@ -1,9 +1,9 @@
 /**
  * Table Controls Extension
  *
- * Adds plus buttons to add columns and rows to tables.
- * - Hover over right edge of table: shows column add button
- * - Hover over bottom edge of table: shows row add button
+ * Adds full-width/full-height pill bars to add columns and rows to tables.
+ * - Hover over table: shows add-row bar below and add-column bar to the right
+ * - Both bars visible simultaneously on table hover
  */
 
 import { Extension } from '@tiptap/core';
@@ -15,63 +15,75 @@ export const TableControls = Extension.create({
   addProseMirrorPlugins() {
     const editor = this.editor;
     let currentTable: HTMLElement | null = null;
-    let columnBtn: HTMLElement | null = null;
-    let rowBtn: HTMLElement | null = null;
+    let columnBar: HTMLElement | null = null;
+    let rowBar: HTMLElement | null = null;
+    let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    const createButton = (className: string, title: string): HTMLElement => {
-      const btn = document.createElement('button');
-      btn.className = className;
-      btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
-      btn.title = title;
-      btn.contentEditable = 'false';
-      btn.addEventListener('mousedown', (e) => {
+    const PLUS_SVG = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+
+    const createBar = (className: string, title: string): HTMLElement => {
+      const bar = document.createElement('button');
+      bar.className = className;
+      bar.innerHTML = PLUS_SVG;
+      bar.title = title;
+      bar.contentEditable = 'false';
+      bar.addEventListener('mousedown', (e) => {
         e.preventDefault();
         e.stopPropagation();
       });
-      return btn;
+      return bar;
     };
 
     const positionElements = (table: HTMLElement) => {
-      if (!columnBtn || !rowBtn) return;
+      if (!columnBar || !rowBar) return;
 
       const tableRect = table.getBoundingClientRect();
 
-      // Column button - right side, vertically centered
-      columnBtn.style.left = `${tableRect.right + 4}px`;
-      columnBtn.style.top = `${tableRect.top + tableRect.height / 2 - 8}px`;
+      // Row bar: full width below the table
+      rowBar.style.left = `${tableRect.left}px`;
+      rowBar.style.top = `${tableRect.bottom + 4}px`;
+      rowBar.style.width = `${tableRect.width}px`;
 
-      // Row button - bottom, horizontally centered
-      rowBtn.style.left = `${tableRect.left + tableRect.width / 2 - 8}px`;
-      rowBtn.style.top = `${tableRect.bottom + 4}px`;
+      // Column bar: full height to the right of the table
+      columnBar.style.left = `${tableRect.right + 4}px`;
+      columnBar.style.top = `${tableRect.top}px`;
+      columnBar.style.height = `${tableRect.height}px`;
     };
 
-    const showColumnBtn = () => {
-      columnBtn?.classList.add('visible');
-      rowBtn?.classList.remove('visible');
+    const showBars = () => {
+      columnBar?.classList.add('visible');
+      rowBar?.classList.add('visible');
     };
 
-    const showRowBtn = () => {
-      rowBtn?.classList.add('visible');
-      columnBtn?.classList.remove('visible');
+    const clearHideTimeout = () => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+        hideTimeout = null;
+      }
     };
 
-    const hideAllBtns = () => {
-      columnBtn?.classList.remove('visible');
-      rowBtn?.classList.remove('visible');
+    const scheduleHide = () => {
+      clearHideTimeout();
+      hideTimeout = setTimeout(hideControls, 150);
     };
 
     const createControls = (table: HTMLElement) => {
       if (currentTable === table) {
         positionElements(table);
+        showBars();
         return;
       }
 
       hideControls();
       currentTable = table;
 
-      // Create column button
-      columnBtn = createButton('table-add-column-btn', 'Add column');
-      columnBtn.addEventListener('click', (e) => {
+      // Create column bar
+      columnBar = createBar('table-add-column-bar', 'Add column');
+      columnBar.addEventListener('mouseenter', () => {
+        clearHideTimeout();
+      });
+      columnBar.addEventListener('mouseleave', scheduleHide);
+      columnBar.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         if (!currentTable) return;
@@ -108,9 +120,13 @@ export const TableControls = Extension.create({
         }
       });
 
-      // Create row button
-      rowBtn = createButton('table-add-row-btn', 'Add row');
-      rowBtn.addEventListener('click', (e) => {
+      // Create row bar
+      rowBar = createBar('table-add-row-bar', 'Add row');
+      rowBar.addEventListener('mouseenter', () => {
+        clearHideTimeout();
+      });
+      rowBar.addEventListener('mouseleave', scheduleHide);
+      rowBar.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         if (!currentTable) return;
@@ -150,16 +166,18 @@ export const TableControls = Extension.create({
         }
       });
 
-      document.body.appendChild(columnBtn);
-      document.body.appendChild(rowBtn);
+      document.body.appendChild(columnBar);
+      document.body.appendChild(rowBar);
       positionElements(table);
+      showBars();
     };
 
     const hideControls = () => {
-      columnBtn?.remove();
-      rowBtn?.remove();
-      columnBtn = null;
-      rowBtn = null;
+      clearHideTimeout();
+      columnBar?.remove();
+      rowBar?.remove();
+      columnBar = null;
+      rowBar = null;
       currentTable = null;
     };
 
@@ -167,49 +185,21 @@ export const TableControls = Extension.create({
       new Plugin({
         key: new PluginKey('tableControls'),
         view() {
-          let hideTimeout: ReturnType<typeof setTimeout> | null = null;
-          const EDGE_THRESHOLD = 30; // pixels from edge to trigger button
-
           const handleMouseMove = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
             const table = target.closest('table');
-            const isOverButton = target.closest('.table-add-column-btn, .table-add-row-btn');
+            const isOverBar = target.closest('.table-add-column-bar, .table-add-row-bar');
 
-            if (hideTimeout) {
-              clearTimeout(hideTimeout);
-              hideTimeout = null;
-            }
-
-            if (isOverButton) {
-              // Keep current button visible
+            if (isOverBar) {
+              clearHideTimeout();
               return;
             }
 
             if (table && editor.view.dom.contains(table)) {
+              clearHideTimeout();
               createControls(table as HTMLElement);
-
-              // Determine which edge we're near
-              const tableRect = table.getBoundingClientRect();
-              const distFromRight = tableRect.right - e.clientX;
-              const distFromBottom = tableRect.bottom - e.clientY;
-
-              // Show button based on which edge is closest (within threshold)
-              if (distFromRight >= 0 && distFromRight <= EDGE_THRESHOLD && distFromBottom > EDGE_THRESHOLD) {
-                showColumnBtn();
-              } else if (distFromBottom >= 0 && distFromBottom <= EDGE_THRESHOLD && distFromRight > EDGE_THRESHOLD) {
-                showRowBtn();
-              } else if (distFromRight >= 0 && distFromRight <= EDGE_THRESHOLD && distFromBottom >= 0 && distFromBottom <= EDGE_THRESHOLD) {
-                // Corner - show whichever is closer
-                if (distFromRight < distFromBottom) {
-                  showColumnBtn();
-                } else {
-                  showRowBtn();
-                }
-              } else {
-                hideAllBtns();
-              }
             } else if (currentTable) {
-              hideTimeout = setTimeout(hideControls, 150);
+              scheduleHide();
             }
           };
 
