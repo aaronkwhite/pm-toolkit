@@ -95,9 +95,24 @@ export const TableControls = Extension.create({
       }
     };
 
-    const showBars = () => {
-      columnBar?.classList.add('visible');
-      rowBar?.classList.add('visible');
+    const updateBarsForCell = () => {
+      if (!currentTable) return;
+      const rows = currentTable.querySelectorAll('tr');
+      const headerCells = currentTable.querySelectorAll('tr:first-child th, tr:first-child td');
+
+      // Show add-row bar only when hovering the last row
+      if (activeRowIndex === rows.length - 1) {
+        rowBar?.classList.add('visible');
+      } else {
+        rowBar?.classList.remove('visible');
+      }
+
+      // Show add-column bar only when hovering the last column
+      if (activeColIndex === headerCells.length - 1) {
+        columnBar?.classList.add('visible');
+      } else {
+        columnBar?.classList.remove('visible');
+      }
     };
 
     const clearHideTimeout = () => {
@@ -173,6 +188,8 @@ export const TableControls = Extension.create({
         }
         colGrip.classList.add('visible');
       }
+
+      updateBarsForCell();
     };
 
     const hideGrips = () => {
@@ -305,7 +322,6 @@ export const TableControls = Extension.create({
     const createControls = (table: HTMLElement) => {
       if (currentTable === table) {
         positionBars(table);
-        showBars();
         return;
       }
 
@@ -392,7 +408,6 @@ export const TableControls = Extension.create({
       document.body.appendChild(columnBar);
       document.body.appendChild(rowBar);
       positionBars(table);
-      showBars();
     };
 
     const hideControls = () => {
