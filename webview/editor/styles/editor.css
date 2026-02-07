@@ -370,13 +370,13 @@ html, body {
 }
 
 .table-row-grip {
-  width: 14px;
-  border-radius: 4px;
+  width: 10px;
+  border-radius: 5px;
 }
 
 .table-col-grip {
-  height: 14px;
-  border-radius: 4px;
+  height: 10px;
+  border-radius: 5px;
 }
 
 .table-row-grip svg,
@@ -390,8 +390,25 @@ html, body {
 .table-row-grip:hover,
 .table-col-grip:hover { opacity: 1; cursor: grab; }
 
+.table-row-grip.active,
+.table-col-grip.active {
+  opacity: 1;
+  background: var(--vscode-focusBorder, #007acc);
+  color: #fff;
+}
+
 .table-row-grip.dragging,
 .table-col-grip.dragging { opacity: 1; cursor: grabbing; }
+
+/* Row/column selection highlight overlay */
+.table-selection-highlight {
+  position: fixed;
+  border: 2px solid var(--vscode-focusBorder, #007acc);
+  background: color-mix(in srgb, var(--vscode-focusBorder, #007acc) 8%, transparent);
+  border-radius: 4px;
+  z-index: 999;
+  pointer-events: none;
+}
 
 /* Drop indicator line */
 .table-drop-indicator {
@@ -405,6 +422,44 @@ html, body {
 .table-drop-indicator.row { height: 2px; }
 
 .table-drop-indicator.column { width: 2px; }
+
+/* Grip context menu */
+.table-grip-menu {
+  position: fixed;
+  min-width: 180px;
+  background-color: var(--vscode-menu-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  padding: 4px;
+  z-index: 1002;
+}
+
+.table-grip-menu-item {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  background: none;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.table-grip-menu-item:hover {
+  background-color: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
+  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground));
+}
+
+.table-grip-menu-separator {
+  height: 1px;
+  background-color: var(--vscode-menu-border, var(--vscode-panel-border));
+  margin: 4px 0;
+}
 
 /* ===== Images ===== */
 

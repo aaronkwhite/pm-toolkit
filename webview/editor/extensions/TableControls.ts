@@ -2,19 +2,65 @@
  * Table Controls Extension
  *
  * Adds full-width/full-height pill bars to add columns and rows to tables,
- * plus row/column grip handles for drag-to-reorder.
+ * row/column grip handles for drag-to-reorder, and a context menu on grip click.
  * - Hover over a table cell: shows one row grip (left) and one column grip (top)
- *   for the hovered row/column, plus add-row/add-column bars
- * - Drag a gripper to reorder rows/columns via prosemirror-tables commands
+ * - Drag a gripper to reorder rows/columns
+ * - Click a gripper to open a context menu with row/column operations
+ * - Add-row/add-column bars appear only when hovering the last row/column
  */
 
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { moveTableRow, moveTableColumn } from 'prosemirror-tables';
+import { Fragment } from '@tiptap/pm/model';
+import {
+  moveTableRow,
+  moveTableColumn,
+  findTable,
+  TableMap,
+} from 'prosemirror-tables';
 
 const PLUS_SVG = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
 
-const GRIP_SVG = `<svg width="6" height="10" viewBox="0 0 6 10" fill="currentColor"><circle cx="1.5" cy="1.5" r="1"/><circle cx="4.5" cy="1.5" r="1"/><circle cx="1.5" cy="5" r="1"/><circle cx="4.5" cy="5" r="1"/><circle cx="1.5" cy="8.5" r="1"/><circle cx="4.5" cy="8.5" r="1"/></svg>`;
+const GRIP_V_SVG = `<svg width="6" height="10" viewBox="0 0 6 10" fill="currentColor"><circle cx="1.5" cy="1.5" r="1"/><circle cx="4.5" cy="1.5" r="1"/><circle cx="1.5" cy="5" r="1"/><circle cx="4.5" cy="5" r="1"/><circle cx="1.5" cy="8.5" r="1"/><circle cx="4.5" cy="8.5" r="1"/></svg>`;
+const GRIP_H_SVG = `<svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor"><circle cx="1.5" cy="1.5" r="1"/><circle cx="1.5" cy="4.5" r="1"/><circle cx="5" cy="1.5" r="1"/><circle cx="5" cy="4.5" r="1"/><circle cx="8.5" cy="1.5" r="1"/><circle cx="8.5" cy="4.5" r="1"/></svg>`;
+
+// --- Menu item definitions ---
+
+interface MenuItem {
+  label: string;
+  action: string;
+  separator?: never;
+}
+interface MenuSeparator {
+  separator: true;
+  label?: never;
+  action?: never;
+}
+type MenuEntry = MenuItem | MenuSeparator;
+
+const ROW_MENU: MenuEntry[] = [
+  { label: 'Insert row above', action: 'insertRowAbove' },
+  { label: 'Insert row below', action: 'insertRowBelow' },
+  { separator: true },
+  { label: 'Move row up', action: 'moveRowUp' },
+  { label: 'Move row down', action: 'moveRowDown' },
+  { separator: true },
+  { label: 'Duplicate row', action: 'duplicateRow' },
+  { separator: true },
+  { label: 'Delete row', action: 'deleteRow' },
+];
+
+const COL_MENU: MenuEntry[] = [
+  { label: 'Insert column left', action: 'insertColLeft' },
+  { label: 'Insert column right', action: 'insertColRight' },
+  { separator: true },
+  { label: 'Move column left', action: 'moveColLeft' },
+  { label: 'Move column right', action: 'moveColRight' },
+  { separator: true },
+  { label: 'Duplicate column', action: 'duplicateCol' },
+  { separator: true },
+  { label: 'Delete column', action: 'deleteCol' },
+];
 
 export const TableControls = Extension.create({
   name: 'tableControls',
@@ -30,6 +76,33 @@ export const TableControls = Extension.create({
     let activeColIndex = -1;
     let hideTimeout: ReturnType<typeof setTimeout> | null = null;
     let isDragging = false;
+    let contextMenu: HTMLElement | null = null;
+
+    // --- Helpers ---
+
+    /** Place editor selection inside a specific cell of the current table. */
+    const focusCellAt = (rowIdx: number, colIdx: number) => {
+      if (!currentTable) return;
+      const rows = currentTable.querySelectorAll('tr');
+      const row = rows[rowIdx];
+      if (!row) return;
+      const cells = row.querySelectorAll('td, th');
+      const cell = cells[colIdx] as HTMLElement | undefined;
+      if (!cell) return;
+      try {
+        const pos = editor.view.posAtDOM(cell, 0) + 1;
+        editor.chain().focus().setTextSelection(pos).run();
+      } catch {
+        // cell not in PM DOM
+      }
+    };
+
+    /** Focus the active row/column so tiptap commands operate on it. */
+    const focusActiveCell = () => {
+      const r = activeRowIndex >= 0 ? activeRowIndex : 0;
+      const c = activeColIndex >= 0 ? activeColIndex : 0;
+      focusCellAt(r, c);
+    };
 
     const createBar = (className: string, title: string): HTMLElement => {
       const bar = document.createElement('button');
@@ -44,10 +117,10 @@ export const TableControls = Extension.create({
       return bar;
     };
 
-    const createGripEl = (className: string): HTMLElement => {
+    const createGripEl = (className: string, svg: string): HTMLElement => {
       const grip = document.createElement('button');
       grip.className = className;
-      grip.innerHTML = GRIP_SVG;
+      grip.innerHTML = svg;
       grip.contentEditable = 'false';
       grip.addEventListener('mousedown', (e) => {
         e.preventDefault();
@@ -77,7 +150,7 @@ export const TableControls = Extension.create({
         const row = rows[activeRowIndex];
         if (row) {
           const rect = row.getBoundingClientRect();
-          rowGrip.style.left = `${tableRect.left - 18}px`;
+          rowGrip.style.left = `${tableRect.left - 14}px`;
           rowGrip.style.top = `${rect.top}px`;
           rowGrip.style.height = `${rect.height}px`;
         }
@@ -89,7 +162,7 @@ export const TableControls = Extension.create({
         if (cell) {
           const rect = cell.getBoundingClientRect();
           colGrip.style.left = `${rect.left}px`;
-          colGrip.style.top = `${tableRect.top - 18}px`;
+          colGrip.style.top = `${tableRect.top - 14}px`;
           colGrip.style.width = `${rect.width}px`;
         }
       }
@@ -100,14 +173,12 @@ export const TableControls = Extension.create({
       const rows = currentTable.querySelectorAll('tr');
       const headerCells = currentTable.querySelectorAll('tr:first-child th, tr:first-child td');
 
-      // Show add-row bar only when hovering the last row
       if (activeRowIndex === rows.length - 1) {
         rowBar?.classList.add('visible');
       } else {
         rowBar?.classList.remove('visible');
       }
 
-      // Show add-column bar only when hovering the last column
       if (activeColIndex === headerCells.length - 1) {
         columnBar?.classList.add('visible');
       } else {
@@ -123,9 +194,315 @@ export const TableControls = Extension.create({
     };
 
     const scheduleHide = () => {
-      if (isDragging) return;
+      if (isDragging || contextMenu) return;
       clearHideTimeout();
       hideTimeout = setTimeout(hideControls, 150);
+    };
+
+    // --- Context menu ---
+
+    let menuDismissListener: ((e: MouseEvent) => void) | null = null;
+    let menuKeyListener: ((e: KeyboardEvent) => void) | null = null;
+    let selectionHighlight: HTMLElement | null = null;
+    let menuGripType: 'row' | 'column' | null = null;
+
+    const removeHighlight = () => {
+      selectionHighlight?.remove();
+      selectionHighlight = null;
+      rowGrip?.classList.remove('active');
+      colGrip?.classList.remove('active');
+      menuGripType = null;
+    };
+
+    const showHighlight = (type: 'row' | 'column') => {
+      if (!currentTable) return;
+      removeHighlight();
+      menuGripType = type;
+
+      const tableRect = currentTable.getBoundingClientRect();
+      const hl = document.createElement('div');
+      hl.className = 'table-selection-highlight';
+
+      if (type === 'row') {
+        const rows = currentTable.querySelectorAll('tr');
+        const row = rows[activeRowIndex];
+        if (!row) return;
+        const rowRect = row.getBoundingClientRect();
+        hl.style.left = `${tableRect.left}px`;
+        hl.style.top = `${rowRect.top}px`;
+        hl.style.width = `${tableRect.width}px`;
+        hl.style.height = `${rowRect.height}px`;
+        rowGrip?.classList.add('active');
+      } else {
+        const headerCells = currentTable.querySelectorAll('tr:first-child th, tr:first-child td');
+        const cell = headerCells[activeColIndex] as HTMLElement | undefined;
+        if (!cell) return;
+        const cellRect = cell.getBoundingClientRect();
+        hl.style.left = `${cellRect.left}px`;
+        hl.style.top = `${tableRect.top}px`;
+        hl.style.width = `${cellRect.width}px`;
+        hl.style.height = `${tableRect.height}px`;
+        colGrip?.classList.add('active');
+      }
+
+      document.body.appendChild(hl);
+      selectionHighlight = hl;
+    };
+
+    const closeContextMenu = () => {
+      contextMenu?.remove();
+      contextMenu = null;
+      removeHighlight();
+      if (menuDismissListener) {
+        document.removeEventListener('pointerdown', menuDismissListener, true);
+        menuDismissListener = null;
+      }
+      if (menuKeyListener) {
+        document.removeEventListener('keydown', menuKeyListener, true);
+        menuKeyListener = null;
+      }
+    };
+
+    const openContextMenu = (type: 'row' | 'column', clickX: number, clickY: number) => {
+      closeContextMenu();
+
+      showHighlight(type);
+
+      const menu = document.createElement('div');
+      menu.className = 'table-grip-menu';
+      const items = type === 'row' ? ROW_MENU : COL_MENU;
+
+      items.forEach((entry) => {
+        if (entry.separator) {
+          const sep = document.createElement('div');
+          sep.className = 'table-grip-menu-separator';
+          menu.appendChild(sep);
+          return;
+        }
+        const btn = document.createElement('button');
+        btn.className = 'table-grip-menu-item';
+        btn.textContent = entry.label!;
+        btn.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+        });
+        btn.addEventListener('pointerup', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          executeMenuAction(type, entry.action!);
+          closeContextMenu();
+        });
+        menu.appendChild(btn);
+      });
+
+      document.body.appendChild(menu);
+      contextMenu = menu;
+
+      // Position at click location
+      menu.style.left = `${clickX}px`;
+      menu.style.top = `${clickY}px`;
+
+      // Clamp to viewport
+      requestAnimationFrame(() => {
+        if (!contextMenu) return;
+        const menuRect = contextMenu.getBoundingClientRect();
+        if (menuRect.right > window.innerWidth) {
+          contextMenu.style.left = `${window.innerWidth - menuRect.width - 8}px`;
+        }
+        if (menuRect.bottom > window.innerHeight) {
+          contextMenu.style.top = `${clickY - menuRect.height}px`;
+        }
+      });
+
+      // Close on click outside or Escape (capture phase, next tick)
+      requestAnimationFrame(() => {
+        menuDismissListener = (e: MouseEvent) => {
+          if (contextMenu && !contextMenu.contains(e.target as Node)) {
+            closeContextMenu();
+          }
+        };
+        menuKeyListener = (e: KeyboardEvent) => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            closeContextMenu();
+          }
+        };
+        document.addEventListener('pointerdown', menuDismissListener, true);
+        document.addEventListener('keydown', menuKeyListener, true);
+      });
+    };
+
+    /** Get a ProseMirror position inside the active cell for chaining commands. */
+    const getActiveCellPos = (): number | null => {
+      if (!currentTable) return null;
+      const r = activeRowIndex >= 0 ? activeRowIndex : 0;
+      const c = activeColIndex >= 0 ? activeColIndex : 0;
+      const rows = currentTable.querySelectorAll('tr');
+      const row = rows[r];
+      if (!row) return null;
+      const cells = row.querySelectorAll('td, th');
+      const cell = cells[c] as HTMLElement | undefined;
+      if (!cell) return null;
+      // posAtDOM on the cell element gives us a position just inside the cell node,
+      // then +1 to land inside the cell's content (paragraph).
+      try {
+        const pos = editor.view.posAtDOM(cell, 0);
+        return pos + 1;
+      } catch {
+        return null;
+      }
+    };
+
+    const executeMenuAction = (type: 'row' | 'column', action: string) => {
+      if (!currentTable) return;
+
+      const pos = getActiveCellPos();
+      if (pos == null) return;
+
+      const rows = currentTable.querySelectorAll('tr');
+      const totalRows = rows.length;
+      const headerCells = currentTable.querySelectorAll('tr:first-child th, tr:first-child td');
+      const totalCols = headerCells.length;
+
+      // Helper: focus active cell then run a tiptap command in one chain
+      const focusThen = (cmd: (chain: ReturnType<typeof editor.chain>) => ReturnType<typeof editor.chain>) => {
+        cmd(editor.chain().focus().setTextSelection(pos)).run();
+      };
+
+      switch (action) {
+        // --- Row actions ---
+        case 'insertRowAbove':
+          focusThen((c) => c.addRowBefore());
+          break;
+        case 'insertRowBelow':
+          focusThen((c) => c.addRowAfter());
+          break;
+        case 'moveRowUp':
+          if (activeRowIndex > 1) {
+            focusActiveCell();
+            runMoveCommand('row', activeRowIndex, activeRowIndex - 1);
+          }
+          break;
+        case 'moveRowDown':
+          if (activeRowIndex < totalRows - 1) {
+            focusActiveCell();
+            runMoveCommand('row', activeRowIndex, activeRowIndex + 1);
+          }
+          break;
+        case 'duplicateRow':
+          focusActiveCell();
+          duplicateRow(activeRowIndex);
+          break;
+        case 'deleteRow':
+          focusThen((c) => c.deleteRow());
+          break;
+
+        // --- Column actions ---
+        case 'insertColLeft':
+          focusThen((c) => c.addColumnBefore());
+          break;
+        case 'insertColRight':
+          focusThen((c) => c.addColumnAfter());
+          break;
+        case 'moveColLeft':
+          if (activeColIndex > 0) {
+            focusActiveCell();
+            runMoveCommand('column', activeColIndex, activeColIndex - 1);
+          }
+          break;
+        case 'moveColRight':
+          if (activeColIndex < totalCols - 1) {
+            focusActiveCell();
+            runMoveCommand('column', activeColIndex, activeColIndex + 1);
+          }
+          break;
+        case 'duplicateCol':
+          focusActiveCell();
+          duplicateColumn(activeColIndex);
+          break;
+        case 'deleteCol':
+          focusThen((c) => c.deleteColumn());
+          break;
+      }
+    };
+
+    const runMoveCommand = (type: 'row' | 'column', from: number, to: number) => {
+      editor.commands.command(({ state, dispatch }) => {
+        if (type === 'row') {
+          return moveTableRow({ from, to })(state, dispatch);
+        } else {
+          return moveTableColumn({ from, to })(state, dispatch);
+        }
+      });
+    };
+
+    const duplicateRow = (rowIndex: number) => {
+      editor.commands.command(({ state, dispatch }) => {
+        const $pos = state.selection.$from;
+        const table = findTable($pos);
+        if (!table) return false;
+        const tableNode = table.node;
+        const map = TableMap.get(tableNode);
+        if (rowIndex < 0 || rowIndex >= map.height) return false;
+
+        // Get the row node and create a deep copy
+        const sourceRow = tableNode.child(rowIndex);
+        const newCells: any[] = [];
+        sourceRow.forEach((cell) => {
+          // Copy cell with its content
+          newCells.push(cell.type.create(cell.attrs, cell.content, cell.marks));
+        });
+        const newRow = sourceRow.type.create(sourceRow.attrs, Fragment.from(newCells));
+
+        // Build new table rows array
+        const rows: any[] = [];
+        tableNode.forEach((row) => rows.push(row));
+        rows.splice(rowIndex + 1, 0, newRow);
+
+        const newTable = tableNode.type.create(tableNode.attrs, Fragment.from(rows));
+        if (dispatch) {
+          const tr = state.tr;
+          tr.replaceWith(table.pos, table.pos + tableNode.nodeSize, newTable);
+          dispatch(tr);
+        }
+        return true;
+      });
+    };
+
+    const duplicateColumn = (colIndex: number) => {
+      editor.commands.command(({ state, dispatch }) => {
+        const $pos = state.selection.$from;
+        const table = findTable($pos);
+        if (!table) return false;
+        const tableNode = table.node;
+        const map = TableMap.get(tableNode);
+        if (colIndex < 0 || colIndex >= map.width) return false;
+
+        // Build new table with duplicated column
+        const newRows: any[] = [];
+        for (let r = 0; r < map.height; r++) {
+          const row = tableNode.child(r);
+          const newCells: any[] = [];
+          let col = 0;
+          row.forEach((cell) => {
+            newCells.push(cell);
+            if (col === colIndex) {
+              // Duplicate this cell
+              newCells.push(cell.type.create(cell.attrs, cell.content, cell.marks));
+            }
+            col++;
+          });
+          newRows.push(row.type.create(row.attrs, Fragment.from(newCells)));
+        }
+
+        const newTable = tableNode.type.create(tableNode.attrs, Fragment.from(newRows));
+        if (dispatch) {
+          const tr = state.tr;
+          tr.replaceWith(table.pos, table.pos + tableNode.nodeSize, newTable);
+          dispatch(tr);
+        }
+        return true;
+      });
     };
 
     // --- Grip visibility based on hovered cell ---
@@ -139,7 +516,6 @@ export const TableControls = Extension.create({
       let rowIdx = -1;
       rows.forEach((r, i) => { if (r === row) rowIdx = i; });
 
-      // Column index: count preceding siblings
       const cellsInRow = row.querySelectorAll('td, th');
       let colIdx = -1;
       cellsInRow.forEach((c, i) => { if (c === cell) colIdx = i; });
@@ -150,19 +526,18 @@ export const TableControls = Extension.create({
       if (rowIdx > 0 && rowIdx !== activeRowIndex) {
         activeRowIndex = rowIdx;
         if (!rowGrip) {
-          rowGrip = createGripEl('table-row-grip');
+          rowGrip = createGripEl('table-row-grip', GRIP_V_SVG);
           rowGrip.addEventListener('mouseenter', clearHideTimeout);
           rowGrip.addEventListener('mouseleave', scheduleHide);
-          rowGrip.addEventListener('pointerdown', (e) => startDrag(e, 'row'));
+          rowGrip.addEventListener('pointerdown', (e) => onGripPointerDown(e, 'row'));
           document.body.appendChild(rowGrip);
         }
         const rect = row.getBoundingClientRect();
-        rowGrip.style.left = `${tableRect.left - 18}px`;
+        rowGrip.style.left = `${tableRect.left - 14}px`;
         rowGrip.style.top = `${rect.top}px`;
         rowGrip.style.height = `${rect.height}px`;
         rowGrip.classList.add('visible');
       } else if (rowIdx === 0) {
-        // Header row — hide row grip
         activeRowIndex = -1;
         rowGrip?.classList.remove('visible');
       }
@@ -171,19 +546,18 @@ export const TableControls = Extension.create({
       if (colIdx >= 0 && colIdx !== activeColIndex) {
         activeColIndex = colIdx;
         if (!colGrip) {
-          colGrip = createGripEl('table-col-grip');
+          colGrip = createGripEl('table-col-grip', GRIP_H_SVG);
           colGrip.addEventListener('mouseenter', clearHideTimeout);
           colGrip.addEventListener('mouseleave', scheduleHide);
-          colGrip.addEventListener('pointerdown', (e) => startDrag(e, 'column'));
+          colGrip.addEventListener('pointerdown', (e) => onGripPointerDown(e, 'column'));
           document.body.appendChild(colGrip);
         }
-        // Use the header cell for width/position (column spans full table height)
         const headerCells = currentTable.querySelectorAll('tr:first-child th, tr:first-child td');
         const headerCell = headerCells[colIdx] as HTMLElement | undefined;
         if (headerCell) {
           const rect = headerCell.getBoundingClientRect();
           colGrip.style.left = `${rect.left}px`;
-          colGrip.style.top = `${tableRect.top - 18}px`;
+          colGrip.style.top = `${tableRect.top - 14}px`;
           colGrip.style.width = `${rect.width}px`;
         }
         colGrip.classList.add('visible');
@@ -201,27 +575,52 @@ export const TableControls = Extension.create({
       activeColIndex = -1;
     };
 
-    // --- Drag handling ---
+    // --- Grip pointer handling: click → menu, drag → reorder ---
 
-    const startDrag = (e: PointerEvent, type: 'row' | 'column') => {
+    const DRAG_THRESHOLD = 4;
+
+    const onGripPointerDown = (e: PointerEvent, type: 'row' | 'column') => {
       e.preventDefault();
       const fromIndex = type === 'row' ? activeRowIndex : activeColIndex;
       if (fromIndex < 0) return;
 
       const grip = e.currentTarget as HTMLElement;
       grip.setPointerCapture(e.pointerId);
-      grip.classList.add('dragging');
-      isDragging = true;
-
-      const indicator = document.createElement('div');
-      indicator.className = `table-drop-indicator ${type}`;
-      document.body.appendChild(indicator);
-
+      const startX = e.clientX;
+      const startY = e.clientY;
+      let didDrag = false;
+      let indicator: HTMLElement | null = null;
+      let dropGrip: HTMLElement | null = null;
       let toIndex = fromIndex;
-      const table = currentTable!;
-      const tableRect = table.getBoundingClientRect();
 
       const onMove = (ev: PointerEvent) => {
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+
+        if (!didDrag && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD) return;
+
+        if (!didDrag) {
+          // Transition to drag mode
+          didDrag = true;
+          isDragging = true;
+          grip.classList.add('dragging', 'active');
+          closeContextMenu();
+          indicator = document.createElement('div');
+          indicator.className = `table-drop-indicator ${type}`;
+          document.body.appendChild(indicator);
+
+          // Create a ghost grip at drop target
+          const gripClass = type === 'row' ? 'table-row-grip' : 'table-col-grip';
+          const gripSvg = type === 'row' ? GRIP_V_SVG : GRIP_H_SVG;
+          dropGrip = createGripEl(gripClass, gripSvg);
+          dropGrip.classList.add('visible', 'active');
+          dropGrip.style.pointerEvents = 'none';
+          document.body.appendChild(dropGrip);
+        }
+
+        const table = currentTable!;
+        const tableRect = table.getBoundingClientRect();
+
         if (type === 'row') {
           const rows = table.querySelectorAll('tr');
           let bestIndex = fromIndex;
@@ -242,9 +641,20 @@ export const TableControls = Extension.create({
           const indicatorY = bestIndex < rows.length
             ? rows[bestIndex].getBoundingClientRect().top
             : rows[rows.length - 1].getBoundingClientRect().bottom;
-          indicator.style.left = `${tableRect.left}px`;
-          indicator.style.top = `${indicatorY - 1}px`;
-          indicator.style.width = `${tableRect.width}px`;
+          indicator!.style.left = `${tableRect.left}px`;
+          indicator!.style.top = `${indicatorY - 1}px`;
+          indicator!.style.width = `${tableRect.width}px`;
+
+          // Position drop grip at target row
+          if (dropGrip) {
+            const targetRow = rows[toIndex];
+            if (targetRow) {
+              const rowRect = targetRow.getBoundingClientRect();
+              dropGrip.style.left = `${tableRect.left - 14}px`;
+              dropGrip.style.top = `${rowRect.top}px`;
+              dropGrip.style.height = `${rowRect.height}px`;
+            }
+          }
         } else {
           const cells = table.querySelectorAll('tr:first-child th, tr:first-child td');
           let bestIndex = fromIndex;
@@ -265,53 +675,69 @@ export const TableControls = Extension.create({
           const indicatorX = bestIndex < cells.length
             ? (cells[bestIndex] as HTMLElement).getBoundingClientRect().left
             : (cells[cells.length - 1] as HTMLElement).getBoundingClientRect().right;
-          indicator.style.left = `${indicatorX - 1}px`;
-          indicator.style.top = `${tableRect.top}px`;
-          indicator.style.height = `${tableRect.height}px`;
+          indicator!.style.left = `${indicatorX - 1}px`;
+          indicator!.style.top = `${tableRect.top}px`;
+          indicator!.style.height = `${tableRect.height}px`;
+
+          // Position drop grip at target column
+          if (dropGrip) {
+            const targetCell = cells[toIndex] as HTMLElement | undefined;
+            if (targetCell) {
+              const cellRect = targetCell.getBoundingClientRect();
+              dropGrip.style.left = `${cellRect.left}px`;
+              dropGrip.style.top = `${tableRect.top - 14}px`;
+              dropGrip.style.width = `${cellRect.width}px`;
+            }
+          }
         }
       };
 
       const onUp = (ev: PointerEvent) => {
         grip.releasePointerCapture(ev.pointerId);
-        grip.classList.remove('dragging');
-        isDragging = false;
-        indicator.remove();
+        grip.classList.remove('dragging', 'active');
         grip.removeEventListener('pointermove', onMove);
         grip.removeEventListener('pointerup', onUp);
 
-        if (toIndex !== fromIndex) {
-          // The move commands use selection.$from to locate the table,
-          // so we must place the selection inside the table first.
-          const firstCell = table.querySelector('td, th');
-          if (firstCell) {
-            const rect = (firstCell as HTMLElement).getBoundingClientRect();
-            const coords = editor.view.posAtCoords({
-              left: rect.left + 1,
-              top: rect.top + 1,
-            });
-            if (coords) {
-              // Set selection inside the table, then run the move command
-              editor.chain()
-                .focus()
-                .setTextSelection(coords.pos)
-                .command(({ state, dispatch }) => {
-                  if (type === 'row') {
-                    return moveTableRow({
-                      from: fromIndex,
-                      to: toIndex,
-                      pos: coords.pos,
-                    })(state, dispatch);
-                  } else {
-                    return moveTableColumn({
-                      from: fromIndex,
-                      to: toIndex,
-                      pos: coords.pos,
-                    })(state, dispatch);
-                  }
-                })
-                .run();
+        if (didDrag) {
+          isDragging = false;
+          indicator?.remove();
+          dropGrip?.remove();
+
+          if (toIndex !== fromIndex) {
+            const table = currentTable!;
+            const firstCell = table.querySelector('td, th');
+            if (firstCell) {
+              const rect = (firstCell as HTMLElement).getBoundingClientRect();
+              const coords = editor.view.posAtCoords({
+                left: rect.left + 1,
+                top: rect.top + 1,
+              });
+              if (coords) {
+                editor.chain()
+                  .focus()
+                  .setTextSelection(coords.pos)
+                  .command(({ state, dispatch }) => {
+                    if (type === 'row') {
+                      return moveTableRow({
+                        from: fromIndex,
+                        to: toIndex,
+                        pos: coords.pos,
+                      })(state, dispatch);
+                    } else {
+                      return moveTableColumn({
+                        from: fromIndex,
+                        to: toIndex,
+                        pos: coords.pos,
+                      })(state, dispatch);
+                    }
+                  })
+                  .run();
+              }
             }
           }
+        } else {
+          // Click — open context menu at click position
+          openContextMenu(type, startX, startY);
         }
       };
 
@@ -413,6 +839,7 @@ export const TableControls = Extension.create({
     const hideControls = () => {
       if (isDragging) return;
       clearHideTimeout();
+      closeContextMenu();
       columnBar?.remove();
       rowBar?.remove();
       columnBar = null;
@@ -427,6 +854,10 @@ export const TableControls = Extension.create({
         view() {
           const handleMouseMove = (e: MouseEvent) => {
             if (isDragging) return;
+
+            // While context menu is open, freeze all controls in place
+            if (contextMenu) return;
+
             const target = e.target as HTMLElement;
             const isOverControl = target.closest(
               '.table-add-column-bar, .table-add-row-bar, .table-row-grip, .table-col-grip'
