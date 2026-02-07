@@ -10,7 +10,7 @@
  */
 
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 import { Fragment } from '@tiptap/pm/model';
 import {
   moveTableRow,
@@ -102,6 +102,17 @@ export const TableControls = Extension.create({
       const r = activeRowIndex >= 0 ? activeRowIndex : 0;
       const c = activeColIndex >= 0 ? activeColIndex : 0;
       focusCellAt(r, c);
+    };
+
+    /** Clear PM CellSelection (the blue .selectedCell background) and browser text selection. */
+    const clearCellSelection = () => {
+      const { state, dispatch } = editor.view;
+      if (!(state.selection instanceof TextSelection)) {
+        const pos = state.selection.$from.pos;
+        dispatch(state.tr.setSelection(TextSelection.create(state.doc, pos)));
+      }
+      window.getSelection()?.removeAllRanges();
+      (editor.view.dom as HTMLElement).blur();
     };
 
     const createBar = (className: string, title: string): HTMLElement => {
@@ -205,6 +216,20 @@ export const TableControls = Extension.create({
     let menuKeyListener: ((e: KeyboardEvent) => void) | null = null;
     let selectionHighlight: HTMLElement | null = null;
     let menuGripType: 'row' | 'column' | null = null;
+    let highlightDismissListener: ((e: MouseEvent) => void) | null = null;
+
+    /** Register a click listener that dismisses the selection highlight on next click. */
+    const registerHighlightDismiss = () => {
+      if (highlightDismissListener) {
+        document.removeEventListener('pointerdown', highlightDismissListener, true);
+      }
+      highlightDismissListener = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('.table-row-grip, .table-col-grip')) return;
+        removeHighlight(); // also cleans up this listener
+      };
+      document.addEventListener('pointerdown', highlightDismissListener, true);
+    };
 
     const removeHighlight = () => {
       selectionHighlight?.remove();
@@ -212,6 +237,10 @@ export const TableControls = Extension.create({
       rowGrip?.classList.remove('active');
       colGrip?.classList.remove('active');
       menuGripType = null;
+      if (highlightDismissListener) {
+        document.removeEventListener('pointerdown', highlightDismissListener, true);
+        highlightDismissListener = null;
+      }
     };
 
     const showHighlight = (type: 'row' | 'column') => {
@@ -223,25 +252,48 @@ export const TableControls = Extension.create({
       const hl = document.createElement('div');
       hl.className = 'table-selection-highlight';
 
+      // Clamp highlight to the tableWrapper scroll container (handles overflow-x)
+      // and the editor scroll container (handles overflow-y)
+      const wrapperEl = currentTable.closest('.tableWrapper');
+      const editorEl = editor.view.dom.closest('.ProseMirror') || editor.view.dom;
+      const wrapperRect = wrapperEl ? wrapperEl.getBoundingClientRect() : null;
+      const editorRect = editorEl.getBoundingClientRect();
+
+      // Use the tighter of the wrapper and editor bounds (intersect them)
+      const clipTop = Math.max(0, editorRect.top, wrapperRect ? wrapperRect.top : 0);
+      const clipBottom = Math.min(window.innerHeight, editorRect.bottom, wrapperRect ? wrapperRect.bottom : window.innerHeight);
+      const clipLeft = Math.max(0, wrapperRect ? wrapperRect.left : editorRect.left);
+      const clipRight = Math.min(window.innerWidth, wrapperRect ? wrapperRect.right : editorRect.right);
+
       if (type === 'row') {
         const rows = currentTable.querySelectorAll('tr');
         const row = rows[activeRowIndex];
         if (!row) return;
         const rowRect = row.getBoundingClientRect();
-        hl.style.left = `${tableRect.left}px`;
-        hl.style.top = `${rowRect.top}px`;
-        hl.style.width = `${tableRect.width}px`;
-        hl.style.height = `${rowRect.height}px`;
+        const top = Math.max(clipTop, rowRect.top);
+        const bottom = Math.min(clipBottom, rowRect.bottom);
+        const left = Math.max(clipLeft, tableRect.left);
+        const right = Math.min(clipRight, tableRect.right);
+        if (bottom <= top || right <= left) return;
+        hl.style.left = `${left}px`;
+        hl.style.top = `${top}px`;
+        hl.style.width = `${right - left}px`;
+        hl.style.height = `${bottom - top}px`;
         rowGrip?.classList.add('active');
       } else {
         const headerCells = currentTable.querySelectorAll('tr:first-child th, tr:first-child td');
         const cell = headerCells[activeColIndex] as HTMLElement | undefined;
         if (!cell) return;
         const cellRect = cell.getBoundingClientRect();
-        hl.style.left = `${cellRect.left}px`;
-        hl.style.top = `${tableRect.top}px`;
-        hl.style.width = `${cellRect.width}px`;
-        hl.style.height = `${tableRect.height}px`;
+        const top = Math.max(clipTop, tableRect.top);
+        const bottom = Math.min(clipBottom, tableRect.bottom);
+        const left = Math.max(clipLeft, cellRect.left);
+        const right = Math.min(clipRight, cellRect.right);
+        if (bottom <= top || right <= left) return;
+        hl.style.left = `${left}px`;
+        hl.style.top = `${top}px`;
+        hl.style.width = `${right - left}px`;
+        hl.style.height = `${bottom - top}px`;
         colGrip?.classList.add('active');
       }
 
@@ -249,10 +301,15 @@ export const TableControls = Extension.create({
       selectionHighlight = hl;
     };
 
-    const closeContextMenu = () => {
+    const closeContextMenu = (keepHighlight = false) => {
       contextMenu?.remove();
       contextMenu = null;
-      removeHighlight();
+      if (!keepHighlight) {
+        removeHighlight();
+      } else if (selectionHighlight) {
+        // Register dismiss-on-click for the existing highlight
+        registerHighlightDismiss();
+      }
       if (menuDismissListener) {
         document.removeEventListener('pointerdown', menuDismissListener, true);
         menuDismissListener = null;
@@ -267,6 +324,7 @@ export const TableControls = Extension.create({
       closeContextMenu();
 
       showHighlight(type);
+      clearCellSelection();
 
       const menu = document.createElement('div');
       menu.className = 'table-grip-menu';
@@ -288,8 +346,15 @@ export const TableControls = Extension.create({
         btn.addEventListener('pointerup', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          const isMoveAction = entry.action!.startsWith('move');
           executeMenuAction(type, entry.action!);
-          closeContextMenu();
+          // Move actions re-show the highlight after PM re-renders,
+          // so close the menu without removing it
+          closeContextMenu(isMoveAction);
+          // Clear PM cell selection and browser text selection after the action
+          requestAnimationFrame(() => {
+            clearCellSelection();
+          });
         });
         menu.appendChild(btn);
       });
@@ -324,7 +389,7 @@ export const TableControls = Extension.create({
           if (e.key === 'Escape') {
             e.preventDefault();
             e.stopPropagation();
-            closeContextMenu();
+            closeContextMenu(true);
           }
         };
         document.addEventListener('pointerdown', menuDismissListener, true);
@@ -381,12 +446,26 @@ export const TableControls = Extension.create({
           if (activeRowIndex > 1) {
             focusActiveCell();
             runMoveCommand('row', activeRowIndex, activeRowIndex - 1);
+            activeRowIndex = activeRowIndex - 1;
+            requestAnimationFrame(() => {
+              if (!currentTable) return;
+              positionGrips(currentTable);
+              showHighlight('row');
+              registerHighlightDismiss();
+            });
           }
           break;
         case 'moveRowDown':
           if (activeRowIndex < totalRows - 1) {
             focusActiveCell();
             runMoveCommand('row', activeRowIndex, activeRowIndex + 1);
+            activeRowIndex = activeRowIndex + 1;
+            requestAnimationFrame(() => {
+              if (!currentTable) return;
+              positionGrips(currentTable);
+              showHighlight('row');
+              registerHighlightDismiss();
+            });
           }
           break;
         case 'duplicateRow':
@@ -408,12 +487,26 @@ export const TableControls = Extension.create({
           if (activeColIndex > 0) {
             focusActiveCell();
             runMoveCommand('column', activeColIndex, activeColIndex - 1);
+            activeColIndex = activeColIndex - 1;
+            requestAnimationFrame(() => {
+              if (!currentTable) return;
+              positionGrips(currentTable);
+              showHighlight('column');
+              registerHighlightDismiss();
+            });
           }
           break;
         case 'moveColRight':
           if (activeColIndex < totalCols - 1) {
             focusActiveCell();
             runMoveCommand('column', activeColIndex, activeColIndex + 1);
+            activeColIndex = activeColIndex + 1;
+            requestAnimationFrame(() => {
+              if (!currentTable) return;
+              positionGrips(currentTable);
+              showHighlight('column');
+              registerHighlightDismiss();
+            });
           }
           break;
         case 'duplicateCol':
@@ -694,7 +787,7 @@ export const TableControls = Extension.create({
 
       const onUp = (ev: PointerEvent) => {
         grip.releasePointerCapture(ev.pointerId);
-        grip.classList.remove('dragging', 'active');
+        grip.classList.remove('dragging');
         grip.removeEventListener('pointermove', onMove);
         grip.removeEventListener('pointerup', onUp);
 
@@ -732,8 +825,26 @@ export const TableControls = Extension.create({
                     }
                   })
                   .run();
+
+                // Update active index to the new position and show highlight
+                if (type === 'row') {
+                  activeRowIndex = toIndex;
+                } else {
+                  activeColIndex = toIndex;
+                }
+                // Wait for PM to re-render, then reposition grip & show highlight
+                requestAnimationFrame(() => {
+                  if (!currentTable) return;
+                  positionGrips(currentTable);
+                  showHighlight(type);
+                  registerHighlightDismiss();
+                  clearCellSelection();
+                });
               }
             }
+          } else {
+            // No actual move — remove the active state
+            grip.classList.remove('active');
           }
         } else {
           // Click — open context menu at click position
@@ -886,6 +997,14 @@ export const TableControls = Extension.create({
             if (currentTable) {
               positionBars(currentTable);
               positionGrips(currentTable);
+              // Close menu on scroll but keep highlight tracking the table
+              if (contextMenu) {
+                closeContextMenu(true);
+              }
+              // Reposition selection highlight on scroll
+              if (selectionHighlight && menuGripType) {
+                showHighlight(menuGripType);
+              }
             }
           };
 

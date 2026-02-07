@@ -1,6 +1,12 @@
 /* PM Toolkit - Editor Styles */
 /* Uses VS Code CSS variables for theme integration */
 
+:root {
+  /* Accent color — uses the theme's link/interactive color (always vibrant across themes) */
+  --pmtoolkit-accent: var(--vscode-textLink-foreground, #007acc);
+  --pmtoolkit-accent-bg: color-mix(in srgb, var(--pmtoolkit-accent) 15%, transparent);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -184,7 +190,7 @@ html, body {
   padding: 0.25em 1em;
   border-left: 3px solid var(--vscode-textBlockQuote-border, var(--vscode-focusBorder));
   background-color: var(--vscode-textBlockQuote-background, transparent);
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
 }
 
 .ProseMirror blockquote p {
@@ -228,7 +234,7 @@ html, body {
 
 .ProseMirror hr {
   border: none;
-  border-top: 1px solid var(--vscode-panel-border);
+  border-top: 1px solid var(--vscode-panel-border, rgba(127, 127, 127, 0.25));
   margin: 1em 0;
 }
 
@@ -258,7 +264,7 @@ html, body {
 
 .ProseMirror td,
 .ProseMirror th {
-  border: 1px solid var(--vscode-panel-border);
+  border: 1px solid var(--vscode-panel-border, rgba(127, 127, 127, 0.25));
   padding: 6px 10px;
   text-align: left;
   vertical-align: top;
@@ -277,12 +283,12 @@ html, body {
 }
 
 .ProseMirror tr {
-  border-bottom: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(127, 127, 127, 0.25));
 }
 
 /* Selected cells */
 .ProseMirror .selectedCell {
-  background-color: var(--vscode-editor-selectionBackground);
+  background-color: var(--pmtoolkit-accent-bg);
 }
 
 /* Table resize handle */
@@ -292,7 +298,7 @@ html, body {
   top: 0;
   bottom: 0;
   width: 4px;
-  background-color: var(--vscode-focusBorder);
+  background-color: var(--pmtoolkit-accent);
   cursor: col-resize;
 }
 
@@ -306,8 +312,8 @@ html, body {
   justify-content: center;
   padding: 0;
   border: none;
-  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.08));
-  color: var(--vscode-descriptionForeground);
+  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.12));
+  color: var(--vscode-editor-foreground);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s ease, background-color 0.15s ease;
@@ -323,8 +329,8 @@ html, body {
   justify-content: center;
   padding: 0;
   border: none;
-  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.08));
-  color: var(--vscode-descriptionForeground);
+  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.12));
+  color: var(--vscode-editor-foreground);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s ease, background-color 0.15s ease;
@@ -361,8 +367,8 @@ html, body {
   justify-content: center;
   padding: 0;
   border: none;
-  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.08));
-  color: var(--vscode-descriptionForeground);
+  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.12));
+  color: var(--vscode-editor-foreground);
   cursor: grab;
   opacity: 0;
   transition: opacity 0.15s ease, background-color 0.15s ease;
@@ -393,8 +399,8 @@ html, body {
 .table-row-grip.active,
 .table-col-grip.active {
   opacity: 1;
-  background: var(--vscode-focusBorder, #007acc);
-  color: #fff;
+  background: var(--pmtoolkit-accent);
+  color: var(--vscode-button-foreground, #fff);
 }
 
 .table-row-grip.dragging,
@@ -403,8 +409,8 @@ html, body {
 /* Row/column selection highlight overlay */
 .table-selection-highlight {
   position: fixed;
-  border: 2px solid var(--vscode-focusBorder, #007acc);
-  background: color-mix(in srgb, var(--vscode-focusBorder, #007acc) 8%, transparent);
+  border: 2px solid var(--pmtoolkit-accent);
+  background: color-mix(in srgb, var(--pmtoolkit-accent) 8%, transparent);
   border-radius: 4px;
   z-index: 999;
   pointer-events: none;
@@ -413,15 +419,15 @@ html, body {
 /* Drop indicator line */
 .table-drop-indicator {
   position: fixed;
-  background: var(--vscode-focusBorder, #007acc);
+  background: var(--pmtoolkit-accent);
   z-index: 1001;
   pointer-events: none;
   border-radius: 1px;
 }
 
-.table-drop-indicator.row { height: 2px; }
+.table-drop-indicator.row { height: 3px; }
 
-.table-drop-indicator.column { width: 2px; }
+.table-drop-indicator.column { width: 3px; }
 
 /* Grip context menu */
 .table-grip-menu {
@@ -441,7 +447,7 @@ html, body {
   padding: 4px 8px;
   border: none;
   background: none;
-  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  color: var(--vscode-menu-foreground, var(--vscode-foreground, var(--vscode-editor-foreground)));
   font-family: inherit;
   font-size: 12px;
   text-align: left;
@@ -452,7 +458,7 @@ html, body {
 
 .table-grip-menu-item:hover {
   background-color: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
-  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground));
+  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground, var(--vscode-editor-foreground)));
 }
 
 .table-grip-menu-separator {
@@ -537,7 +543,7 @@ html, body {
   border-radius: 8px;
   padding: 32px 24px;
   text-align: center;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   cursor: pointer;
   transition: border-color 0.15s, background-color 0.15s;
 }
@@ -569,7 +575,7 @@ html, body {
   font-size: 13px;
   border: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.4));
   background: var(--vscode-input-background, var(--vscode-editor-background));
-  color: var(--vscode-input-foreground, var(--vscode-foreground));
+  color: var(--vscode-input-foreground, var(--vscode-foreground, var(--vscode-editor-foreground)));
   border-radius: 6px;
   width: 280px;
   font-family: inherit;
@@ -586,7 +592,7 @@ html, body {
   font-size: 13px;
   border: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.4));
   background: var(--vscode-button-secondaryBackground, var(--vscode-editor-background));
-  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground, var(--vscode-editor-foreground)));
   border-radius: 6px;
   cursor: pointer;
   font-family: inherit;
@@ -616,7 +622,7 @@ html, body {
   height: 28px;
   border: none;
   background: none;
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
   border-radius: 4px;
   cursor: pointer;
   display: flex;
@@ -653,7 +659,7 @@ html, body {
   padding: 6px 12px;
   border: none !important;
   background: transparent;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   font-size: 12px !important;
   line-height: 1.4 !important;
   font-weight: 400 !important;
@@ -677,11 +683,11 @@ html, body {
 /* ===== Selection ===== */
 
 .ProseMirror ::selection {
-  background-color: var(--vscode-editor-selectionBackground);
+  background-color: var(--pmtoolkit-accent-bg);
 }
 
 .ProseMirror .ProseMirror-selectednode {
-  outline: 2px solid var(--vscode-focusBorder);
+  outline: 2px solid var(--pmtoolkit-accent);
 }
 /* Images and mermaid nodes handle their own selection styling */
 .ProseMirror .image-node-view.ProseMirror-selectednode,
@@ -725,7 +731,7 @@ html, body {
 
 .ProseMirror .ProseMirror-dropcursor {
   position: absolute;
-  background-color: var(--vscode-focusBorder);
+  background-color: var(--pmtoolkit-accent);
   height: 2px;
 }
 
@@ -769,7 +775,7 @@ html, body {
   padding: 4px 8px;
   border: none;
   background: none;
-  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  color: var(--vscode-menu-foreground, var(--vscode-foreground, var(--vscode-editor-foreground)));
   cursor: pointer;
   text-align: left;
   border-radius: 4px;
@@ -780,7 +786,7 @@ html, body {
 .slash-command-item:hover,
 .slash-command-item.is-selected {
   background-color: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
-  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground));
+  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground, var(--vscode-editor-foreground)));
 }
 
 .slash-command-item:hover .slash-command-icon,
@@ -809,7 +815,7 @@ html, body {
 .slash-command-empty {
   padding: 12px;
   text-align: center;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   font-size: 13px;
 }
 
@@ -817,7 +823,7 @@ html, body {
   padding: 4px 8px 2px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
 }
 
 .slash-command-separator {
@@ -842,7 +848,7 @@ html, body {
 .table-size-picker-header {
   font-size: 12px;
   font-weight: 500;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   margin-bottom: 10px;
   text-align: center;
 }
@@ -869,13 +875,13 @@ html, body {
 }
 
 .table-size-picker-cell.is-highlighted {
-  background-color: var(--vscode-editor-selectionBackground);
-  border-color: var(--vscode-focusBorder);
+  background-color: var(--pmtoolkit-accent-bg);
+  border-color: var(--pmtoolkit-accent);
 }
 
 .table-size-picker-label {
   font-size: 12px;
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
   margin-top: 10px;
   text-align: center;
   font-weight: 500;
@@ -901,7 +907,7 @@ html, body {
   padding: 8px 12px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -914,7 +920,7 @@ html, body {
   padding: 10px 12px;
   border: none;
   background: none;
-  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  color: var(--vscode-menu-foreground, var(--vscode-foreground, var(--vscode-editor-foreground)));
   cursor: pointer;
   text-align: left;
   font-family: inherit;
@@ -924,7 +930,7 @@ html, body {
 .link-picker-item:hover,
 .link-picker-item.is-selected {
   background-color: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
-  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground));
+  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground, var(--vscode-editor-foreground)));
 }
 
 .link-picker-icon {
@@ -956,7 +962,7 @@ html, body {
 
 .link-picker-description {
   font-size: 11px;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -995,7 +1001,7 @@ html, body {
 .link-picker-empty {
   padding: 16px;
   text-align: center;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   font-size: 13px;
 }
 
@@ -1048,7 +1054,7 @@ html, body {
 
 .link-picker-btn-cancel {
   background-color: transparent;
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
 }
 
 .link-picker-btn-cancel:hover {
@@ -1224,7 +1230,7 @@ html, body {
 .mermaid-error-message {
   font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, Menlo, Consolas, monospace);
   font-size: 0.85em;
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -1295,7 +1301,7 @@ html, body {
   padding: 6px 8px;
   border: none;
   background: none;
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -1343,7 +1349,7 @@ html, body {
   padding: 4px 8px;
   border: none;
   background: none;
-  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  color: var(--vscode-menu-foreground, var(--vscode-foreground, var(--vscode-editor-foreground)));
   font-family: inherit;
   font-size: 12px;
   text-align: left;
@@ -1384,7 +1390,7 @@ html, body {
   padding: 0;
   border: none;
   background: none;
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
   cursor: pointer;
   border-radius: 4px;
   transition: background-color 0.1s ease, color 0.1s ease;
@@ -1452,7 +1458,7 @@ html, body {
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   cursor: pointer;
   border-radius: 20px;
   transition: background-color 0.1s ease, color 0.1s ease;
@@ -1471,7 +1477,7 @@ html, body {
 .block-handle-plus:hover,
 .block-handle-drag:hover {
   background-color: var(--vscode-toolbar-hoverBackground, rgba(127, 127, 127, 0.15));
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
 }
 
 .block-handle-drag {
@@ -1538,10 +1544,10 @@ html, body {
   height: 3px;
   border: none;
   border-radius: 2px;
-  background-color: var(--vscode-foreground);
+  background-color: var(--vscode-editor-foreground);
   cursor: pointer;
   transition: opacity 0.15s ease, background-color 0.15s ease;
-  opacity: 0.2;
+  opacity: 0.35;
   padding: 0;
   margin: 0;
 }
@@ -1576,7 +1582,7 @@ html, body {
   max-height: 50vh;
   overflow-y: auto;
   background-color: var(--vscode-editorWidget-background, var(--vscode-editor-background));
-  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
+  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.35)));
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   padding: 6px 0;
@@ -1598,7 +1604,7 @@ html, body {
   width: 100%;
   border: none;
   background: transparent;
-  color: var(--vscode-foreground);
+  color: var(--vscode-editor-foreground);
   font-size: 12px;
   line-height: 1.4;
   padding: 3px 12px;
@@ -1607,7 +1613,7 @@ html, body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  opacity: 0.7;
+  opacity: 0.85;
   transition: opacity 0.1s ease, background-color 0.1s ease;
 }
 
@@ -1646,4 +1652,102 @@ html, body {
 
 .outline-popover::-webkit-scrollbar-thumb:hover {
   background-color: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+/* ===== Dark Theme Contrast Overrides ===== */
+/* Some dark themes (e.g. One Dark Pro Flat) define CSS variables that resolve
+   to low-contrast values. CSS fallbacks don't help because the variables ARE
+   defined — they're just too muted. These overrides use hardcoded rgba()
+   values under .vscode-dark to bypass theme variables entirely. */
+
+/* --- Outline bars (minimap) --- */
+.vscode-dark .outline-bar {
+  opacity: 0.5;
+}
+
+.vscode-dark .outline-bar:hover {
+  background-color: var(--pmtoolkit-accent);
+  opacity: 0.85;
+}
+
+.vscode-dark .outline-bar-active {
+  background-color: var(--pmtoolkit-accent);
+  opacity: 1;
+}
+
+.vscode-dark .outline-item {
+  opacity: 0.9;
+}
+
+/* --- Table borders --- */
+.vscode-dark .ProseMirror td,
+.vscode-dark .ProseMirror th {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.vscode-dark .ProseMirror tr {
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+.vscode-dark .ProseMirror hr {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+/* --- Table grip dots --- */
+.vscode-dark .table-row-grip,
+.vscode-dark .table-col-grip {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--vscode-editor-foreground);
+}
+
+.vscode-dark .table-row-grip:hover,
+.vscode-dark .table-col-grip:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.vscode-dark .table-row-grip.active,
+.vscode-dark .table-col-grip.active {
+  background: var(--pmtoolkit-accent);
+  color: var(--vscode-editor-background, #1e1e1e);
+}
+
+/* --- Table add row/column bars --- */
+.vscode-dark .table-add-row-bar,
+.vscode-dark .table-add-column-bar {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--vscode-editor-foreground);
+}
+
+.vscode-dark .table-add-row-bar:hover,
+.vscode-dark .table-add-column-bar:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* --- Grip context menu --- */
+.vscode-dark .table-grip-menu {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.vscode-dark .table-grip-menu-item {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.vscode-dark .table-grip-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.vscode-dark .table-grip-menu-separator {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Block handles --- */
+.vscode-dark .block-handle-plus,
+.vscode-dark .block-handle-drag {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.vscode-dark .block-handle-plus:hover,
+.vscode-dark .block-handle-drag:hover {
+  color: rgba(255, 255, 255, 0.8);
 }
