@@ -19,7 +19,7 @@ import { DocumentOutline } from './components/DocumentOutline'
 // Keep existing extensions for now (will convert later)
 import { CustomParagraph } from './extensions/CustomParagraph'
 import { KeyboardNavigation } from './extensions/KeyboardNavigation'
-import { SlashCommand } from './extensions/SlashCommand'
+import { SlashCommand, setTemplates } from './extensions/SlashCommand'
 import { ImageNode } from './extensions/ImageNode'
 import { MermaidNode } from './extensions/MermaidNode'
 import { TableControls } from './extensions/TableControls'
@@ -178,6 +178,14 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
           )
           break
         }
+
+        // Templates received from extension
+        case 'templates': {
+          if (message.payload?.templates) {
+            setTemplates(message.payload.templates)
+          }
+          break
+        }
       }
     }
 
@@ -188,6 +196,9 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
 
     // Signal ready only after the message handler is set up
     getVSCode().postMessage({ type: 'ready' })
+
+    // Request templates from extension
+    getVSCode().postMessage({ type: 'requestTemplates' })
 
     return () => {
       window.removeEventListener('message', handleMessage)
