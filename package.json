@@ -1,7 +1,7 @@
 {
   "name": "pm-toolkit",
   "displayName": "PM Toolkit",
-  "description": "Obsidian-like editing experience for Cursor. WYSIWYG markdown, kanban boards, and file viewers—built for product managers and teams who work alongside AI.",
+  "description": "Visual markdown editor, kanban boards, and file viewers for Cursor — built for product managers and teams who work alongside AI.",
   "version": "0.5.0",
   "publisher": "aaronkwhite",
   "license": "MIT",

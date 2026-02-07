@@ -108,7 +108,7 @@ export class SettingsPanel {
     };
 
     // Get version from package.json
-    const extension = vscode.extensions.getExtension('pm-toolkit.pm-toolkit');
+    const extension = vscode.extensions.getExtension('aaronkwhite.pm-toolkit');
     const version = extension?.packageJSON?.version || '0.0.0';
 
     this.panel.webview.html = this.getHtmlForWebview(this.panel.webview, settings, version);
@@ -265,14 +265,14 @@ export class SettingsPanel {
       border-color: var(--vscode-foreground);
     }
 
-    /* Primary button (green) */
+    /* Primary button */
     .btn-primary {
       padding: 6px 16px;
       font-size: 13px;
       font-weight: 500;
       border: none;
-      background: #2e7d32;
-      color: white;
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
       border-radius: 6px;
       cursor: pointer;
       font-family: inherit;
@@ -280,7 +280,7 @@ export class SettingsPanel {
     }
 
     .btn-primary:hover {
-      background: #1b5e20;
+      background: var(--vscode-button-hoverBackground);
     }
 
     /* Toggle switch - Cursor style (green, pill-shaped) */
@@ -323,7 +323,7 @@ export class SettingsPanel {
     }
 
     .toggle input:checked + .toggle-slider {
-      background-color: #2e7d32;
+      background-color: var(--vscode-button-background);
     }
 
     .toggle input:checked + .toggle-slider:before {
@@ -417,7 +417,7 @@ export class SettingsPanel {
 </head>
 <body>
   <h1 class="page-title">PM Toolkit</h1>
-  <p class="page-tagline">Notion-like editing in Cursor/VS Code — markdown, kanban, and diagrams in one extension.</p>
+  <p class="page-tagline">Your docs. Your editor. Visual markdown, kanban boards, and diagrams — right where you code.</p>
 
   <div class="section-label">Editor</div>
   <div class="card">
