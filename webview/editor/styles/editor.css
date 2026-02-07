@@ -352,6 +352,60 @@ html, body {
   background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.15));
 }
 
+/* Row/column grip handles */
+.table-row-grip,
+.table-col-grip {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.08));
+  color: var(--vscode-descriptionForeground);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  z-index: 1000;
+}
+
+.table-row-grip {
+  width: 14px;
+  border-radius: 4px;
+}
+
+.table-col-grip {
+  height: 14px;
+  border-radius: 4px;
+}
+
+.table-row-grip svg,
+.table-col-grip svg {
+  flex-shrink: 0;
+}
+
+.table-row-grip.visible,
+.table-col-grip.visible { opacity: 0.6; }
+
+.table-row-grip:hover,
+.table-col-grip:hover { opacity: 1; cursor: grab; }
+
+.table-row-grip.dragging,
+.table-col-grip.dragging { opacity: 1; cursor: grabbing; }
+
+/* Drop indicator line */
+.table-drop-indicator {
+  position: fixed;
+  background: var(--vscode-focusBorder, #007acc);
+  z-index: 1001;
+  pointer-events: none;
+  border-radius: 1px;
+}
+
+.table-drop-indicator.row { height: 2px; }
+
+.table-drop-indicator.column { width: 2px; }
+
 /* ===== Images ===== */
 
 /* NodeView wrapper */
