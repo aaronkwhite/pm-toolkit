@@ -20,7 +20,7 @@ html, body {
   min-height: 100vh;
   max-width: 900px;
   margin: 0 auto;
-  padding: 24px 20px;
+  padding: 24px 40px 24px 20px;
 }
 
 /* ===== Tiptap ProseMirror Editor ===== */
@@ -1288,7 +1288,7 @@ html, body {
   position: relative;
   height: 100%;
   /* Reserve space for block handles on the left */
-  padding-left: 28px;
+  padding-left: 42px;
 }
 
 /* ===== Block Handle ===== */
@@ -1299,8 +1299,17 @@ html, body {
   gap: 2px;
   z-index: 100;
   pointer-events: auto;
-  opacity: 0.4;
+  opacity: 0;
   transition: opacity 0.15s ease;
+}
+
+.block-handle-container:hover {
+  opacity: 1;
+}
+
+/* Show handles when hovering near blocks (set via JS positioning) */
+.block-handle-container[style] {
+  opacity: 0.4;
 }
 
 .block-handle-container:hover {
@@ -1312,28 +1321,35 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
+  width: 18px;
   height: 24px;
   padding: 0;
   border: none;
-  background: var(--vscode-editor-background);
+  background: transparent;
   color: var(--vscode-descriptionForeground);
   cursor: pointer;
-  border-radius: 4px;
-  font-size: 16px;
+  border-radius: 20px;
   transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.block-handle-plus svg {
+  width: 12px;
+  height: 12px;
+}
+
+.block-handle-drag svg {
+  width: 8px;
+  height: 12px;
 }
 
 .block-handle-plus:hover,
 .block-handle-drag:hover {
-  background-color: var(--vscode-toolbar-hoverBackground, rgba(127, 127, 127, 0.2));
+  background-color: var(--vscode-toolbar-hoverBackground, rgba(127, 127, 127, 0.15));
   color: var(--vscode-foreground);
 }
 
 .block-handle-drag {
   cursor: grab;
-  font-size: 14px;
-  letter-spacing: -2px;
 }
 
 .block-handle-drag:active {
