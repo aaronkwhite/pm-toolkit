@@ -170,10 +170,10 @@ html, body {
 }
 
 .ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   cursor: pointer;
-  accent-color: var(--vscode-checkbox-foreground, var(--vscode-focusBorder));
+  accent-color: var(--pmtoolkit-accent);
   margin: 0;
 }
 
@@ -799,10 +799,13 @@ html, body {
   align-items: center;
   justify-content: center;
   width: 20px;
-  font-size: 12px;
-  font-weight: 600;
   flex-shrink: 0;
-  opacity: 0.6;
+  opacity: 0.5;
+}
+
+.slash-command-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .slash-command-title {
@@ -937,12 +940,14 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background-color: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.1));
-  border-radius: 4px;
-  font-size: 14px;
+  width: 20px;
   flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.link-picker-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .link-picker-content {
@@ -1273,9 +1278,6 @@ html, body {
 /* ===== Bubble Menu ===== */
 
 .bubble-menu {
-  position: fixed;
-  z-index: 9999;
-  display: none;
   background-color: var(--vscode-menu-background, var(--vscode-editor-background));
   border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
   border-radius: 6px;
@@ -1624,7 +1626,7 @@ html, body {
 
 .outline-item-active {
   opacity: 1;
-  color: var(--vscode-focusBorder);
+  color: var(--pmtoolkit-accent);
   font-weight: 500;
 }
 

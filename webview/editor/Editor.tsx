@@ -15,15 +15,15 @@ import { useEffect, useRef, useCallback } from 'react'
 // Components
 import { BlockHandle } from './components/BlockHandle'
 import { DocumentOutline } from './components/DocumentOutline'
+import { BubbleMenuToolbar } from './components/BubbleMenu'
 
-// Keep existing extensions for now (will convert later)
+// Extensions
 import { CustomParagraph } from './extensions/CustomParagraph'
 import { KeyboardNavigation } from './extensions/KeyboardNavigation'
 import { SlashCommand, setTemplates } from './extensions/SlashCommand'
 import { ImageNode } from './extensions/ImageNode'
 import { MermaidNode } from './extensions/MermaidNode'
 import { TableControls } from './extensions/TableControls'
-import { BubbleMenuExtension } from './extensions/BubbleMenu'
 
 // VS Code API type
 declare global {
@@ -97,7 +97,6 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       }),
       SlashCommand,
       KeyboardNavigation,
-      BubbleMenuExtension,
     ],
     content: initialContent,
     onUpdate: ({ editor }) => {
@@ -218,6 +217,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
     <div id="editor-wrapper">
       <BlockHandle editor={editor} />
       <EditorContent editor={editor} />
+      <BubbleMenuToolbar editor={editor} />
       <DocumentOutline editor={editor} />
     </div>
   )

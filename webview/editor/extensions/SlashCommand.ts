@@ -11,8 +11,8 @@ import { Editor, Range } from '@tiptap/core';
 import { createElement } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { SlashCommandMenu, SlashCommandMenuRef } from '../components/SlashCommandMenu';
-import { TableSizePicker } from '../components/TableSizePicker';
-import { LinkPicker } from '../components/LinkPicker';
+import { TableSizePicker, type TableSize } from '../components/TableSizePicker';
+import { LinkPicker, type LinkData } from '../components/LinkPicker';
 
 /**
  * Template interface (matches src/types/index.ts)
@@ -33,7 +33,7 @@ export interface SlashCommandItem {
   description: string;
   icon: string;
   searchTerms: string[];
-  category?: 'blocks' | 'templates';
+  category?: 'style' | 'lists' | 'blocks' | 'media' | 'templates';
   command: (params: { editor: Editor; range: Range }) => void;
 }
 
@@ -109,13 +109,41 @@ function templateToCommandItem(template: Template): SlashCommandItem {
 }
 
 /**
+ * Lucide icon SVG helper (24x24, stroke-based)
+ */
+const icon = (paths: string) =>
+  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+
+// --- Lucide icon paths ---
+const ICON = {
+  text:       icon('<path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/>'),
+  heading1:   icon('<path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M21 18h-4c0-4 4-3 4-6 0-1.5-2-2.5-4-1"/>'),
+  heading2:   icon('<path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M21.1 18h-4.6c.7-1.3 4.5-3.6 4.5-5.8 0-2-1.3-2.7-2.7-2.7-1.2 0-2.2.6-2.7 1.5"/>'),
+  heading3:   icon('<path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M17.5 10.5c1.7-1 3.5 0 3.5 1.5a2 2 0 0 1-2 2"/><path d="M17 17.5c2 1.5 4 .3 4-1.5a2 2 0 0 0-2-2"/>'),
+  heading4:   icon('<path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M17 10v4h4"/><path d="M21 10v8"/>'),
+  bulletList: icon('<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1.5" fill="currentColor" stroke="none"/>'),
+  numberedList: icon('<line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>'),
+  taskList:   icon('<rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3.5 5.5 7.5 7.5"/><line x1="13" y1="6" x2="21" y2="6"/><rect x="3" y="14" width="6" height="6" rx="1"/><line x1="13" y1="17" x2="21" y2="17"/>'),
+  quote:      icon('<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/>'),
+  codeBlock:  icon('<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'),
+  divider:    icon('<path d="M3 12h18"/>'),
+  table:      icon('<path d="M12 3v18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/>'),
+  image:      icon('<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>'),
+  mermaid:    icon('<path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/>'),
+  flowchart:  icon('<rect width="8" height="6" x="8" y="2" rx="1"/><rect width="8" height="6" x="2" y="16" rx="1"/><rect width="8" height="6" x="14" y="16" rx="1"/><path d="M12 8v4"/><path d="M6 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>'),
+  sequence:   icon('<path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/>'),
+  link:       icon('<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>'),
+};
+
+/**
  * Default slash commands
  */
 export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Text',
     description: 'Plain text paragraph',
-    icon: '¶',
+    icon: ICON.text,
+    category: 'style',
     searchTerms: ['text', 'paragraph', 'p'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setParagraph().run();
@@ -124,7 +152,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Heading 1',
     description: 'Large section heading',
-    icon: 'H1',
+    icon: ICON.heading1,
+    category: 'style',
     searchTerms: ['h1', 'heading1', 'title', 'large'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run();
@@ -133,7 +162,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Heading 2',
     description: 'Medium section heading',
-    icon: 'H2',
+    icon: ICON.heading2,
+    category: 'style',
     searchTerms: ['h2', 'heading2', 'subtitle'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run();
@@ -142,7 +172,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Heading 3',
     description: 'Small section heading',
-    icon: 'H3',
+    icon: ICON.heading3,
+    category: 'style',
     searchTerms: ['h3', 'heading3'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run();
@@ -151,7 +182,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Heading 4',
     description: 'Smallest section heading',
-    icon: 'H4',
+    icon: ICON.heading4,
+    category: 'style',
     searchTerms: ['h4', 'heading4'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 4 }).run();
@@ -160,7 +192,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Bullet List',
     description: 'Unordered list',
-    icon: '•',
+    icon: ICON.bulletList,
+    category: 'lists',
     searchTerms: ['bullet', 'ul', 'unordered', 'list'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleBulletList().run();
@@ -169,7 +202,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Numbered List',
     description: 'Ordered list',
-    icon: '1.',
+    icon: ICON.numberedList,
+    category: 'lists',
     searchTerms: ['numbered', 'ol', 'ordered', 'list'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleOrderedList().run();
@@ -178,7 +212,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Task List',
     description: 'Checklist with checkboxes',
-    icon: '☐',
+    icon: ICON.taskList,
+    category: 'lists',
     searchTerms: ['task', 'todo', 'checkbox', 'checklist'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleTaskList().run();
@@ -187,7 +222,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Quote',
     description: 'Block quote',
-    icon: '"',
+    icon: ICON.quote,
+    category: 'blocks',
     searchTerms: ['quote', 'blockquote', 'citation'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setBlockquote().run();
@@ -196,7 +232,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Code Block',
     description: 'Fenced code block',
-    icon: '<>',
+    icon: ICON.codeBlock,
+    category: 'blocks',
     searchTerms: ['code', 'codeblock', 'pre', 'programming'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setCodeBlock().run();
@@ -205,7 +242,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Divider',
     description: 'Horizontal rule',
-    icon: '—',
+    icon: ICON.divider,
+    category: 'blocks',
     searchTerms: ['divider', 'hr', 'rule', 'line', 'separator'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHorizontalRule().run();
@@ -214,7 +252,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Table',
     description: 'Insert a table (pick size)',
-    icon: '⊞',
+    icon: ICON.table,
+    category: 'blocks',
     searchTerms: ['table', 'grid'],
     command: ({ editor, range }) => {
       // Delete the slash command text first
@@ -225,51 +264,58 @@ export const defaultCommands: SlashCommandItem[] = [
       const coords = view.coordsAtPos(editor.state.selection.from);
       const rect = new DOMRect(coords.left, coords.top, 0, coords.bottom - coords.top);
 
-      // Show table size picker
-      const picker = new TableSizePicker();
-      picker.show({
-        rect,
-        onSelect: (size) => {
-          editor
-            .chain()
-            .focus()
-            .insertTable({ rows: size.rows, cols: size.cols, withHeaderRow: true })
-            .run();
+      // Mount React TableSizePicker
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = createRoot(container);
 
-          // Ensure there's a paragraph after the table so user can click/navigate there
-          // Use setTimeout to let the editor state update after insertTable
-          setTimeout(() => {
-            const { state } = editor;
-            const { $from } = state.selection;
+      const cleanup = () => {
+        root.unmount();
+        container.remove();
+      };
 
-            // Find the table we just inserted
-            for (let depth = $from.depth; depth > 0; depth--) {
-              if ($from.node(depth).type.name === 'table') {
-                const tableEnd = $from.after(depth);
-                const nodeAfter = state.doc.nodeAt(tableEnd);
-                if (!nodeAfter || nodeAfter.type.name !== 'paragraph') {
-                  editor.chain()
-                    .insertContentAt(tableEnd, { type: 'paragraph' })
-                    .run();
-                }
-                break;
+      const onSelect = (size: TableSize) => {
+        editor
+          .chain()
+          .focus()
+          .insertTable({ rows: size.rows, cols: size.cols, withHeaderRow: true })
+          .run();
+
+        // Ensure there's a paragraph after the table so user can click/navigate there
+        setTimeout(() => {
+          const { state } = editor;
+          const { $from } = state.selection;
+
+          for (let depth = $from.depth; depth > 0; depth--) {
+            if ($from.node(depth).type.name === 'table') {
+              const tableEnd = $from.after(depth);
+              const nodeAfter = state.doc.nodeAt(tableEnd);
+              if (!nodeAfter || nodeAfter.type.name !== 'paragraph') {
+                editor.chain()
+                  .insertContentAt(tableEnd, { type: 'paragraph' })
+                  .run();
               }
+              break;
             }
-          }, 0);
+          }
+        }, 0);
 
-          picker.destroy();
-        },
-        onCancel: () => {
-          editor.chain().focus().run();
-          picker.destroy();
-        },
-      });
+        cleanup();
+      };
+
+      const onCancel = () => {
+        editor.chain().focus().run();
+        cleanup();
+      };
+
+      root.render(createElement(TableSizePicker, { rect, onSelect, onCancel }));
     },
   },
   {
     title: 'Image',
     description: 'Insert or upload an image',
-    icon: '🖼',
+    icon: ICON.image,
+    category: 'media',
     searchTerms: ['image', 'img', 'picture', 'photo', 'upload'],
     command: ({ editor, range }) => {
       editor
@@ -299,7 +345,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Mermaid Diagram',
     description: 'Insert a mermaid diagram',
-    icon: '◇',
+    icon: ICON.mermaid,
+    category: 'media',
     searchTerms: ['mermaid', 'diagram', 'flowchart', 'chart', 'graph'],
     command: ({ editor, range }) => {
       editor
@@ -313,7 +360,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Flowchart',
     description: 'Mermaid flowchart diagram',
-    icon: '⬡',
+    icon: ICON.flowchart,
+    category: 'media',
     searchTerms: ['flowchart', 'flow', 'diagram', 'mermaid'],
     command: ({ editor, range }) => {
       editor
@@ -327,7 +375,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Sequence Diagram',
     description: 'Mermaid sequence diagram',
-    icon: '⇄',
+    icon: ICON.sequence,
+    category: 'media',
     searchTerms: ['sequence', 'diagram', 'mermaid', 'interaction'],
     command: ({ editor, range }) => {
       editor
@@ -341,7 +390,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Link',
     description: 'Link to file or URL',
-    icon: '🔗',
+    icon: ICON.link,
+    category: 'media',
     searchTerms: ['link', 'url', 'file', 'document', 'reference'],
     command: ({ editor, range }) => {
       const { view } = editor;
@@ -355,37 +405,41 @@ export const defaultCommands: SlashCommandItem[] = [
       // Freeze the editor to prevent any changes while picker is open
       editor.setEditable(false);
 
-      const picker = new LinkPicker();
-      picker.show({
-        rect,
-        onSelect: (linkData: { text: string; href: string }) => {
-          // Re-enable editor before making changes
-          editor.setEditable(true);
+      // Mount React LinkPicker
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = createRoot(container);
 
-          // Use setTimeout to ensure editor is fully re-enabled before inserting
-          setTimeout(() => {
-            editor
-              .chain()
-              .focus()
-              .insertContentAt(insertPos, {
-                type: 'text',
-                marks: [{ type: 'link', attrs: { href: linkData.href } }],
-                text: linkData.text,
-              })
-              .run();
-          }, 0);
+      const cleanup = () => {
+        root.unmount();
+        container.remove();
+      };
 
-          picker.destroy();
-        },
-        onCancel: () => {
-          // Re-enable editor
-          editor.setEditable(true);
-          setTimeout(() => {
-            editor.chain().focus().run();
-          }, 0);
-          picker.destroy();
-        },
-      });
+      const onSelect = (linkData: LinkData) => {
+        editor.setEditable(true);
+        setTimeout(() => {
+          editor
+            .chain()
+            .focus()
+            .insertContentAt(insertPos, {
+              type: 'text',
+              marks: [{ type: 'link', attrs: { href: linkData.href } }],
+              text: linkData.text,
+            })
+            .run();
+        }, 0);
+        cleanup();
+      };
+
+      const onCancel = () => {
+        editor.setEditable(true);
+        setTimeout(() => {
+          editor.chain().focus().run();
+        }, 0);
+        cleanup();
+      };
+
+      root.render(createElement(LinkPicker, { rect, onSelect, onCancel }));
     },
   },
 ];

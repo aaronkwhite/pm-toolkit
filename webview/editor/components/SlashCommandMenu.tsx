@@ -194,7 +194,7 @@ export const SlashCommandMenu = forwardRef<SlashCommandMenuRef, SlashCommandMenu
                   onMouseEnter={() => setSelectedIndex(currentIndex)}
                   type="button"
                 >
-                  <span className="slash-command-icon">{item.icon}</span>
+                  <span className="slash-command-icon" dangerouslySetInnerHTML={{ __html: item.icon }} />
                   <span className="slash-command-title">{item.title}</span>
                 </button>
               );

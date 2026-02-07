@@ -21,7 +21,6 @@ import { SlashCommand, setTemplates } from './extensions/SlashCommand';
 import { KeyboardNavigation } from './extensions/KeyboardNavigation';
 import { CustomParagraph } from './extensions/CustomParagraph';
 import { TableControls } from './extensions/TableControls';
-import { BubbleMenuExtension } from './extensions/BubbleMenu';
 
 // VS Code webview API
 interface VSCodeAPI {
@@ -152,7 +151,6 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
       }),
       SlashCommand,
       KeyboardNavigation,
-      BubbleMenuExtension,
     ],
     content: initialContent,
     autofocus: true,
