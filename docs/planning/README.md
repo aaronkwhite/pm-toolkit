@@ -29,7 +29,7 @@
 - **CSV**: Papa Parse
 - **Diagrams**: Mermaid.js
 - **Build**: esbuild + TypeScript
-- **Tests**: Playwright (277 E2E tests)
+- **Tests**: Playwright (285 E2E tests)
 
 ### Key Features
 
@@ -44,7 +44,7 @@
 
 ### Project Status
 
-**Current Version**: 0.5.0 (`feature/react-migration` branch)
+**Current Version**: 0.6.0 (`feature/react-migration` branch)
 
 - [x] Requirements analysis
 - [x] Technology selection
@@ -60,5 +60,6 @@
 - [x] Phase 8: Bubble Menu & Links
 - [x] Phase 9: React Migration (SlashCommand, ImageNode, MermaidNode, BlockHandle, DocumentOutline)
 - [x] Phase 10: Image Redesign & Table Controls
-- [x] Testing (277 E2E tests, all passing)
+- [x] Phase 11.5: Save Guard & Component Migrations (BubbleMenu, LinkPicker, TableSizePicker, mermaid fit-to-view)
+- [x] Testing (285 E2E tests, all passing)
 - [ ] Release

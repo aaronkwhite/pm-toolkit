@@ -2,7 +2,7 @@
   "name": "pm-toolkit",
   "displayName": "PM Toolkit",
   "description": "Visual markdown editor, kanban boards, and file viewers for Cursor — built for product managers and teams who work alongside AI.",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "publisher": "aaronkwhite",
   "license": "MIT",
   "icon": "images/pm-toolkit-icon-light.png",
@@ -23,7 +23,12 @@
     "kanban",
     "wysiwyg",
     "editor",
-    "product-management"
+    "product-management",
+    "visual-editor",
+    "mermaid",
+    "pdf-viewer",
+    "documentation",
+    "no-code"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [

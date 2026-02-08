@@ -5,7 +5,7 @@
 [![Changelog](https://img.shields.io/badge/changelog-view-blue)](https://github.com/aaronkwhite/pm-toolkit/blob/main/CHANGELOG.md)
 [![Website](https://img.shields.io/badge/website-getpmtoolkit.com-4A90D9)](https://getpmtoolkit.com)
 
-> **Free Forever.** No trial period. No yearly fee. No read-only mode. Just pure, unadulterated rich editing in your IDE.
+> **Free Forever.** No trial period. No yearly fee. No read-only mode. Just pure, unadulterated rich editing in your IDE. Every save is validated to protect your files from corruption.
 
 **Visual markdown editor, kanban boards, and file viewers for Cursor** — built for product managers and teams who work alongside AI.
 
@@ -34,9 +34,11 @@ Edit markdown files visually. What you see is what you get—no more switching b
 - **Templates** — Create reusable templates and insert them via `/` commands
 - **Rich formatting** — Bold, italic, strikethrough, code, links with familiar keyboard shortcuts
 - **Image support** — Paste, drag and drop, or browse for images; resize with handles; align left/center/right via popover toolbar
+- **Block handles** — Drag blocks to reorder, click `+` to insert new content
+- **Document outline** — Collapsible heading sidebar for quick navigation
 - **Tables** — Create and edit tables visually with Tab/Shift+Tab navigation, drag-to-reorder rows and columns, right-click context menu
 - **Task lists** — Interactive checkboxes that save to standard markdown
-- **Mermaid diagrams** — Flowcharts, sequence diagrams, and more render inline
+- **Mermaid diagrams** — Flowcharts, sequence diagrams, and more render inline with fit-to-view default
 - **Smart navigation** — Escape code blocks and tables with arrow keys or Cmd+Enter
 
 ### 📋 Kanban Boards

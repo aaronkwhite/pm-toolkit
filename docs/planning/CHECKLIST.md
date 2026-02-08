@@ -1,8 +1,8 @@
 # PM Toolkit - Implementation Checklist
 
 > **Last Updated**: 2026-02-06
-> **Current Version**: 0.5.0 (React migration branch)
-> **Current Phase**: Phase 11 Complete (Table Controls & Image Redesign)
+> **Current Version**: 0.6.0 (React migration branch)
+> **Current Phase**: Phase 12 in progress
 
 This checklist tracks all implementation tasks. Update status as work progresses.
 
@@ -497,7 +497,7 @@ This checklist tracks all implementation tasks. Update status as work progresses
 - [ ] Pre-commit hooks
 
 **Phase 9 Status:**
-- 277 total tests (277 passing, 0 failed)
+- 285 total tests (285 passing, 0 failed)
 
 **Phase 9 Commit Checkpoints:**
 - [x] `test: add settings panel E2E tests and fix flaky test`
@@ -585,7 +585,7 @@ This checklist tracks all implementation tasks. Update status as work progresses
 - [x] Image VS Code handler tests (saveImage, requestFilePicker, requestImageUrl)
 - [x] Table controls tests (grippers, context menus, drag-to-reorder)
 - [x] Settings panel branding tests
-- [x] Total: 277 tests passing
+- [x] Total: 285 tests passing
 
 **Phase 11 Commit Checkpoints:**
 - [x] `feat: redesign image system with drop zone, resize, popover toolbar`
@@ -593,6 +593,37 @@ This checklist tracks all implementation tasks. Update status as work progresses
 - [x] `feat: add table grip context menu with row/column operations`
 - [x] `fix: tighten and align all floating menu styles`
 - [x] `test: fix and add comprehensive E2E tests, update branding`
+
+---
+
+## Phase 11.5: Save Guard & Component Migrations ✅
+
+### 11.5.1 Save Validation
+- [x] `validateMarkdown` utility (shared/)
+- [x] Webview save validation (blocks corrupted content)
+- [x] Extension-side save validation
+- [x] Empty content guard
+
+### 11.5.2 Component Migrations
+- [x] BubbleMenu migrated to React component
+- [x] LinkPicker migrated to React component
+- [x] TableSizePicker migrated to React component
+
+### 11.5.3 Mermaid Enhancements
+- [x] Mermaid diagrams default to fit-to-view mode
+- [x] Mermaid placeholder content fix for directly-parsed nodes
+- [x] Template loading ported to React editor entry point
+
+### 11.5.4 E2E Tests
+- [x] 8 save guard E2E tests
+- [x] Total: 285 tests passing
+
+**Phase 11.5 Commit Checkpoints:**
+- [x] `feat: add markdown validation guard to prevent HTML corruption on save`
+- [x] `feat: migrate BubbleMenu, LinkPicker, TableSizePicker to React`
+- [x] `fix: default mermaid diagrams to fit-to-view mode`
+- [x] `fix: resolve mermaid placeholder content in directly-parsed nodes`
+- [x] `fix: port template loading to React editor entry point`
 
 ---
 
@@ -622,9 +653,9 @@ This checklist tracks all implementation tasks. Update status as work progresses
 - [ ] Linux testing
 
 ### 12.5 Release
-- [x] SemVer versioning (v0.5.0)
-- [ ] VS Code Marketplace submission
-- [ ] Open VSX submission
+- [x] SemVer versioning (v0.6.0)
+- [x] VS Code Marketplace submission
+- [x] Open VSX submission
 - [ ] Release announcement
 
 **Phase 12 Commit Checkpoints:**
@@ -778,4 +809,4 @@ This checklist tracks all implementation tasks. Update status as work progresses
   - Consistent floating menu styling across all menus
   - Branding cleanup: removed "Obsidian" and "Notion" references
   - Settings toggles now use theme variables
-  - 277 E2E tests (all passing, up from 192)
+  - 285 E2E tests (all passing, up from 192)
