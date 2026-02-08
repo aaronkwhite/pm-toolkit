@@ -17,6 +17,8 @@ import { NodeViewWrapper } from '@tiptap/react'
 import type { NodeViewProps } from '@tiptap/react'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import mermaid from 'mermaid'
+import { Text, Minimize2, Maximize2 } from 'lucide'
+import { LucideIcon } from '../components/LucideIcon'
 
 // VS Code API type
 declare global {
@@ -106,63 +108,6 @@ function escapeHtml(text: string): string {
   return div.innerHTML
 }
 
-// SVG Icons
-const CodeIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M17 6H3" />
-    <path d="M21 12H3" />
-    <path d="M15.5 18H3" />
-  </svg>
-)
-
-const ShrinkIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="m15 15 6 6m-6-6v4.8m0-4.8h4.8" />
-    <path d="M9 19.8V15m0 0H4.2M9 15l-6 6" />
-    <path d="M15 4.2V9m0 0h4.8M15 9l6-6" />
-    <path d="M9 4.2V9m0 0H4.2M9 9 3 3" />
-  </svg>
-)
-
-const ExpandIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8" />
-    <path d="M3 16.2V21m0 0h4.8M3 21l6-6" />
-    <path d="M21 7.8V3m0 0h-4.8M21 3l-6 6" />
-    <path d="M3 7.8V3m0 0h4.8M3 3l6 6" />
-  </svg>
-)
-
 type ViewMode = 'scroll' | 'fit'
 
 interface MermaidNodeViewProps extends NodeViewProps {}
@@ -176,7 +121,7 @@ export function MermaidNodeView({
   getPos,
 }: MermaidNodeViewProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [viewMode, setViewMode] = useState<ViewMode>('scroll')
+  const [viewMode, setViewMode] = useState<ViewMode>('fit')
   const [renderedSvg, setRenderedSvg] = useState<string>('')
   const [renderError, setRenderError] = useState<string | null>(null)
   const [isDark, setIsDark] = useState(() => document.body.classList.contains('vscode-dark'))
@@ -619,7 +564,7 @@ export function MermaidNodeView({
               color: iconColor,
             }}
           >
-            <CodeIcon />
+            <LucideIcon icon={Text} size={16} />
           </button>
           <button
             className="mermaid-view-toggle"
@@ -633,7 +578,7 @@ export function MermaidNodeView({
               color: iconColor,
             }}
           >
-            {viewMode === 'scroll' ? <ShrinkIcon /> : <ExpandIcon />}
+            {viewMode === 'scroll' ? <LucideIcon icon={Minimize2} size={16} /> : <LucideIcon icon={Maximize2} size={16} />}
           </button>
         </div>
       </div>
