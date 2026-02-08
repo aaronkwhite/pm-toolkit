@@ -120,6 +120,7 @@ declare global {
     _getMessages(): unknown[];
     _getMessagesByType(type: string): unknown[];
     _waitForMessage(type: string, timeout?: number): Promise<unknown>;
+    _getEditorContent?: () => string;
   }
 }
 

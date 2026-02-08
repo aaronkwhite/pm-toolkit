@@ -6,10 +6,10 @@
 > Visual editing tools for the AI-powered workflow
 
 ### One-liner
-> Notion-like editing in Cursor/VS Code - markdown, kanban, and diagrams in one extension.
+> Visual markdown editor, kanban boards, and file viewers for Cursor — built for product managers and teams who work alongside AI.
 
 ### Elevator Pitch
-PM Toolkit brings visual editing superpowers to Cursor and VS Code. Edit markdown with a Notion-like WYSIWYG editor, manage tasks on kanban boards that stay as plain text files, render Mermaid diagrams instantly, and preview PDFs, Word docs, and spreadsheets without leaving your editor. Built by a product manager for anyone who wants Cursor's AI capabilities without wrestling with raw markup. Your files stay portable—everything is just markdown.
+PM Toolkit brings visual editing superpowers to Cursor and VS Code. Edit markdown with a rich WYSIWYG editor featuring slash commands, bubble menus, and drag-to-reorder blocks. Manage tasks on kanban boards that stay as plain text files, render Mermaid diagrams instantly, and preview PDFs, Word docs, and spreadsheets without leaving your editor. Built by a product manager for anyone who wants Cursor's AI capabilities without wrestling with raw markup. Your files stay portable—everything is just markdown.
 
 ---
 

@@ -10,7 +10,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
-import Table from '@tiptap/extension-table';
+import { CustomTable } from './extensions/CustomTable';
 import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
@@ -21,7 +21,6 @@ import { SlashCommand, setTemplates } from './extensions/SlashCommand';
 import { KeyboardNavigation } from './extensions/KeyboardNavigation';
 import { CustomParagraph } from './extensions/CustomParagraph';
 import { TableControls } from './extensions/TableControls';
-import { BubbleMenuExtension } from './extensions/BubbleMenu';
 
 // VS Code webview API
 interface VSCodeAPI {
@@ -126,7 +125,7 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
           return true;
         },
       }),
-      Table.configure({
+      CustomTable.configure({
         resizable: true,
         HTMLAttributes: {
           class: 'editor-table',
@@ -152,7 +151,6 @@ function initEditor(container: HTMLElement, initialContent: string = '') {
       }),
       SlashCommand,
       KeyboardNavigation,
-      BubbleMenuExtension,
     ],
     content: initialContent,
     autofocus: true,
@@ -434,6 +432,28 @@ window.addEventListener('message', (event) => {
       // Dispatch custom event for image nodes to handle
       if (message.payload?.originalPath && message.payload?.webviewUrl) {
         window.dispatchEvent(new CustomEvent('image-url-resolved', {
+          detail: {
+            originalPath: message.payload.originalPath,
+            webviewUrl: message.payload.webviewUrl,
+          },
+        }));
+      }
+      break;
+
+    case 'imageSaved':
+      if (message.payload?.originalPath && message.payload?.webviewUrl) {
+        window.dispatchEvent(new CustomEvent('image-saved', {
+          detail: {
+            originalPath: message.payload.originalPath,
+            webviewUrl: message.payload.webviewUrl,
+          },
+        }));
+      }
+      break;
+
+    case 'filePickerResult':
+      if (message.payload?.originalPath && message.payload?.webviewUrl) {
+        window.dispatchEvent(new CustomEvent('file-picker-result', {
           detail: {
             originalPath: message.payload.originalPath,
             webviewUrl: message.payload.webviewUrl,

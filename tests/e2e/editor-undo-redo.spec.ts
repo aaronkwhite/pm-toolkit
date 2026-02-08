@@ -163,7 +163,8 @@ test.describe('Undo/Redo', () => {
   test('continuous typing creates grouped undo', async ({ page }) => {
     await editor.load();
 
-    // Type a word quickly (should be grouped)
+    // Focus the editor first, then type a word quickly (should be grouped)
+    await editor.focus();
     await page.keyboard.type('Testing', { delay: 20 });
     await editor.waitForSync();
 

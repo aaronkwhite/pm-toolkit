@@ -4,7 +4,7 @@
  * Dropdown menu for column settings (kebab menu)
  */
 
-import { Check } from './icons';
+import { CheckIcon as Check } from './icons';
 
 export interface ColumnMenuOptions {
   autoComplete: boolean;

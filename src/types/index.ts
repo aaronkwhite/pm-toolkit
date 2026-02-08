@@ -16,6 +16,8 @@ export type ExtensionToWebviewMessage =
   | { type: 'templates'; payload: { templates: Template[] } }
   | { type: 'clipboardData'; payload: { text: string } }
   | { type: 'imageUrl'; payload: { originalPath: string; webviewUrl: string } }
+  | { type: 'imageSaved'; payload: { originalPath: string; webviewUrl: string } }
+  | { type: 'filePickerResult'; payload: { originalPath: string; webviewUrl: string } }
   | { type: 'files'; payload: { files: FileInfo[]; currentFilePath: string } };
 
 /**
@@ -28,6 +30,8 @@ export type WebviewToExtensionMessage =
   | { type: 'requestClipboard' }
   | { type: 'copyToClipboard'; payload: { text: string } }
   | { type: 'requestImageUrl'; payload: { path: string } }
+  | { type: 'saveImage'; payload: { filename: string; data: string } }
+  | { type: 'requestFilePicker' }
   | { type: 'requestFiles'; payload: { search?: string } }
   | { type: 'openFile'; payload: { path: string } };
 

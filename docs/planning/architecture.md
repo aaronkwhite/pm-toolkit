@@ -22,16 +22,16 @@ PM Toolkit transforms markdown files into a visual editing experience while keep
 
 | Component | Library | Rationale |
 |-----------|---------|-----------|
-| Rich Text Editor | **Tiptap** | Built on ProseMirror, battle-tested (Asana, NYT), excellent DX, active maintenance |
-| Slash Commands | Tiptap Suggestion Plugin | Native integration, no custom menu needed |
-| Markdown Parser | ProseMirror Markdown | Comes with Tiptap ecosystem |
+| Rich Text Editor | **Tiptap** + **@tiptap/react** | Built on ProseMirror, React NodeViews for custom nodes |
+| UI Framework | **React 18** | React NodeView renderer, component-based UI |
+| Slash Commands | Tiptap Suggestion Plugin | Native integration, React menu component |
+| Markdown Parser | **tiptap-markdown** | Markdown ↔ ProseMirror round-trip |
 
-**Why Tiptap?**
-- English-first documentation and community
+**Why Tiptap + React?**
 - ProseMirror ecosystem compatibility
-- Better extensibility model
-- Active maintenance
-- Framework-agnostic (works in webviews)
+- React NodeViews for complex node UIs (images, diagrams)
+- Component-based architecture for block handles, outlines, toolbars
+- Active maintenance, large community
 
 ### Kanban Board
 
@@ -82,6 +82,8 @@ pm-toolkit/
 │   │   ├── MarkdownEditorProvider.ts
 │   │   ├── KanbanEditorProvider.ts
 │   │   └── HTMLBuilder.ts
+│   ├── settings/
+│   │   └── SettingsPanel.ts      # Settings UI (webview panel)
 │   ├── viewers/
 │   │   ├── PDFViewerProvider.ts
 │   │   ├── DocxViewerProvider.ts
@@ -92,28 +94,45 @@ pm-toolkit/
 │   └── types/
 │       └── index.ts
 ├── webview/
-│   ├── editor/                   # Tiptap-based editor
-│   │   ├── main.ts
-│   │   ├── extensions/           # Custom Tiptap extensions
-│   │   │   ├── SlashCommand.ts
-│   │   │   └── Mermaid.ts
+│   ├── editor/                   # Tiptap-based editor (React)
+│   │   ├── index.tsx             # React entry point
+│   │   ├── Editor.tsx            # Main React editor component
+│   │   ├── main.ts              # Legacy non-React entry (kept for compatibility)
+│   │   ├── components/
+│   │   │   ├── BlockHandle.tsx   # Drag handle + plus button
+│   │   │   ├── DocumentOutline.tsx
+│   │   │   ├── SlashCommandMenu.tsx
+│   │   │   ├── ImageDropZone.tsx
+│   │   │   ├── ImagePopoverToolbar.tsx
+│   │   │   └── TableSizePicker.ts
+│   │   ├── extensions/
+│   │   │   ├── SlashCommand.ts   # Suggestion plugin (React menu)
+│   │   │   ├── ImageNode.ts      # Image extension + markdown serialization
+│   │   │   ├── ImageNodeView.tsx  # React NodeView (drop zone, resize, popover)
+│   │   │   ├── MermaidNode.ts    # Mermaid extension
+│   │   │   ├── MermaidNodeView.tsx # React NodeView
+│   │   │   ├── TableControls.ts  # Add bars, grips, drag-to-reorder, context menus
+│   │   │   ├── BubbleMenuExtension.ts
+│   │   │   ├── CustomParagraph.ts
+│   │   │   └── KeyboardNavigation.ts
+│   │   ├── hooks/
+│   │   │   └── useImageResize.ts # Pointer-event-based image resize
 │   │   └── styles/
+│   │       └── editor.css
 │   ├── kanban/                   # Kanban board UI
 │   │   ├── main.ts
-│   │   ├── Board.tsx
-│   │   ├── Column.tsx
-│   │   ├── Card.tsx
-│   │   └── parser.ts             # Markdown <-> Board conversion
+│   │   └── ...
 │   └── viewers/                  # File viewer webviews
-│       ├── pdf-viewer.ts
-│       ├── docx-viewer.ts
-│       ├── excel-viewer.ts
-│       └── csv-viewer.ts
+│       └── ...
+├── tests/
+│   ├── e2e/                      # Playwright E2E tests (277 tests)
+│   ├── harness/                  # Test server + harness HTML
+│   └── utils/                    # EditorHelper page object
 ├── docs/
 │   └── planning/
 ├── package.json
 ├── tsconfig.json
-└── build.js
+└── esbuild.js
 ```
 
 ---
@@ -137,6 +156,9 @@ Message protocol between VS Code extension and webviews:
 | `ready` | - | Webview initialized |
 | `update` | `{ content: string }` | Content changed in editor |
 | `requestTemplates` | - | Request template refresh |
+| `saveImage` | `{ filename, data }` | Save uploaded image to assets/ |
+| `requestFilePicker` | - | Open VS Code file picker for images |
+| `requestImageUrl` | `{ path }` | Convert relative path to webview URI |
 
 ---
 
@@ -266,18 +288,37 @@ template_icon: "calendar"
 - [x] CSV viewer with Papa Parse
 - [x] All viewers set to default priority
 
-### Phase 5: Templates & Polish (In Progress)
-- [ ] Template manager
-- [ ] Template variables
-- [ ] Mermaid diagram support
-- [ ] Outline panel
-- [ ] Accessibility audit
+### Phase 5: Templates & Diagrams ✅
+- [x] Template manager with YAML frontmatter
+- [x] Template variables (date, time, datetime, year, month, day)
+- [x] Mermaid diagram support with theme integration
+
+### Phase 6: Settings Panel ✅
+- [x] Dedicated settings UI with card-based layout
+- [x] Font size, template, and kanban configuration
+
+### Phase 7: Bubble Menu & Links ✅
+- [x] Floating toolbar on text selection
+- [x] Link slash command
+
+### Phase 8: React Migration ✅
+- [x] React 18 + @tiptap/react integration
+- [x] SlashCommand, ImageNode, MermaidNode as React components
+- [x] BlockHandle (drag handles in gutter)
+- [x] DocumentOutline (heading navigation)
+
+### Phase 9: Image Redesign & Table Controls ✅
+- [x] Image drop zone, resize handles, popover toolbar
+- [x] Table grips, drag-to-reorder, context menus
+- [x] Consistent floating menu styling
+- [x] 277 E2E tests passing
 
 ### Additional Features Completed
 - [x] View Source command (switch to text editor)
 - [x] Kanban file language registration (.kanban)
 - [x] Custom file icons for .kanban files
 - [x] Toggle card thumbnails command
+- [x] H4 heading support
 
 ---
 

@@ -28,7 +28,7 @@ test.describe('Settings Panel', () => {
       const tagline = page.locator('.page-tagline');
 
       await expect(title).toHaveText('PM Toolkit');
-      await expect(tagline).toContainText('Notion-like editing');
+      await expect(tagline).toContainText('Your docs. Your editor.');
     });
 
     test('displays all section labels', async () => {
