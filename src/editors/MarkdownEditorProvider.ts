@@ -3,6 +3,7 @@ import * as path from 'path';
 import { HTMLBuilder } from './HTMLBuilder';
 import { ExtensionToWebviewMessage, WebviewToExtensionMessage, FileInfo } from '../types';
 import { TemplateManager } from '../templates/TemplateManager';
+import { validateMarkdown } from '../../shared/validateMarkdown';
 
 /**
  * Convert relative image paths in markdown to webview URIs
@@ -174,10 +175,24 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
             }
             break;
 
-          case 'update':
+          case 'update': {
             // Content changed in webview, update document
             // The markdown serializer uses originalSrc, so paths are already relative
             const content = message.payload.content;
+
+            // Guard: don't overwrite a non-empty document with empty content
+            if (!content.trim() && lastKnownContent.trim().length > 0) {
+              console.warn('[PM Toolkit] Save blocked: empty content replacing non-empty document');
+              break;
+            }
+
+            // Guard: validate markdown before writing to disk
+            const validation = validateMarkdown(content);
+            if (!validation.valid) {
+              console.warn('[PM Toolkit] Save blocked:', validation.reason);
+              break;
+            }
+
             // Only update if content is actually different
             if (content !== lastKnownContent) {
               pendingWebviewUpdate = true;
@@ -190,6 +205,7 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
               }, 100); // Increased from 50ms to 100ms for safer timing
             }
             break;
+          }
 
           case 'requestTemplates':
             // Send current templates to webview

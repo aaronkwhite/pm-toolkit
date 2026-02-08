@@ -11,6 +11,7 @@ import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 import { Markdown } from 'tiptap-markdown'
 import { useEffect, useRef, useCallback } from 'react'
+import { validateMarkdown } from '../../shared/validateMarkdown'
 
 // Components
 import { BlockHandle } from './components/BlockHandle'
@@ -34,7 +35,31 @@ declare global {
       setState: (state: unknown) => void
     }
     _getEditorContent?: () => string
+    __mermaidBlocks?: string[]
   }
+}
+
+/**
+ * Preprocess markdown to protect mermaid code blocks from being mangled
+ * during double-parsing (explicit parse + tiptap-markdown's setContent override).
+ * Extracts mermaid block content into window.__mermaidBlocks and replaces it with
+ * simple placeholders that survive the double parse. The MermaidNode plugin's
+ * appendTransaction resolves placeholders back to the original content.
+ */
+function preprocessMermaidBlocks(markdown: string): string {
+  const mermaidBlocks: string[] = []
+  window.__mermaidBlocks = mermaidBlocks
+
+  const processed = markdown.replace(
+    /```mermaid\n([\s\S]*?)```/g,
+    (_match, content) => {
+      const index = mermaidBlocks.length
+      mermaidBlocks.push(content.trimEnd())
+      return '```mermaid\n___MERMAID_BLOCK_' + index + '___\n```'
+    }
+  )
+
+  return processed
 }
 
 // Get vscode API - it should be set by index.tsx before this component mounts
@@ -109,6 +134,11 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
 
       updateTimeout.current = window.setTimeout(() => {
         const markdown = editor.storage.markdown.getMarkdown()
+        const validation = validateMarkdown(markdown)
+        if (!validation.valid) {
+          console.warn('[PM Toolkit] Save blocked:', validation.reason)
+          return
+        }
         if (markdown !== lastKnownContent.current) {
           lastKnownContent.current = markdown
           getVSCode().postMessage({ type: 'update', payload: { content: markdown } })
@@ -133,8 +163,11 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
             isUpdatingFromExtension.current = true
             lastKnownContent.current = content
 
+            // Preprocess mermaid blocks to protect them from double-parsing
+            const processedContent = preprocessMermaidBlocks(content)
+
             // Parse the content using the markdown parser
-            const doc = editor.storage.markdown.parser.parse(content)
+            const doc = editor.storage.markdown.parser.parse(processedContent)
 
             // Set content without adding to undo history
             // The chain() command with setMeta must be done in the same transaction
@@ -190,8 +223,9 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
 
     window.addEventListener('message', handleMessage)
 
-    // Expose a method to get content directly (for testing)
+    // Expose methods for testing
     window._getEditorContent = () => editor.storage.markdown.getMarkdown()
+    ;(window as any).__validateMarkdown = validateMarkdown
 
     // Signal ready only after the message handler is set up
     getVSCode().postMessage({ type: 'ready' })
