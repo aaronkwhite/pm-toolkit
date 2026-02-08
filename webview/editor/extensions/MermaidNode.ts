@@ -58,19 +58,32 @@ export const MermaidNode = Node.create({
   parseHTML() {
     return [
       // Handle our own rendered output (pre with data-type="mermaid")
+      // Priority 60 ensures these rules are checked before codeBlock's
+      // tag: 'pre' rule (default priority 50 from StarterKit).
       {
         tag: 'pre[data-type="mermaid"]',
+        priority: 60,
         getAttrs: (element: HTMLElement) => {
           const code = element.querySelector('code');
           const content = code?.textContent || element.textContent || '';
           return { content };
         },
       },
+      // Handle markdown-generated output (pre > code.language-mermaid)
+      {
+        tag: 'pre',
+        priority: 60,
+        getAttrs: (element: HTMLElement) => {
+          const code = element.querySelector('code.language-mermaid');
+          if (!code) return false;
+          return { content: code.textContent || '' };
+        },
+      },
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
-    return ['pre', mergeAttributes({ 'data-type': 'mermaid' }, HTMLAttributes), ['code', 0]];
+  renderHTML({ node, HTMLAttributes }) {
+    return ['pre', mergeAttributes({ 'data-type': 'mermaid' }, HTMLAttributes), ['code', { class: 'language-mermaid' }, node.attrs.content || '']];
   },
 
   addCommands() {
@@ -99,7 +112,20 @@ export const MermaidNode = Node.create({
           state.write('```');
           state.closeBlock(node);
         },
-        // We use appendTransaction plugin to convert codeBlocks after parse
+        parse: {
+          // Transform mermaid <pre><code class="language-mermaid"> elements in the
+          // DOM before ProseMirror's DOMParser runs. This tags them with
+          // data-type="mermaid" so our parseHTML rule 1 matches directly,
+          // preventing codeBlock from claiming them.
+          updateDOM(element: HTMLElement) {
+            element.querySelectorAll('pre > code.language-mermaid').forEach(code => {
+              const pre = code.parentElement;
+              if (pre) {
+                pre.setAttribute('data-type', 'mermaid');
+              }
+            });
+          },
+        },
       },
     };
   },
@@ -189,6 +215,22 @@ export const MermaidNode = Node.create({
                 content,
               });
               return false; // Don't descend into this node
+            }
+            // Resolve placeholders in mermaid nodes created directly by parseHTML
+            if (node.type.name === 'mermaid') {
+              const placeholderMatch = node.attrs.content?.match(/^___MERMAID_BLOCK_(\d+)___$/);
+              if (placeholderMatch) {
+                const index = parseInt(placeholderMatch[1], 10);
+                const mermaidBlocks = (window as any).__mermaidBlocks || [];
+                if (mermaidBlocks[index]) {
+                  replacements.push({
+                    pos,
+                    nodeSize: node.nodeSize,
+                    content: mermaidBlocks[index],
+                  });
+                }
+              }
+              return false;
             }
             return true;
           });
