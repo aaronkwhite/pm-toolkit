@@ -5,15 +5,11 @@
 [![Changelog](https://img.shields.io/badge/changelog-view-blue)](https://github.com/aaronkwhite/pm-toolkit/blob/main/CHANGELOG.md)
 [![Website](https://img.shields.io/badge/website-getpmtoolkit.com-4A90D9)](https://getpmtoolkit.com)
 
-> **Free Forever.** No trial period. No yearly fee. No read-only mode. Just pure, unadulterated rich editing in your IDE. Every save is validated to protect your files from corruption.
+> **Free Forever.** No trial period. No yearly fee. No read-only mode. Every save is validated to protect your files.
 
-**Visual markdown editor, kanban boards, and file viewers for Cursor** — built for product managers and teams who work alongside AI.
+**Your docs. Your editor.** Visual markdown, kanban boards, and file viewers — right where you code.
 
-Draft specs with Cursor's agent, then polish them visually. Keep planning docs, task boards, and reference files next to your code. Everything stays in plain text—portable, version-controlled, and yours.
-
-- **WYSIWYG Markdown** — Slash commands, templates, tables, Mermaid diagrams
-- **Kanban Boards** — Drag-and-drop task management backed by markdown
-- **File Viewers** — PDF, Word, Excel, CSV without leaving your editor
+Write specs with Cursor's agent, then polish them visually. Keep planning docs, task boards, and reference files next to your code. Everything stays in plain text — portable, version-controlled, and yours.
 
 #### Support the project
 
@@ -23,27 +19,26 @@ If PM Toolkit saves you time, consider buying me a coffee. Your support helps ke
   <img src="https://github.com/user-attachments/assets/fa213bf0-9dc1-4c94-b5d2-3e0612ccb37d" width="128" alt="Buy A-A-Ron a Coffee" />
 </a>
 
-## 🚀 Features
+## Everything you need
 
-### ✍️ WYSIWYG Markdown Editor
+### No more preview tabs
 
-Edit markdown files visually. What you see is what you get—no more switching between raw text and preview.
+Type `/` for slash commands. Select text for instant formatting. Drag in images. It just works.
 
-- **Slash commands** — Type `/` to insert headings, lists, tables, code blocks, links, and more
-- **Bubble menu** — Select text to see a floating toolbar for quick formatting
-- **Templates** — Create reusable templates and insert them via `/` commands
-- **Rich formatting** — Bold, italic, strikethrough, code, links with familiar keyboard shortcuts
-- **Image support** — Paste, drag and drop, or browse for images; resize with handles; align left/center/right via popover toolbar
-- **Block handles** — Drag blocks to reorder, click `+` to insert new content
-- **Document outline** — Collapsible heading sidebar for quick navigation
-- **Tables** — Create and edit tables visually with Tab/Shift+Tab navigation, drag-to-reorder rows and columns, right-click context menu
-- **Task lists** — Interactive checkboxes that save to standard markdown
-- **Mermaid diagrams** — Flowcharts, sequence diagrams, and more render inline with fit-to-view default
-- **Smart navigation** — Escape code blocks and tables with arrow keys or Cmd+Enter
+- **Slash commands** — Type `/` to insert headings, lists, tables, code blocks, images, diagrams, links, and templates
+- **Bubble menu** — Select any text for a floating toolbar with formatting and block type controls
+- **Block handles** — Drag any block to reorder it, or click `+` to insert new content
+- **Document outline** — Collapsible heading sidebar for navigating long documents
+- **Images** — Paste, drag and drop, or browse. Resize with handles, align with the popover toolbar, add captions
+- **Tables** — Visual editing with drag-to-reorder rows and columns, right-click context menus, and auto-expanding add bars
+- **Mermaid diagrams** — Flowcharts, sequence diagrams, and more render inline with fit-to-view
+- **Templates** — Create reusable document templates and insert them via `/` commands
+- **Task lists** — Interactive checkboxes that save to standard markdown syntax
+- **Smart navigation** — Arrow keys and Cmd+Enter move through code blocks and tables naturally
 
-### 📋 Kanban Boards
+### Tasks without context switching
 
-Turn any markdown file into a visual task board. Your data stays in plain text—always portable, always yours.
+Drag cards between columns. Your board stays as plain markdown — portable, version-controlled, yours.
 
 - **Drag and drop** — Move cards between columns
 - **Card details** — Click to expand and edit with full formatting
@@ -53,9 +48,9 @@ Turn any markdown file into a visual task board. Your data stays in plain text�
 
 Create a `.kanban` file or right-click any `.md` file and select "Open as Kanban Board."
 
-### 📄 File Viewers
+### View docs without leaving Cursor
 
-View common file types without leaving your editor:
+PDF, Word, Excel, CSV — open them right in your editor. No more jumping to Finder.
 
 - **PDF** — Page navigation, zoom, rotation
 - **Word (.docx)** — View documents with formatting preserved
