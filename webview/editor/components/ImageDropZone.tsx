@@ -7,6 +7,8 @@
  */
 
 import { useState, useRef, useCallback, useEffect, KeyboardEvent } from 'react';
+import { ImagePlus } from 'lucide';
+import { LucideIcon } from './LucideIcon';
 
 // VS Code API type
 declare global {
@@ -153,13 +155,7 @@ export function ImageDropZone({ onUrlSubmit, onFileDrop, onBrowseClick, onCancel
       onMouseDown={handleMouseDown}
     >
       <div className="image-drop-zone-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-          <circle cx="8.5" cy="8.5" r="1.5" />
-          <polyline points="21 15 16 10 5 21" />
-          <line x1="12" y1="4" x2="12" y2="8" />
-          <line x1="10" y1="6" x2="14" y2="6" />
-        </svg>
+        <LucideIcon icon={ImagePlus} size={24} strokeWidth={1.5} />
       </div>
       <div className="image-drop-zone-text">
         {onCancel ? 'Replace image — paste a URL or browse (Esc to cancel)' : 'Paste a URL or browse for an image'}

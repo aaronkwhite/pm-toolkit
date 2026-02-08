@@ -456,9 +456,20 @@ html, body {
   white-space: nowrap;
 }
 
-.table-grip-menu-item:hover {
+.table-grip-menu-item:hover:not(.disabled) {
   background-color: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
   color: var(--vscode-menu-selectionForeground, var(--vscode-foreground, var(--vscode-editor-foreground)));
+}
+
+.table-grip-menu-item.disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.table-grip-menu-item.checked::before {
+  content: '✓';
+  margin-right: 6px;
+  font-size: 11px;
 }
 
 .table-grip-menu-separator {

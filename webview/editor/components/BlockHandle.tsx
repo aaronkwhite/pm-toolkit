@@ -17,6 +17,8 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Editor } from '@tiptap/core';
+import { Plus } from 'lucide';
+import { LucideIcon } from './LucideIcon';
 
 interface BlockHandleProps {
   editor: Editor;
@@ -190,7 +192,7 @@ export function BlockHandle({ editor }: BlockHandleProps) {
       const blockRect = blockNode.getBoundingClientRect();
       const wrapperRect = wrapperEl.getBoundingClientRect();
       const handleWidth = 38; // 18px + 2px gap + 18px
-      const handleGap = 6; // space between handles and content
+      const handleGap = 12; // space between handles and content
 
       setPosition({
         top: blockRect.top - wrapperRect.top + wrapperEl.scrollTop,
@@ -259,12 +261,169 @@ export function BlockHandle({ editor }: BlockHandleProps) {
   }, [editor, activeNode]);
 
   /**
+   * Show a context menu for the active block (e.g., "Delete table" for tables).
+   */
+  const showBlockContextMenu = useCallback(
+    (blockEl: Element, x: number, y: number) => {
+      const isTable = blockEl.matches('table');
+      if (!isTable) return;
+
+      /** Focus a cell in the table and return its PM position, or null. */
+      const focusTable = (): number | null => {
+        const firstCell = blockEl.querySelector('td, th') as HTMLElement | undefined;
+        if (!firstCell) return null;
+        try {
+          const pos = editor.view.posAtDOM(firstCell, 0) + 1;
+          editor.chain().focus().setTextSelection(pos).run();
+          return pos;
+        } catch { return null; }
+      };
+
+      const actions: { label: string; handler: () => void; separator?: never }[] = [
+        {
+          label: 'Clear all contents',
+          handler: () => {
+            const pos = focusTable();
+            if (pos == null) return;
+            editor.commands.command(({ state, dispatch }) => {
+              const { doc, tr } = state;
+              // Resolve to the table node
+              const $pos = doc.resolve(pos);
+              let tablePos = -1;
+              for (let d = $pos.depth; d > 0; d--) {
+                if ($pos.node(d).type.name === 'table') {
+                  tablePos = $pos.before(d);
+                  break;
+                }
+              }
+              if (tablePos < 0) return false;
+              const tableNode = doc.nodeAt(tablePos);
+              if (!tableNode) return false;
+              const tableEnd = tablePos + tableNode.nodeSize;
+              // Walk all cells and replace their content with an empty paragraph
+              doc.nodesBetween(tablePos, tableEnd, (node, nodePos) => {
+                if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+                  const cellStart = nodePos + 1;
+                  const cellEnd = nodePos + node.nodeSize - 1;
+                  if (cellEnd > cellStart) {
+                    tr.replaceWith(
+                      tr.mapping.map(cellStart),
+                      tr.mapping.map(cellEnd),
+                      node.type.schema.nodes.paragraph.create()
+                    );
+                  }
+                  return false;
+                }
+              });
+              if (dispatch) dispatch(tr);
+              return true;
+            });
+          },
+        },
+        {
+          label: 'Duplicate table',
+          handler: () => {
+            try {
+              const pmNode = toProseMirrorNode(blockEl);
+              const pos = editor.view.posAtDOM(pmNode, 0);
+              const $pos = editor.state.doc.resolve(pos);
+              const blockPos = $pos.depth >= 1 ? $pos.before($pos.depth) : pos;
+              const node = editor.state.doc.nodeAt(blockPos);
+              if (!node) return;
+              const insertPos = blockPos + node.nodeSize;
+              editor.chain()
+                .focus()
+                .insertContentAt(insertPos, node.toJSON())
+                .run();
+            } catch { /* ignore */ }
+          },
+        },
+        {
+          label: 'Delete table',
+          handler: () => {
+            const pos = focusTable();
+            if (pos != null) {
+              editor.chain().focus().setTextSelection(pos).deleteTable().run();
+            }
+          },
+        },
+      ];
+
+      const menu = document.createElement('div');
+      menu.className = 'table-grip-menu';
+
+      actions.forEach((item, i) => {
+        // Add separator before "Delete table" (last item)
+        if (i === actions.length - 1) {
+          const sep = document.createElement('div');
+          sep.className = 'table-grip-menu-separator';
+          menu.appendChild(sep);
+        }
+        const btn = document.createElement('button');
+        btn.className = 'table-grip-menu-item';
+        btn.textContent = item.label;
+        btn.addEventListener('pointerdown', (ev) => ev.stopPropagation());
+        btn.addEventListener('pointerup', (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          item.handler();
+          cleanup();
+        });
+        menu.appendChild(btn);
+      });
+
+      menu.style.left = `${x}px`;
+      menu.style.top = `${y}px`;
+      document.body.appendChild(menu);
+
+      // Clamp to viewport
+      requestAnimationFrame(() => {
+        const menuRect = menu.getBoundingClientRect();
+        if (menuRect.right > window.innerWidth) {
+          menu.style.left = `${window.innerWidth - menuRect.width - 8}px`;
+        }
+        if (menuRect.bottom > window.innerHeight) {
+          menu.style.top = `${y - menuRect.height}px`;
+        }
+      });
+
+      const cleanup = () => {
+        menu.remove();
+        document.removeEventListener('pointerdown', dismissListener, true);
+        document.removeEventListener('keydown', keyListener, true);
+      };
+
+      const dismissListener = (ev: MouseEvent) => {
+        if (!menu.contains(ev.target as Node)) cleanup();
+      };
+      const keyListener = (ev: KeyboardEvent) => {
+        if (ev.key === 'Escape') {
+          ev.preventDefault();
+          ev.stopPropagation();
+          cleanup();
+        }
+      };
+
+      requestAnimationFrame(() => {
+        document.addEventListener('pointerdown', dismissListener, true);
+        document.addEventListener('keydown', keyListener, true);
+      });
+    },
+    [editor]
+  );
+
+  /**
    * Pointer-based drag: mousedown starts, mousemove shows indicator, mouseup moves block.
+   * Click (no drag) on a table block opens a context menu.
    */
   const handleGripMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (!activeNode) return;
       e.preventDefault(); // Prevent text selection
+
+      const startX = e.clientX;
+      const startY = e.clientY;
+      let didDrag = false;
 
       const view = editor.view;
       const editorEl = document.querySelector('.ProseMirror');
@@ -292,17 +451,10 @@ export function BlockHandle({ editor }: BlockHandleProps) {
         const node = view.state.doc.nodeAt(blockPos);
         if (!node) return;
 
-        // Create drop indicator line
+        // Create drop indicator line (kept hidden until drag starts)
         const indicator = document.createElement('div');
         indicator.className = 'block-drop-indicator';
         document.body.appendChild(indicator);
-
-        // Visual feedback on source — suppress PM observer to avoid invalidation
-        if (activeNode instanceof HTMLElement) {
-          view.domObserver.stop();
-          activeNode.classList.add('is-dragging', 'block-hover');
-          view.domObserver.start();
-        }
 
         dragStateRef.current = {
           sourceBlockEl: activeNode,
@@ -311,10 +463,25 @@ export function BlockHandle({ editor }: BlockHandleProps) {
           indicatorEl: indicator,
         };
 
-        // Hide the handle buttons during drag
-        setPosition(null);
-
         const onMouseMove = (moveEvent: MouseEvent) => {
+          const dx = moveEvent.clientX - startX;
+          const dy = moveEvent.clientY - startY;
+
+          // Don't start drag until threshold exceeded
+          if (!didDrag && Math.abs(dx) + Math.abs(dy) < 4) return;
+
+          if (!didDrag) {
+            didDrag = true;
+            // Visual feedback on source — suppress PM observer to avoid invalidation
+            if (activeNode instanceof HTMLElement) {
+              view.domObserver.stop();
+              activeNode.classList.add('is-dragging', 'block-hover');
+              view.domObserver.start();
+            }
+            // Hide the handle buttons during drag
+            setPosition(null);
+          }
+
           const drag = dragStateRef.current;
           if (!drag) return;
 
@@ -347,18 +514,25 @@ export function BlockHandle({ editor }: BlockHandleProps) {
           if (!drag) return;
 
           // Clean up visual state — suppress PM observer
-          if (drag.sourceBlockEl instanceof HTMLElement) {
+          if (didDrag && drag.sourceBlockEl instanceof HTMLElement) {
             view.domObserver.stop();
             drag.sourceBlockEl.classList.remove('is-dragging', 'block-hover');
             view.domObserver.start();
           }
           drag.indicatorEl.remove();
 
+          const capturedBlockEl = drag.sourceBlockEl;
+          dragStateRef.current = null;
+
+          // Click (no drag) — show context menu for table blocks
+          if (!didDrag) {
+            showBlockContextMenu(capturedBlockEl, upEvent.clientX, upEvent.clientY);
+            return;
+          }
+
           const dropInfo = (drag.indicatorEl as any)._dropTarget as
             | { element: Element; above: boolean }
             | undefined;
-
-          dragStateRef.current = null;
 
           if (!dropInfo) return;
 
@@ -428,7 +602,7 @@ export function BlockHandle({ editor }: BlockHandleProps) {
 
                 const blockRect = movedEl.getBoundingClientRect();
                 const wrapperRect = wrapperEl.getBoundingClientRect();
-                const handleWidth = 44; // 38px handles + 6px gap
+                const handleWidth = 50; // 38px handles + 12px gap
 
                 setPosition({
                   top: blockRect.top - wrapperRect.top + wrapperEl.scrollTop,
@@ -448,7 +622,7 @@ export function BlockHandle({ editor }: BlockHandleProps) {
         console.warn('BlockHandle: Could not initiate drag', error);
       }
     },
-    [editor, activeNode]
+    [editor, activeNode, showBlockContextMenu]
   );
 
   // Don't render if no position (no block being hovered)
@@ -473,10 +647,7 @@ export function BlockHandle({ editor }: BlockHandleProps) {
         type="button"
         aria-label="Add block below"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
+        <LucideIcon icon={Plus} size={14} strokeWidth={2.5} />
       </button>
       <button
         className="block-handle-drag"

@@ -5,6 +5,9 @@
  * Provides alignment controls, replace, and delete actions.
  */
 
+import { AlignLeft, AlignCenter, AlignRight, RefreshCw, Trash2, Captions } from 'lucide';
+import { LucideIcon } from './LucideIcon';
+
 interface ImagePopoverToolbarProps {
   textAlign: string | null;
   hasCaption: boolean;
@@ -13,57 +16,6 @@ interface ImagePopoverToolbarProps {
   onReplace: () => void;
   onDelete: () => void;
 }
-
-// Inline SVG icons (Lucide-style, matching project conventions)
-const AlignLeftIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="17" y1="10" x2="3" y2="10" />
-    <line x1="21" y1="6" x2="3" y2="6" />
-    <line x1="21" y1="14" x2="3" y2="14" />
-    <line x1="17" y1="18" x2="3" y2="18" />
-  </svg>
-);
-
-const AlignCenterIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="10" x2="6" y2="10" />
-    <line x1="21" y1="6" x2="3" y2="6" />
-    <line x1="21" y1="14" x2="3" y2="14" />
-    <line x1="18" y1="18" x2="6" y2="18" />
-  </svg>
-);
-
-const AlignRightIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="21" y1="10" x2="7" y2="10" />
-    <line x1="21" y1="6" x2="3" y2="6" />
-    <line x1="21" y1="14" x2="3" y2="14" />
-    <line x1="21" y1="18" x2="7" y2="18" />
-  </svg>
-);
-
-const ReplaceIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-    <path d="M3 3v5h5" />
-    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-    <path d="M16 16h5v5" />
-  </svg>
-);
-
-const TrashIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-  </svg>
-);
-
-const CaptionIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="4" width="20" height="12" rx="2" />
-    <path d="M7 20h10" />
-  </svg>
-);
 
 export function ImagePopoverToolbar({
   textAlign,
@@ -88,7 +40,7 @@ export function ImagePopoverToolbar({
         title="Align left"
         aria-label="Align left"
       >
-        <AlignLeftIcon />
+        <LucideIcon icon={AlignLeft} size={16} strokeWidth={2.5} />
       </button>
       <button
         type="button"
@@ -97,7 +49,7 @@ export function ImagePopoverToolbar({
         title="Align center"
         aria-label="Align center"
       >
-        <AlignCenterIcon />
+        <LucideIcon icon={AlignCenter} size={16} strokeWidth={2.5} />
       </button>
       <button
         type="button"
@@ -106,7 +58,7 @@ export function ImagePopoverToolbar({
         title="Align right"
         aria-label="Align right"
       >
-        <AlignRightIcon />
+        <LucideIcon icon={AlignRight} size={16} strokeWidth={2.5} />
       </button>
 
       <div className="image-popover-separator" />
@@ -118,7 +70,7 @@ export function ImagePopoverToolbar({
         title="Toggle caption"
         aria-label="Toggle caption"
       >
-        <CaptionIcon />
+        <LucideIcon icon={Captions} size={16} strokeWidth={2.5} />
       </button>
       <button
         type="button"
@@ -127,7 +79,7 @@ export function ImagePopoverToolbar({
         title="Replace image"
         aria-label="Replace image"
       >
-        <ReplaceIcon />
+        <LucideIcon icon={RefreshCw} size={16} strokeWidth={2.5} />
       </button>
       <button
         type="button"
@@ -136,7 +88,7 @@ export function ImagePopoverToolbar({
         title="Delete image"
         aria-label="Delete image"
       >
-        <TrashIcon />
+        <LucideIcon icon={Trash2} size={16} strokeWidth={2.5} />
       </button>
     </div>
   );

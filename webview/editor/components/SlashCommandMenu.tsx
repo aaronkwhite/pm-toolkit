@@ -18,6 +18,7 @@ import {
   useState,
   useCallback,
   useRef,
+  type ReactNode,
 } from 'react';
 import type { Editor, Range } from '@tiptap/core';
 
@@ -27,7 +28,7 @@ import type { Editor, Range } from '@tiptap/core';
 export interface SlashCommandItem {
   title: string;
   description: string;
-  icon: string;
+  icon: ReactNode;
   searchTerms: string[];
   category?: 'style' | 'lists' | 'blocks' | 'media' | 'templates';
   command: (params: { editor: Editor; range: Range }) => void;
@@ -194,7 +195,7 @@ export const SlashCommandMenu = forwardRef<SlashCommandMenuRef, SlashCommandMenu
                   onMouseEnter={() => setSelectedIndex(currentIndex)}
                   type="button"
                 >
-                  <span className="slash-command-icon" dangerouslySetInnerHTML={{ __html: item.icon }} />
+                  <span className="slash-command-icon">{item.icon}</span>
                   <span className="slash-command-title">{item.title}</span>
                 </button>
               );

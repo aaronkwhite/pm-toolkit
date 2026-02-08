@@ -18,8 +18,7 @@ import {
   findTable,
   TableMap,
 } from 'prosemirror-tables';
-
-const PLUS_SVG = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+import { createElement as lucideCreateElement, Plus } from 'lucide';
 
 const GRIP_V_SVG = `<svg width="6" height="10" viewBox="0 0 6 10" fill="currentColor"><circle cx="1.5" cy="1.5" r="1"/><circle cx="4.5" cy="1.5" r="1"/><circle cx="1.5" cy="5" r="1"/><circle cx="4.5" cy="5" r="1"/><circle cx="1.5" cy="8.5" r="1"/><circle cx="4.5" cy="8.5" r="1"/></svg>`;
 const GRIP_H_SVG = `<svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor"><circle cx="1.5" cy="1.5" r="1"/><circle cx="1.5" cy="4.5" r="1"/><circle cx="5" cy="1.5" r="1"/><circle cx="5" cy="4.5" r="1"/><circle cx="8.5" cy="1.5" r="1"/><circle cx="8.5" cy="4.5" r="1"/></svg>`;
@@ -118,7 +117,11 @@ export const TableControls = Extension.create({
     const createBar = (className: string, title: string): HTMLElement => {
       const bar = document.createElement('button');
       bar.className = className;
-      bar.innerHTML = PLUS_SVG;
+      const plusSvg = lucideCreateElement(Plus) as SVGSVGElement;
+      plusSvg.setAttribute('width', '10');
+      plusSvg.setAttribute('height', '10');
+      plusSvg.setAttribute('stroke-width', '2.5');
+      bar.appendChild(plusSvg);
       bar.title = title;
       bar.contentEditable = 'false';
       bar.addEventListener('mousedown', (e) => {
@@ -156,7 +159,7 @@ export const TableControls = Extension.create({
     const positionGrips = (table: HTMLElement) => {
       const tableRect = table.getBoundingClientRect();
 
-      if (rowGrip && activeRowIndex > 0) {
+      if (rowGrip && activeRowIndex >= 0) {
         const rows = table.querySelectorAll('tr');
         const row = rows[activeRowIndex];
         if (row) {
@@ -328,7 +331,22 @@ export const TableControls = Extension.create({
 
       const menu = document.createElement('div');
       menu.className = 'table-grip-menu';
-      const items = type === 'row' ? ROW_MENU : COL_MENU;
+      const isHeaderRow = type === 'row' && activeRowIndex === 0;
+      const hasHeader = isHeaderRow && currentTable
+        ? currentTable.querySelector('tr:first-child th') !== null
+        : false;
+
+      // Build menu items — inject header row toggle when on the header
+      let items: MenuEntry[];
+      if (isHeaderRow) {
+        items = [
+          { label: 'Header row', action: 'toggleHeaderRow' },
+          { separator: true },
+          ...ROW_MENU,
+        ];
+      } else {
+        items = type === 'row' ? ROW_MENU : COL_MENU;
+      }
 
       items.forEach((entry) => {
         if (entry.separator) {
@@ -337,8 +355,16 @@ export const TableControls = Extension.create({
           menu.appendChild(sep);
           return;
         }
+        const disabled = isHeaderRow && (
+          entry.action === 'insertRowAbove' ||
+          entry.action === 'moveRowUp' ||
+          entry.action === 'deleteRow'
+        );
+        const isToggle = entry.action === 'toggleHeaderRow';
         const btn = document.createElement('button');
         btn.className = 'table-grip-menu-item';
+        if (disabled) btn.classList.add('disabled');
+        if (isToggle && hasHeader) btn.classList.add('checked');
         btn.textContent = entry.label!;
         btn.addEventListener('pointerdown', (e) => {
           e.stopPropagation();
@@ -346,6 +372,7 @@ export const TableControls = Extension.create({
         btn.addEventListener('pointerup', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          if (disabled) return;
           const isMoveAction = entry.action!.startsWith('move');
           executeMenuAction(type, entry.action!);
           // Move actions re-show the highlight after PM re-renders,
@@ -474,6 +501,9 @@ export const TableControls = Extension.create({
           break;
         case 'deleteRow':
           focusThen((c) => c.deleteRow());
+          break;
+        case 'toggleHeaderRow':
+          focusThen((c) => c.toggleHeaderRow());
           break;
 
         // --- Column actions ---
@@ -615,8 +645,8 @@ export const TableControls = Extension.create({
 
       const tableRect = currentTable.getBoundingClientRect();
 
-      // Row grip: only for body rows (index > 0)
-      if (rowIdx > 0 && rowIdx !== activeRowIndex) {
+      // Row grip: show for all rows including the header
+      if (rowIdx >= 0 && rowIdx !== activeRowIndex) {
         activeRowIndex = rowIdx;
         if (!rowGrip) {
           rowGrip = createGripEl('table-row-grip', GRIP_V_SVG);
@@ -630,9 +660,6 @@ export const TableControls = Extension.create({
         rowGrip.style.top = `${rect.top}px`;
         rowGrip.style.height = `${rect.height}px`;
         rowGrip.classList.add('visible');
-      } else if (rowIdx === 0) {
-        activeRowIndex = -1;
-        rowGrip?.classList.remove('visible');
       }
 
       // Column grip

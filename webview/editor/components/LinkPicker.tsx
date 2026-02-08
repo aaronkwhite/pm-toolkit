@@ -22,6 +22,9 @@ import {
   useRef,
   useCallback,
 } from 'react'
+import type { IconNode } from 'lucide'
+import { FileText, Globe } from 'lucide'
+import { LucideIcon } from './LucideIcon'
 
 /**
  * Simple path utilities for browser environment
@@ -81,10 +84,6 @@ export interface LinkPickerOptions {
 function getVsCodeApi(): { postMessage: (msg: unknown) => void } | null {
   return (window as any).vscode || null
 }
-
-// Icon SVGs
-const fileIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 12h4"/><path d="M10 16h4"/></svg>'
-const urlIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>'
 
 interface LinkPickerProps {
   rect: DOMRect
@@ -364,9 +363,9 @@ interface MenuModeProps {
 }
 
 function MenuMode({ selectedIndex, onFileClick, onUrlClick }: MenuModeProps) {
-  const menuItems = [
-    { icon: fileIcon, title: 'Link to file', description: 'Search and link to a document', action: onFileClick },
-    { icon: urlIcon, title: 'Link to URL', description: 'Link to an external URL', action: onUrlClick },
+  const menuItems: { icon: IconNode; title: string; description: string; action: () => void }[] = [
+    { icon: FileText, title: 'Link to file', description: 'Search and link to a document', action: onFileClick },
+    { icon: Globe, title: 'Link to URL', description: 'Link to an external URL', action: onUrlClick },
   ]
 
   return (
@@ -383,7 +382,9 @@ function MenuMode({ selectedIndex, onFileClick, onUrlClick }: MenuModeProps) {
           }}
           type="button"
         >
-          <span className="link-picker-icon" dangerouslySetInnerHTML={{ __html: item.icon }} />
+          <span className="link-picker-icon">
+            <LucideIcon icon={item.icon} size={16} />
+          </span>
           <div className="link-picker-content">
             <span className="link-picker-title">{item.title}</span>
             <span className="link-picker-description">{item.description}</span>

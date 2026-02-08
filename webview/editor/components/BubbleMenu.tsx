@@ -23,19 +23,10 @@ import { NodeSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/core'
 import { createElement } from 'react'
 import { createRoot, Root } from 'react-dom/client'
+import type { IconNode } from 'lucide'
+import { Bold, Italic, Strikethrough, Code, Link2, ChevronDown } from 'lucide'
 import { LinkPicker, type LinkData } from './LinkPicker'
-
-/**
- * Lucide icon SVGs (16x16, stroke-width 2.5)
- */
-const icons = {
-  bold: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h9a4 4 0 0 1 0 8H6V4h8a4 4 0 0 1 0 8"></path></svg>`,
-  italic: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"></line><line x1="14" y1="20" x2="5" y2="20"></line><line x1="15" y1="4" x2="9" y2="20"></line></svg>`,
-  strikethrough: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4"></path><path d="M14 12a4 4 0 0 1 0 8H6"></path><line x1="4" y1="12" x2="20" y2="12"></line></svg>`,
-  code: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`,
-  link: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`,
-  chevronDown: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`,
-}
+import { LucideIcon } from './LucideIcon'
 
 /**
  * Block type definitions
@@ -109,7 +100,7 @@ const blockTypes: BlockType[] = [
  */
 interface MarkButton {
   id: string
-  icon: string
+  icon: IconNode
   title: string
   shortcut: string
   check: (editor: Editor) => boolean
@@ -119,7 +110,7 @@ interface MarkButton {
 const markButtons: MarkButton[] = [
   {
     id: 'bold',
-    icon: icons.bold,
+    icon: Bold,
     title: 'Bold',
     shortcut: '\u2318B',
     check: (editor) => editor.isActive('bold'),
@@ -127,7 +118,7 @@ const markButtons: MarkButton[] = [
   },
   {
     id: 'italic',
-    icon: icons.italic,
+    icon: Italic,
     title: 'Italic',
     shortcut: '\u2318I',
     check: (editor) => editor.isActive('italic'),
@@ -135,7 +126,7 @@ const markButtons: MarkButton[] = [
   },
   {
     id: 'strike',
-    icon: icons.strikethrough,
+    icon: Strikethrough,
     title: 'Strikethrough',
     shortcut: '\u2318\u21E7S',
     check: (editor) => editor.isActive('strike'),
@@ -143,7 +134,7 @@ const markButtons: MarkButton[] = [
   },
   {
     id: 'code',
-    icon: icons.code,
+    icon: Code,
     title: 'Inline code',
     shortcut: '\u2318E',
     check: (editor) => editor.isActive('code'),
@@ -324,7 +315,7 @@ export function BubbleMenuToolbar({ editor }: BubbleMenuToolbarProps) {
               type="button"
             >
               <span className="bubble-menu-block-label">{currentBlockType.label}</span>
-              <span dangerouslySetInnerHTML={{ __html: icons.chevronDown }} />
+              <LucideIcon icon={ChevronDown} size={12} strokeWidth={2.5} />
             </button>
             {dropdownOpen && (
               <div className="bubble-menu-dropdown">
@@ -351,7 +342,7 @@ export function BubbleMenuToolbar({ editor }: BubbleMenuToolbarProps) {
                 onClick={() => handleMarkClick(btn)}
                 type="button"
               >
-                <span dangerouslySetInnerHTML={{ __html: btn.icon }} />
+                <LucideIcon icon={btn.icon} size={16} strokeWidth={2.5} />
               </button>
             ))}
             <button
@@ -360,7 +351,7 @@ export function BubbleMenuToolbar({ editor }: BubbleMenuToolbarProps) {
               onClick={() => handleLinkClick()}
               type="button"
             >
-              <span dangerouslySetInnerHTML={{ __html: icons.link }} />
+              <LucideIcon icon={Link2} size={16} strokeWidth={2.5} />
             </button>
           </div>
         </div>
