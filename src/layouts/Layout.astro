@@ -103,6 +103,17 @@ const jsonLd = {
         }
       })();
     </script>
+
+    <!-- PostHog Analytics -->
+    <script is:inline>
+      if (localStorage.getItem('ph_optout') !== '1') {
+        !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+        posthog.init('phc_3DIgL4ES4ukoFmH4hgg3jR0e6O52PiQIfzfsVEjJu9u', {
+          api_host: 'https://us.i.posthog.com',
+          person_profiles: 'identified_only',
+        });
+      }
+    </script>
   </head>
   <body class="min-h-screen flex flex-col" style="background-color: var(--bg-primary);">
     <slot />
@@ -201,6 +212,47 @@ const jsonLd = {
         initHeaderScroll();
         initScrollAnimations();
       });
+    </script>
+
+    <!-- Privacy opt-out toast -->
+    <div id="privacy-toast" style="display:none;position:fixed;bottom:1rem;left:1rem;z-index:9999;max-width:360px;width:calc(100% - 2rem);background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:1rem 1.25rem;box-shadow:0 4px 24px rgba(0,0,0,0.12);opacity:0;transform:translateY(12px);transition:opacity 0.3s ease,transform 0.3s ease;">
+      <p style="margin:0 0 0.5rem;font-size:0.875rem;color:var(--text-primary);font-weight:500;">We use analytics to improve this site</p>
+      <p style="margin:0 0 0.75rem;font-size:0.8125rem;color:var(--text-secondary);line-height:1.4;">We use PostHog to understand how visitors use this site. No personal data is collected.</p>
+      <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+        <button id="privacy-optout" style="padding:0.375rem 0.75rem;font-size:0.8125rem;border-radius:6px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;">Opt out</button>
+        <button id="privacy-accept" style="padding:0.375rem 0.75rem;font-size:0.8125rem;border-radius:6px;border:none;background:#6366F1;color:#fff;cursor:pointer;">Got it</button>
+      </div>
+    </div>
+    <script is:inline>
+      (function() {
+        if (localStorage.getItem('ph_consent_dismissed') === '1') return;
+
+        var toast = document.getElementById('privacy-toast');
+        if (!toast) return;
+
+        toast.style.display = 'block';
+        // Trigger reflow then animate in
+        toast.offsetHeight;
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+
+        function dismiss() {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(12px)';
+          localStorage.setItem('ph_consent_dismissed', '1');
+          setTimeout(function() { toast.style.display = 'none'; }, 300);
+        }
+
+        document.getElementById('privacy-accept').addEventListener('click', dismiss);
+
+        document.getElementById('privacy-optout').addEventListener('click', function() {
+          localStorage.setItem('ph_optout', '1');
+          if (window.posthog && typeof window.posthog.opt_out_capturing === 'function') {
+            window.posthog.opt_out_capturing();
+          }
+          dismiss();
+        });
+      })();
     </script>
   </body>
 </html>
