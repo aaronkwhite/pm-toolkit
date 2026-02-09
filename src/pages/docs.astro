@@ -1,0 +1,155 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import FinalCTA from '../components/FinalCTA.astro';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Read the docs markdown file
+const docsPath = path.resolve('src/content/docs.md');
+const docsRaw = fs.readFileSync(docsPath, 'utf-8');
+
+// Simple markdown-to-HTML conversion for our subset of markdown
+function markdownToHtml(md: string): string {
+  const lines = md.split('\n');
+  const html: string[] = [];
+  let inCodeBlock = false;
+  let codeContent = '';
+  let codeLanguage = '';
+  let inList = false;
+  let listType = '';
+  let inTable = false;
+  let tableRows: string[][] = [];
+
+  function inline(text: string): string {
+    return text
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`(.+?)`/g, '<code>$1</code>')
+      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
+  }
+
+  function closeList() {
+    if (inList) {
+      html.push(listType === 'ul' ? '</ul>' : '</ol>');
+      inList = false;
+    }
+  }
+
+  function closeTable() {
+    if (inTable && tableRows.length > 0) {
+      html.push('<div class="table-wrapper"><table>');
+      tableRows.forEach((row, i) => {
+        const tag = i === 0 ? 'th' : 'td';
+        const wrapper = i === 0 ? 'thead' : (i === 1 ? 'tbody' : '');
+        if (wrapper === 'thead') html.push('<thead>');
+        if (wrapper === 'tbody') html.push('<tbody>');
+        html.push('<tr>');
+        row.forEach(cell => html.push(`<${tag}>${inline(cell.trim())}</${tag}>`));
+        html.push('</tr>');
+        if (i === 0) html.push('</thead>');
+      });
+      html.push('</tbody></table></div>');
+      tableRows = [];
+      inTable = false;
+    }
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Code blocks
+    if (line.startsWith('```')) {
+      if (inCodeBlock) {
+        html.push(`<pre><code class="language-${codeLanguage}">${codeContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`);
+        codeContent = '';
+        codeLanguage = '';
+        inCodeBlock = false;
+      } else {
+        closeList();
+        closeTable();
+        inCodeBlock = true;
+        codeLanguage = line.slice(3).trim();
+      }
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeContent += (codeContent ? '\n' : '') + line;
+      continue;
+    }
+
+    // Table rows
+    if (line.includes('|') && line.trim().startsWith('|')) {
+      closeList();
+      const cells = line.split('|').slice(1, -1);
+      // Skip separator rows (|---|---|)
+      if (cells.every(c => /^[\s-:]+$/.test(c))) continue;
+      if (!inTable) inTable = true;
+      tableRows.push(cells);
+      continue;
+    } else {
+      closeTable();
+    }
+
+    // Headings
+    const headingMatch = line.match(/^(#{1,3}) (.+)/);
+    if (headingMatch) {
+      closeList();
+      const level = headingMatch[1].length;
+      const text = headingMatch[2];
+      const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      html.push(`<h${level} id="${id}">${inline(text)}</h${level}>`);
+      continue;
+    }
+
+    // List items
+    if (line.match(/^- /)) {
+      if (!inList || listType !== 'ul') {
+        closeList();
+        html.push('<ul>');
+        inList = true;
+        listType = 'ul';
+      }
+      html.push(`<li>${inline(line.slice(2))}</li>`);
+      continue;
+    }
+
+    if (line.match(/^\d+\. /)) {
+      if (!inList || listType !== 'ol') {
+        closeList();
+        html.push('<ol>');
+        inList = true;
+        listType = 'ol';
+      }
+      html.push(`<li>${inline(line.replace(/^\d+\. /, ''))}</li>`);
+      continue;
+    }
+
+    // Blank line
+    if (line.trim() === '') {
+      closeList();
+      continue;
+    }
+
+    // Paragraph
+    closeList();
+    html.push(`<p>${inline(line)}</p>`);
+  }
+
+  closeList();
+  closeTable();
+  return html.join('\n');
+}
+
+const docsHtml = markdownToHtml(docsRaw);
+---
+
+<Layout title="Docs - PM Toolkit" description="Learn how to use PM Toolkit — installation, features, keyboard shortcuts, and configuration.">
+  <Header />
+  <main class="px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+    <div class="prose max-w-3xl mx-auto">
+      <Fragment set:html={docsHtml} />
+    </div>
+  </main>
+  <FinalCTA />
+</Layout>

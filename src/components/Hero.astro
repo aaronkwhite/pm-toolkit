@@ -19,17 +19,12 @@ const marketplaceLinks = [
 
 ---
 
-<section class="relative overflow-hidden py-24 sm:py-32 lg:py-40 gradient-mesh noise-overlay">
-  <!-- Background gradient accent -->
-  <div class="absolute inset-0 overflow-hidden pointer-events-none">
-    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--color-primary)]/20 rounded-full blur-[100px]"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[var(--color-secondary)]/15 rounded-full blur-[80px]"></div>
-  </div>
+<section class="relative overflow-hidden py-20 sm:py-28 lg:py-36 gradient-mesh noise-overlay">
 
   <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center max-w-3xl mx-auto mb-16">
       <!-- Badge -->
-      <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/20 border border-[var(--color-primary)]/30 mb-8 animate-fade-in">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/20 border border-[var(--color-primary)]/30 mb-8" style="opacity: 0; animation: fadeIn 0.5s ease-out 700ms both;">
         <svg class="w-5 h-5 text-[var(--color-primary)]" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
         </svg>
@@ -70,28 +65,34 @@ const marketplaceLinks = [
       </div>
 
       <!-- Version -->
-      <p class="text-sm mb-12 animate-fade-in-up delay-300" style="color: var(--text-muted);">
+      <p class="text-sm mb-12" style="color: var(--text-muted); opacity: 0; animation: fadeInUp 0.7s ease-out 800ms both;">
         {version}
       </p>
 
     </div>
 
-    <!-- Hero Screenshot - Floating with glow -->
-    <div class="relative max-w-5xl mx-auto animate-fade-in-up delay-500">
-      <!-- Glow backdrop -->
-      <div class="absolute inset-0 -inset-x-8 -inset-y-8 bg-gradient-to-br from-[var(--color-primary)]/30 via-[var(--color-secondary)]/20 to-[var(--color-primary)]/10 rounded-3xl blur-3xl opacity-60"></div>
-
-      <!-- Screenshot container with 3D transform -->
-      <div class="relative screenshot-floating animate-float animate-glow-pulse rounded-xl overflow-hidden">
+    <!-- Hero Screenshot -->
+    <div class="hero-screenshot relative max-w-5xl mx-auto animate-fade-in-up delay-500 rounded-[3rem]">
+      <!-- Gradient background card -->
+      <div class="relative z-10 rounded-[3rem] overflow-hidden">
         <img
-          src="/images/pm-toolkit-markdown-editor.png"
+          src="/images/gradient-background.png"
+          alt=""
+          class="w-full h-auto block"
+          loading="eager"
+        />
+      </div>
+
+      <!-- Screenshot centered on top -->
+      <div class="absolute z-20 top-[6%] bottom-[6%] left-5 right-5 sm:left-8 sm:right-8 lg:left-10 lg:right-10 flex items-center justify-center animate-float">
+        <img
+          src="/images/pmtoolkit-visual-editor.png"
+          srcset="/images/pmtoolkit-visual-editor.png 1160w, /images/pmtoolkit-visual-editor@2x.png 2320w"
+          sizes="(max-width: 1024px) 100vw, 900px"
           alt="PM Toolkit visual markdown editor in Cursor"
           loading="eager"
-          class="w-full rounded-xl shadow-2xl"
+          class="w-full rounded-xl"
         />
-
-        <!-- Subtle reflection overlay -->
-        <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none rounded-xl"></div>
       </div>
     </div>
   </div>

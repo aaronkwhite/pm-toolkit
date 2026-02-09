@@ -1,0 +1,145 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import FinalCTA from '../components/FinalCTA.astro';
+import { execSync } from 'node:child_process';
+
+// Read CHANGELOG.md from the main branch at build time
+let changelogRaw = '';
+try {
+  changelogRaw = execSync('git show main:CHANGELOG.md', { encoding: 'utf-8' });
+} catch {
+  changelogRaw = '## No changelog available\n\nCould not read CHANGELOG.md from the main branch.';
+}
+
+// Parse the changelog into structured data
+interface ChangelogEntry {
+  version: string;
+  date: string;
+  categories: { name: string; items: string[] }[];
+}
+
+const entries: ChangelogEntry[] = [];
+
+// Split by version headers: ## [x.y.z] - YYYY-MM-DD
+const versionRegex = /^## \[(.+?)\] - (\d{4}-\d{2}-\d{2})/;
+const categoryRegex = /^### (.+)/;
+
+const lines = changelogRaw.split('\n');
+let currentEntry: ChangelogEntry | null = null;
+let currentCategory: { name: string; items: string[] } | null = null;
+
+for (const line of lines) {
+  const versionMatch = line.match(versionRegex);
+  if (versionMatch) {
+    currentEntry = { version: versionMatch[1], date: versionMatch[2], categories: [] };
+    entries.push(currentEntry);
+    currentCategory = null;
+    continue;
+  }
+
+  if (!currentEntry) continue;
+
+  const categoryMatch = line.match(categoryRegex);
+  if (categoryMatch) {
+    currentCategory = { name: categoryMatch[1], items: [] };
+    currentEntry.categories.push(currentCategory);
+    continue;
+  }
+
+  if (currentCategory && line.startsWith('- ')) {
+    currentCategory.items.push(line.slice(2));
+  } else if (currentCategory && line.startsWith('  - ')) {
+    // Sub-item: append to the last item
+    const last = currentCategory.items.length - 1;
+    if (last >= 0) {
+      currentCategory.items[last] += '\n' + line;
+    }
+  }
+}
+
+// Category badge colors
+function categoryColor(name: string): string {
+  switch (name.toLowerCase()) {
+    case 'added': return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400';
+    case 'fixed': return 'bg-blue-500/15 text-blue-600 dark:text-blue-400';
+    case 'changed': return 'bg-amber-500/15 text-amber-600 dark:text-amber-400';
+    case 'removed': return 'bg-red-500/15 text-red-600 dark:text-red-400';
+    case 'deprecated': return 'bg-orange-500/15 text-orange-600 dark:text-orange-400';
+    case 'documentation': return 'bg-purple-500/15 text-purple-600 dark:text-purple-400';
+    default: return 'bg-gray-500/15 text-gray-600 dark:text-gray-400';
+  }
+}
+
+// Format markdown-style bold/code in item text
+function formatItem(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.+?)`/g, '<code>$1</code>');
+}
+
+// Format date for display
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr + 'T00:00:00');
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+---
+
+<Layout title="Changelog - PM Toolkit" description="See what's new in PM Toolkit. Release notes, new features, bug fixes, and improvements.">
+  <Header />
+  <main class="px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+    <div class="max-w-3xl mx-auto">
+      <!-- Page header -->
+      <div class="mb-16">
+        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4" style="color: var(--text-primary);">
+          Changelog
+        </h1>
+        <p class="text-lg" style="color: var(--text-secondary);">
+          New features, bug fixes, and improvements to PM Toolkit.
+        </p>
+      </div>
+
+      <!-- Version entries -->
+      <div class="space-y-16">
+        {entries.map((entry) => (
+          <article>
+            <div class="flex flex-wrap items-baseline gap-3 mb-6">
+              <h2 class="text-2xl font-bold" style="color: var(--text-primary);">
+                v{entry.version}
+              </h2>
+              <time
+                datetime={entry.date}
+                class="text-sm font-medium"
+                style="color: var(--text-tertiary);"
+              >
+                {formatDate(entry.date)}
+              </time>
+            </div>
+
+            <div class="space-y-6">
+              {entry.categories.map((cat) => (
+                <div>
+                  <span class={`inline-block text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full mb-3 ${categoryColor(cat.name)}`}>
+                    {cat.name}
+                  </span>
+                  <ul class="space-y-1.5 pl-0">
+                    {cat.items.map((item) => (
+                      <li class="flex items-start gap-2 text-[0.9375rem] leading-relaxed" style="color: var(--text-secondary);">
+                        <span class="mt-2 w-1 h-1 rounded-full flex-shrink-0" style="background: var(--text-tertiary);" />
+                        <span set:html={formatItem(item.split('\n')[0])} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+
+            {/* Divider between entries */}
+            <div class="mt-12 border-b" style="border-color: var(--border-color);" />
+          </article>
+        ))}
+      </div>
+    </div>
+  </main>
+  <FinalCTA />
+</Layout>
