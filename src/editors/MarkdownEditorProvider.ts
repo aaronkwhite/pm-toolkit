@@ -3,6 +3,7 @@ import * as path from 'path';
 import { HTMLBuilder } from './HTMLBuilder';
 import { ExtensionToWebviewMessage, WebviewToExtensionMessage, FileInfo } from '../types';
 import { TemplateManager } from '../templates/TemplateManager';
+import { validateMarkdown } from '../../shared/validateMarkdown';
 
 /**
  * Convert relative image paths in markdown to webview URIs
@@ -17,37 +18,46 @@ function convertImagePathsToWebview(
   documentUri: vscode.Uri,
   webview: vscode.Webview
 ): string {
-  // Match image markdown: ![alt](path)
-  // Captures the path which may be relative or absolute
-  return markdown.replace(
+  const documentDir = vscode.Uri.joinPath(documentUri, '..');
+
+  // Helper to resolve a relative path to a webview URI
+  function resolveToWebviewUri(imagePath: string): string | null {
+    if (/^(https?:|data:)/i.test(imagePath)) return null;
+    if (imagePath.includes('vscode-webview-resource:')) return null;
+    try {
+      const imageUri = vscode.Uri.joinPath(documentDir, imagePath);
+      return webview.asWebviewUri(imageUri).toString();
+    } catch {
+      return null;
+    }
+  }
+
+  // 1. Convert markdown images: ![alt](path)
+  let result = markdown.replace(
     /!\[([^\]]*)\]\(([^)]+)\)/g,
     (match, alt, imagePath) => {
-      // Skip URLs (http, https, data)
-      if (/^(https?:|data:)/i.test(imagePath)) {
-        return match;
-      }
+      const webviewUri = resolveToWebviewUri(imagePath);
+      if (!webviewUri) return match;
 
-      // Skip already converted webview URIs
-      if (imagePath.includes('vscode-webview-resource:')) {
-        return match;
-      }
-
-      try {
-        // Resolve the path relative to the document
-        const documentDir = vscode.Uri.joinPath(documentUri, '..');
-        const imageUri = vscode.Uri.joinPath(documentDir, imagePath);
-        const webviewUri = webview.asWebviewUri(imageUri);
-        // Output HTML with both the webview URI (for rendering) and original path (for editing)
-        // Escape any quotes in alt and paths for HTML attributes
-        const escapedAlt = alt.replace(/"/g, '&quot;');
-        const escapedOriginal = imagePath.replace(/"/g, '&quot;');
-        return `<img src="${webviewUri.toString()}" data-original-src="${escapedOriginal}" alt="${escapedAlt}">`;
-      } catch {
-        // If conversion fails, return original
-        return match;
-      }
+      const escapedAlt = alt.replace(/"/g, '&quot;');
+      const escapedOriginal = imagePath.replace(/"/g, '&quot;');
+      return `<img src="${webviewUri}" data-original-src="${escapedOriginal}" alt="${escapedAlt}">`;
     }
   );
+
+  // 2. Convert HTML <img> tags with relative src (from serializer with width/textAlign)
+  result = result.replace(
+    /<img\s([^>]*?)src="([^"]+)"([^>]*?)>/g,
+    (match, before, imagePath, after) => {
+      const webviewUri = resolveToWebviewUri(imagePath);
+      if (!webviewUri) return match;
+
+      const escapedOriginal = imagePath.replace(/"/g, '&quot;');
+      return `<img ${before}src="${webviewUri}" data-original-src="${escapedOriginal}"${after}>`;
+    }
+  );
+
+  return result;
 }
 
 // Note: convertImagePathsFromWebview() has been removed.
@@ -165,10 +175,24 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
             }
             break;
 
-          case 'update':
+          case 'update': {
             // Content changed in webview, update document
             // The markdown serializer uses originalSrc, so paths are already relative
             const content = message.payload.content;
+
+            // Guard: don't overwrite a non-empty document with empty content
+            if (!content.trim() && lastKnownContent.trim().length > 0) {
+              console.warn('[PM Toolkit] Save blocked: empty content replacing non-empty document');
+              break;
+            }
+
+            // Guard: validate markdown before writing to disk
+            const validation = validateMarkdown(content);
+            if (!validation.valid) {
+              console.warn('[PM Toolkit] Save blocked:', validation.reason);
+              break;
+            }
+
             // Only update if content is actually different
             if (content !== lastKnownContent) {
               pendingWebviewUpdate = true;
@@ -181,6 +205,7 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
               }, 100); // Increased from 50ms to 100ms for safer timing
             }
             break;
+          }
 
           case 'requestTemplates':
             // Send current templates to webview
@@ -230,6 +255,101 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
               }
             } catch (err) {
               console.error('Failed to convert image path:', err);
+            }
+            break;
+
+          case 'saveImage':
+            // Webview dropped/uploaded a file — save to workspace assets directory
+            try {
+              const { filename, data } = message.payload;
+              const config = vscode.workspace.getConfiguration('pmtoolkit');
+              const assetsPath = config.get<string>('imageAssetsPath', 'assets');
+
+              // Use workspace root for assets, not document directory
+              const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri || documentDir;
+              const assetsDir = vscode.Uri.joinPath(workspaceRoot, assetsPath);
+              await vscode.workspace.fs.createDirectory(assetsDir);
+
+              // Generate unique filename to avoid collisions
+              const ext = path.extname(filename) || '.png';
+              const base = path.basename(filename, ext);
+              const uniqueName = `${base}-${Date.now()}${ext}`;
+
+              // Decode base64 and write file
+              const base64Data = (data as string).split(',')[1] || (data as string);
+              const buffer = Buffer.from(base64Data, 'base64');
+              const fileUri = vscode.Uri.joinPath(assetsDir, uniqueName);
+              await vscode.workspace.fs.writeFile(fileUri, buffer);
+
+              // Build a relative path from the document to the saved file
+              const relativePath = path.relative(
+                path.dirname(document.uri.fsPath),
+                fileUri.fsPath
+              );
+
+              const webviewUrl = webviewPanel.webview.asWebviewUri(fileUri).toString();
+
+              webviewPanel.webview.postMessage({
+                type: 'imageSaved',
+                payload: { originalPath: relativePath, webviewUrl },
+              });
+            } catch (err) {
+              console.error('Failed to save image:', err);
+            }
+            break;
+
+          case 'requestFilePicker':
+            // Webview wants to pick an image file
+            try {
+              const result = await vscode.window.showOpenDialog({
+                canSelectFiles: true,
+                canSelectMany: false,
+                filters: { 'Images': ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'] },
+                title: 'Select Image',
+              });
+
+              if (result && result[0]) {
+                const selectedUri = result[0];
+                const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+
+                // Check if the file is inside the workspace
+                const isInWorkspace = workspaceRoot &&
+                  selectedUri.fsPath.startsWith(workspaceRoot.fsPath);
+
+                let fileUri: vscode.Uri;
+                if (isInWorkspace) {
+                  // File is already in the workspace — just reference it directly
+                  fileUri = selectedUri;
+                } else {
+                  // File is outside the workspace — copy to assets directory
+                  const config = vscode.workspace.getConfiguration('pmtoolkit');
+                  const assetsPath = config.get<string>('imageAssetsPath', 'assets');
+                  const root = workspaceRoot || documentDir;
+                  const assetsDir = vscode.Uri.joinPath(root, assetsPath);
+                  await vscode.workspace.fs.createDirectory(assetsDir);
+
+                  const ext = path.extname(selectedUri.fsPath);
+                  const base = path.basename(selectedUri.fsPath, ext);
+                  const uniqueName = `${base}-${Date.now()}${ext}`;
+                  fileUri = vscode.Uri.joinPath(assetsDir, uniqueName);
+                  await vscode.workspace.fs.copy(selectedUri, fileUri, { overwrite: true });
+                }
+
+                // Build a relative path from the document to the image
+                const relativePath = path.relative(
+                  path.dirname(document.uri.fsPath),
+                  fileUri.fsPath
+                );
+
+                const webviewUrl = webviewPanel.webview.asWebviewUri(fileUri).toString();
+
+                webviewPanel.webview.postMessage({
+                  type: 'filePickerResult',
+                  payload: { originalPath: relativePath, webviewUrl },
+                });
+              }
+            } catch (err) {
+              console.error('Failed to pick/copy image:', err);
             }
             break;
 

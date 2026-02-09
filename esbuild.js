@@ -45,8 +45,9 @@ const extensionConfig = {
  */
 const webviewConfigs = [
   {
-    entryPoints: ['webview/editor/main.ts'],
+    entryPoints: ['webview/editor/index.tsx'],
     outfile: 'dist/webview/editor.js',
+    jsx: 'automatic',
   },
   {
     entryPoints: ['webview/kanban/main.ts'],

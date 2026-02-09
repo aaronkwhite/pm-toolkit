@@ -1,75 +1,26 @@
 /**
- * Custom Image Extension with Obsidian-style editing
+ * Custom Image Extension
  *
- * When an image is selected/focused, it shows the raw markdown syntax
- * for direct editing. When deselected, it renders the image.
+ * Extends Tiptap's Image extension with:
+ * - textAlign attribute for alignment (left/center/right)
+ * - width attribute for persisting resize
+ * - Drop zone UI when src is empty (via ReactNodeViewRenderer)
+ * - Resize handles on selection (forked from tiptap-extension-resize-image)
+ * - Popover toolbar for alignment, replace, delete
+ * - Standard markdown serialization: ![alt](url)
  *
- * Supports Obsidian-style dimensions: ![alt|300](url) or ![alt|300x200](url)
- *
- * Also includes an input rule to convert typed markdown ![alt](url) to images.
+ * Also includes an input rule to convert typed markdown ![alt](url) to images,
+ * and a paste handler for image markdown text.
  */
 
 import Image from '@tiptap/extension-image';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { TextSelection } from '@tiptap/pm/state';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import ImageNodeView from './ImageNodeView';
 
-// Regex to match image markdown: ![alt](url) or ![alt|width](url) or ![alt|widthxheight](url)
+// Regex to match image markdown: ![alt](url)
 const imageMarkdownRegex = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/;
-
-/**
- * Parse Obsidian-style alt text to extract actual alt and dimensions
- * Examples:
- *   "my image" -> { alt: "my image", width: null, height: null }
- *   "my image|300" -> { alt: "my image", width: 300, height: null }
- *   "my image|300x200" -> { alt: "my image", width: 300, height: 200 }
- *   "|300" -> { alt: "", width: 300, height: null }
- */
-function parseAltWithDimensions(altText: string): {
-  alt: string;
-  width: number | null;
-  height: number | null;
-} {
-  if (!altText) {
-    return { alt: '', width: null, height: null };
-  }
-
-  // Check for pipe separator
-  const pipeIndex = altText.lastIndexOf('|');
-  if (pipeIndex === -1) {
-    return { alt: altText, width: null, height: null };
-  }
-
-  const alt = altText.substring(0, pipeIndex);
-  const dimensionPart = altText.substring(pipeIndex + 1);
-
-  // Try to parse dimensions: "300" or "300x200"
-  const dimensionMatch = dimensionPart.match(/^(\d+)(?:x(\d+))?$/);
-  if (!dimensionMatch) {
-    // Not valid dimensions, treat entire string as alt
-    return { alt: altText, width: null, height: null };
-  }
-
-  const width = parseInt(dimensionMatch[1], 10);
-  const height = dimensionMatch[2] ? parseInt(dimensionMatch[2], 10) : null;
-
-  return { alt, width, height };
-}
-
-/**
- * Format alt text with dimensions for markdown output
- */
-function formatAltWithDimensions(
-  alt: string,
-  width: number | null,
-  height: number | null
-): string {
-  if (!width && !height) {
-    return alt;
-  }
-
-  const dimensionStr = height ? `${width}x${height}` : `${width}`;
-  return alt ? `${alt}|${dimensionStr}` : `|${dimensionStr}`;
-}
 
 export const ImageNode = Image.extend({
   addAttributes() {
@@ -94,15 +45,12 @@ export const ImageNode = Image.extend({
           return { width: attributes.width };
         },
       },
-      height: {
+      textAlign: {
         default: null,
-        parseHTML: (element) => {
-          const height = element.getAttribute('height');
-          return height ? parseInt(height, 10) : null;
-        },
+        parseHTML: (element) => element.getAttribute('data-text-align'),
         renderHTML: (attributes) => {
-          if (!attributes.height) return {};
-          return { height: attributes.height };
+          if (!attributes.textAlign) return {};
+          return { 'data-text-align': attributes.textAlign };
         },
       },
     };
@@ -116,40 +64,68 @@ export const ImageNode = Image.extend({
           // Use originalSrc for serialization (the user-friendly path), falling back to src
           const src = node.attrs.originalSrc || node.attrs.src || '';
           const width = node.attrs.width;
-          const height = node.attrs.height;
+          const textAlign = node.attrs.textAlign;
 
-          // Format with Obsidian-style dimensions
-          const altWithDimensions = formatAltWithDimensions(alt, width, height);
-
-          // Escape special characters in URL
           const escapedSrc = src.replace(/[()]/g, '\\$&');
 
-          // Ensure image is on its own line (block element)
           state.ensureNewLine();
-          state.write(`![${altWithDimensions}](${escapedSrc})`);
-          state.ensureNewLine();
+
+          // Store width/alignment as a HTML comment before the image.
+          // This avoids HTML block parsing issues that break surrounding markdown.
+          if (width || textAlign) {
+            const parts: string[] = [];
+            if (width) parts.push(`width=${width}`);
+            if (textAlign) parts.push(`align=${textAlign}`);
+            state.write(`<!-- image: ${parts.join(' ')} -->\n`);
+          }
+
+          state.write(`![${alt}](${escapedSrc})`);
+          state.closeBlock(node);
         },
         parse: {
-          // Hook into DOM parsing to extract dimensions from alt text
           updateDOM(element: HTMLElement) {
-            // Find all images and process their alt text for dimensions
-            element.querySelectorAll('img').forEach((img) => {
-              const rawAlt = img.getAttribute('alt') || '';
-              const { alt, width, height } = parseAltWithDimensions(rawAlt);
+            // Find <!-- image: width=N align=X --> comments and apply to following <img>
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_COMMENT);
+            const commentsToRemove: Comment[] = [];
 
-              // Update the alt to remove dimension syntax
-              if (alt !== rawAlt) {
-                img.setAttribute('alt', alt);
+            while (walker.nextNode()) {
+              const comment = walker.currentNode as Comment;
+              const match = comment.textContent?.trim().match(
+                /^image:\s*(.*)/
+              );
+              if (!match) continue;
+
+              const attrs = match[1];
+              // Find the next <img> sibling (may be inside a <p>)
+              let next: Node | null = comment.nextSibling;
+              // Skip whitespace text nodes
+              while (next && next.nodeType === Node.TEXT_NODE && !next.textContent?.trim()) {
+                next = next.nextSibling;
               }
 
-              // Set width/height attributes if present
-              if (width) {
-                img.setAttribute('width', String(width));
+              let img: HTMLImageElement | null = null;
+              if (next instanceof HTMLImageElement) {
+                img = next;
+              } else if (next instanceof HTMLElement) {
+                img = next.querySelector('img');
               }
-              if (height) {
-                img.setAttribute('height', String(height));
+
+              if (img) {
+                const widthMatch = attrs.match(/width=(\d+)/);
+                const alignMatch = attrs.match(/align=(\w+)/);
+                if (widthMatch) {
+                  img.setAttribute('width', widthMatch[1]);
+                }
+                if (alignMatch) {
+                  img.setAttribute('data-text-align', alignMatch[1]);
+                }
               }
-            });
+
+              commentsToRemove.push(comment);
+            }
+
+            // Remove processed comments so they don't become text nodes
+            commentsToRemove.forEach((c) => c.remove());
           },
         },
       },
@@ -180,10 +156,7 @@ export const ImageNode = Image.extend({
       const matchEnd = match.index! + match[0].length;
       if (matchEnd !== textBeforeCursor.length) return false;
 
-      const [fullMatch, rawAlt, src, title] = match;
-
-      // Parse alt text for dimensions
-      const { alt, width, height } = parseAltWithDimensions(rawAlt);
+      const [fullMatch, alt, src, title] = match;
 
       // Calculate positions in the document
       const blockStart = $from.start();
@@ -196,15 +169,12 @@ export const ImageNode = Image.extend({
       // Delete the matched text
       tr.delete(matchStart, matchEndPos);
 
-      // Create the image node with dimensions
-      // Store originalSrc for user-friendly display/editing
+      // Create the image node
       const imageNode = imageType.create({
         src,
-        originalSrc: src, // User typed this path, preserve it
+        originalSrc: src,
         alt: alt || null,
         title: title || null,
-        width: width || null,
-        height: height || null,
       });
 
       // Insert the image
@@ -257,8 +227,7 @@ export const ImageNode = Image.extend({
             const match = trimmed.match(/^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)$/);
             if (!match) return false;
 
-            const [, rawAlt, src, title] = match;
-            const { alt, width, height } = parseAltWithDimensions(rawAlt);
+            const [, alt, src, title] = match;
 
             // Create and insert the image node
             const { state } = view;
@@ -274,8 +243,6 @@ export const ImageNode = Image.extend({
               originalSrc: src,
               alt: alt || null,
               title: title || null,
-              width: width || null,
-              height: height || null,
             });
 
             tr.replaceSelectionWith(imageNode);
@@ -290,477 +257,6 @@ export const ImageNode = Image.extend({
   },
 
   addNodeView() {
-    return ({ node, getPos, editor }) => {
-      const container = document.createElement('span');
-      container.classList.add('image-node-view');
-
-      // Helper to check if a URL is a webview URL (can be rendered)
-      const isWebviewUrl = (url: string) => {
-        return url.startsWith('http') || url.startsWith('data:') || url.includes('vscode-resource');
-      };
-
-      // Helper to request URL conversion from extension
-      const requestUrlConversion = (relativePath: string) => {
-        const vscodeApi = (window as any).vscode;
-        if (vscodeApi && relativePath && !isWebviewUrl(relativePath)) {
-          vscodeApi.postMessage({ type: 'requestImageUrl', payload: { path: relativePath } });
-        }
-      };
-
-      // Image display (shown when not editing)
-      const img = document.createElement('img');
-      const initialSrc = node.attrs.src || '';
-      img.alt = node.attrs.alt || '';
-      if (node.attrs.title) {
-        img.title = node.attrs.title;
-      }
-      // Apply dimensions
-      if (node.attrs.width) {
-        img.width = node.attrs.width;
-      }
-      if (node.attrs.height) {
-        img.height = node.attrs.height;
-      }
-      img.classList.add('editor-image');
-
-      // Track the path we're waiting for conversion on
-      let pendingPath = '';
-
-      // Set image src - if it's not a webview URL, request conversion
-      if (isWebviewUrl(initialSrc)) {
-        img.src = initialSrc;
-      } else if (initialSrc) {
-        // Relative path - request conversion and show placeholder
-        img.src = ''; // Will be updated when we get the webview URL
-        pendingPath = initialSrc;
-        requestUrlConversion(initialSrc);
-      }
-
-      // Listen for URL resolution from extension
-      const handleUrlResolved = (event: Event) => {
-        const customEvent = event as CustomEvent<{ originalPath: string; webviewUrl: string }>;
-        const { originalPath, webviewUrl } = customEvent.detail;
-
-        // Check if this is the path we're waiting for
-        if (pendingPath && originalPath === pendingPath) {
-          img.src = webviewUrl;
-          pendingPath = '';
-
-          // Update the node attributes with the resolved URL
-          if (typeof getPos === 'function') {
-            const pos = getPos();
-            editor.view.dispatch(
-              editor.state.tr
-                .setMeta('addToHistory', false) // Don't add to undo history
-                .setNodeMarkup(pos, undefined, {
-                  ...node.attrs,
-                  src: webviewUrl,
-                  originalSrc: originalPath,
-                })
-            );
-          }
-        }
-      };
-
-      window.addEventListener('image-url-resolved', handleUrlResolved);
-
-      // Markdown edit field (shown when editing)
-      const editField = document.createElement('span');
-      editField.classList.add('image-markdown-edit');
-      editField.contentEditable = 'true';
-      editField.spellcheck = false;
-
-      const updateEditField = () => {
-        const alt = node.attrs.alt || '';
-        // Display originalSrc (the user-friendly path) instead of the webview URL
-        const displaySrc = node.attrs.originalSrc || node.attrs.src || '';
-        const width = node.attrs.width;
-        const height = node.attrs.height;
-        const altWithDimensions = formatAltWithDimensions(alt, width, height);
-        editField.textContent = `![${altWithDimensions}](${displaySrc})`;
-      };
-      updateEditField();
-
-      // Simple undo/redo stack for the edit field
-      const undoStack: string[] = [];
-      const redoStack: string[] = [];
-      let lastSavedContent = editField.textContent || '';
-
-      const saveUndoState = () => {
-        const current = editField.textContent || '';
-        if (current !== lastSavedContent) {
-          undoStack.push(lastSavedContent);
-          redoStack.length = 0; // Clear redo stack on new change
-          lastSavedContent = current;
-        }
-      };
-
-      const undo = () => {
-        if (undoStack.length > 0) {
-          const current = editField.textContent || '';
-          redoStack.push(current);
-          const prev = undoStack.pop()!;
-          editField.textContent = prev;
-          lastSavedContent = prev;
-          // Move cursor to end
-          const sel = window.getSelection();
-          if (sel) {
-            const range = document.createRange();
-            range.selectNodeContents(editField);
-            range.collapse(false);
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }
-        }
-      };
-
-      const redo = () => {
-        if (redoStack.length > 0) {
-          const current = editField.textContent || '';
-          undoStack.push(current);
-          const next = redoStack.pop()!;
-          editField.textContent = next;
-          lastSavedContent = next;
-          // Move cursor to end
-          const sel = window.getSelection();
-          if (sel) {
-            const range = document.createRange();
-            range.selectNodeContents(editField);
-            range.collapse(false);
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }
-        }
-      };
-
-      // Edit field goes above the image
-      container.appendChild(editField);
-      container.appendChild(img);
-
-      let isEditing = false;
-
-      const enterEditMode = () => {
-        if (isEditing) return;
-        isEditing = true;
-        container.classList.add('is-editing');
-        updateEditField();
-        editField.focus();
-
-        const text = editField.textContent || '';
-        const sel = window.getSelection();
-        const range = document.createRange();
-
-        // If empty image (no alt, no src), position cursor in alt text area (between [ and ])
-        if (text === '![]()') {
-          const textNode = editField.firstChild;
-          if (textNode && sel) {
-            // Position cursor after "![" (at position 2)
-            range.setStart(textNode, 2);
-            range.setEnd(textNode, 2);
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }
-        } else {
-          // Select all for non-empty images
-          range.selectNodeContents(editField);
-          sel?.removeAllRanges();
-          sel?.addRange(range);
-        }
-      };
-
-      const exitEditMode = () => {
-        if (!isEditing) return;
-        isEditing = false;
-        container.classList.remove('is-editing');
-
-        // Parse the markdown and update the node
-        const text = (editField.textContent || '').trim();
-
-        // Match image markdown: ![alt](url) - alt may contain |dimensions
-        const match = text.match(/^!\[([^\]]*)\]\(([^)]*)\)$/);
-
-        if (typeof getPos === 'function') {
-          const pos = getPos();
-
-          if (match) {
-            const [, rawAlt, newSrc] = match;
-            const { alt, width, height } = parseAltWithDimensions(rawAlt);
-
-            // Compare against originalSrc (what user sees) not src (webview URL)
-            const currentDisplaySrc = node.attrs.originalSrc || node.attrs.src || '';
-
-            // Check if anything changed
-            const altChanged = alt !== (node.attrs.alt || '');
-            const srcChanged = newSrc !== currentDisplaySrc;
-            const widthChanged = width !== node.attrs.width;
-            const heightChanged = height !== node.attrs.height;
-
-            if (altChanged || srcChanged || widthChanged || heightChanged) {
-              // Update attributes - only modify originalSrc, keep src (webview URL) intact
-              // The markdown serializer uses originalSrc, so saving will write the correct path
-              const newAttrs: Record<string, any> = {
-                ...node.attrs,
-                alt: alt || null,
-                width: width,
-                height: height,
-              };
-
-              if (srcChanged) {
-                // User changed the path - update originalSrc
-                newAttrs.originalSrc = newSrc || null;
-
-                if (newSrc && isWebviewUrl(newSrc)) {
-                  // For http/https/data URLs, set src directly
-                  newAttrs.src = newSrc;
-                  img.src = newSrc;
-                } else if (newSrc) {
-                  // For relative paths, request URL conversion
-                  pendingPath = newSrc;
-                  requestUrlConversion(newSrc);
-                }
-              }
-
-              editor.view.dispatch(
-                editor.state.tr.setNodeMarkup(pos, undefined, newAttrs)
-              );
-              // Update the img element
-              img.alt = alt || '';
-              if (width) {
-                img.width = width;
-              } else {
-                img.removeAttribute('width');
-              }
-              if (height) {
-                img.height = height;
-              } else {
-                img.removeAttribute('height');
-              }
-            }
-          } else if (text === '' || text === '![]()') {
-            // Empty or cleared - delete the node
-            editor.chain()
-              .deleteRange({ from: pos, to: pos + 1 })
-              .focus()
-              .run();
-          }
-          // If text doesn't match pattern, revert to original values
-          else {
-            updateEditField();
-          }
-        }
-      };
-
-      // Click on image enters edit mode
-      img.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (typeof getPos === 'function') {
-          editor.commands.setNodeSelection(getPos());
-        }
-        enterEditMode();
-      });
-
-      // Handle edit field events
-      editField.addEventListener('blur', () => {
-        exitEditMode();
-      });
-
-      editField.addEventListener('keydown', (e) => {
-        // Handle Cmd+V / Ctrl+V for paste via VS Code API
-        if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
-          e.preventDefault();
-          e.stopPropagation();
-
-          // Request clipboard from VS Code extension
-          const vscodeApi = (window as any).vscode;
-          if (vscodeApi) {
-            (window as any).__pendingPasteTarget = editField;
-            vscodeApi.postMessage({ type: 'requestClipboard' });
-          }
-          return;
-        }
-
-        // Cmd+Z / Ctrl+Z for undo
-        if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
-          e.preventDefault();
-          e.stopPropagation();
-          undo();
-          return;
-        }
-
-        // Cmd+Shift+Z / Ctrl+Y for redo
-        if ((e.metaKey || e.ctrlKey) && ((e.shiftKey && e.key === 'z') || e.key === 'y')) {
-          e.preventDefault();
-          e.stopPropagation();
-          redo();
-          return;
-        }
-
-        // Allow Cmd+A / Ctrl+A for select all
-        if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
-          e.stopPropagation();
-          return;
-        }
-
-        // Handle Cmd+C / Ctrl+C for copy via VS Code API
-        if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
-          e.preventDefault();
-          e.stopPropagation();
-
-          const sel = window.getSelection();
-          if (sel && sel.toString()) {
-            const textToCopy = sel.toString();
-            const vscodeApi = (window as any).vscode;
-            if (vscodeApi) {
-              vscodeApi.postMessage({ type: 'copyToClipboard', payload: { text: textToCopy } });
-            }
-          }
-          return;
-        }
-
-        // Allow Cmd+X / Ctrl+X for cut
-        if ((e.metaKey || e.ctrlKey) && e.key === 'x') {
-          e.stopPropagation();
-          // Let the browser handle cut
-          return;
-        }
-
-        if (e.key === 'Escape' || e.key === 'Enter') {
-          e.preventDefault();
-          exitEditMode();
-          editor.commands.focus();
-          return;
-        }
-
-        // Arrow keys: navigate within the field
-        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-          e.stopPropagation();
-
-          const sel = window.getSelection();
-          if (!sel) return;
-
-          // Shift+Arrow for selection
-          if (e.shiftKey) {
-            // Let the browser handle shift+arrow for selection
-            return;
-          }
-
-          // Up arrow: move to start
-          if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            const range = document.createRange();
-            range.setStart(editField, 0);
-            range.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }
-
-          // Down arrow: move to end
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            const range = document.createRange();
-            range.selectNodeContents(editField);
-            range.collapse(false);
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }
-
-          // Left/Right: let browser handle naturally
-          return;
-        }
-
-        // Delete the image if user clears all text and presses backspace/delete
-        const text = editField.textContent || '';
-        const isEmpty = text === '' || text.trim() === '';
-
-        if ((e.key === 'Backspace' || e.key === 'Delete') && isEmpty) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof getPos === 'function') {
-            const pos = getPos();
-            isEditing = false;
-            container.classList.remove('is-editing');
-            editor.chain()
-              .deleteRange({ from: pos, to: pos + 1 })
-              .focus()
-              .run();
-          }
-          return;
-        }
-
-        // Allow normal editing keys
-        e.stopPropagation();
-      });
-
-      // Prevent other events from bubbling
-      editField.addEventListener('keyup', (e) => e.stopPropagation());
-      editField.addEventListener('keypress', (e) => e.stopPropagation());
-
-      // Save undo state on input (debounced)
-      let undoTimeout: ReturnType<typeof setTimeout> | null = null;
-      editField.addEventListener('input', () => {
-        if (undoTimeout) clearTimeout(undoTimeout);
-        undoTimeout = setTimeout(saveUndoState, 300);
-      });
-
-      return {
-        dom: container,
-        update: (updatedNode) => {
-          if (updatedNode.type.name !== 'image') {
-            return false;
-          }
-          // Update image - check if we need URL conversion
-          const newSrc = updatedNode.attrs.src || '';
-          if (isWebviewUrl(newSrc)) {
-            img.src = newSrc;
-          } else if (newSrc && newSrc !== pendingPath) {
-            // New relative path - request conversion
-            img.src = ''; // Clear while loading
-            pendingPath = newSrc;
-            requestUrlConversion(newSrc);
-          }
-          img.alt = updatedNode.attrs.alt || '';
-          if (updatedNode.attrs.title) {
-            img.title = updatedNode.attrs.title;
-          }
-          // Update dimensions
-          if (updatedNode.attrs.width) {
-            img.width = updatedNode.attrs.width;
-          } else {
-            img.removeAttribute('width');
-          }
-          if (updatedNode.attrs.height) {
-            img.height = updatedNode.attrs.height;
-          } else {
-            img.removeAttribute('height');
-          }
-          // Update node reference for edit field
-          node = updatedNode;
-          if (!isEditing) {
-            updateEditField();
-          }
-          return true;
-        },
-        selectNode: () => {
-          container.classList.add('is-selected');
-          enterEditMode();
-        },
-        deselectNode: () => {
-          container.classList.remove('is-selected');
-          exitEditMode();
-        },
-        stopEvent: (event) => {
-          // Let the edit field handle its own events when editing
-          if (isEditing && container.contains(event.target as Node)) {
-            return true;
-          }
-          return false;
-        },
-        destroy: () => {
-          // Clean up event listener
-          window.removeEventListener('image-url-resolved', handleUrlResolved);
-        },
-      };
-    };
+    return ReactNodeViewRenderer(ImageNodeView);
   },
 });

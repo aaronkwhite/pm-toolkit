@@ -86,15 +86,24 @@ export class EditorHelper {
    * Get the current markdown content from the editor
    */
   async getContent(): Promise<string> {
-    // Type in the editor to trigger an update message if needed
-    // Then read the last update message
+    // Try to get content directly from the editor
+    const content = await this.page.evaluate(() => {
+      if (typeof window._getEditorContent === 'function') {
+        return window._getEditorContent();
+      }
+      return null;
+    });
+
+    if (content !== null) {
+      return content;
+    }
+
+    // Fallback: check update messages
     const messages = await this.getMessages('update');
     if (messages.length > 0) {
       return (messages[messages.length - 1] as any).payload.content;
     }
 
-    // If no update messages yet, we need to get content another way
-    // Force an update by focusing and typing/deleting
     return '';
   }
 

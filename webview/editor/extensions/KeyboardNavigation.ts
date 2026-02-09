@@ -7,8 +7,8 @@
  * Adds Tab/Shift+Tab navigation within tables.
  */
 
-import { Extension } from '@tiptap/core';
-import { TextSelection } from '@tiptap/pm/state';
+import { Extension, findParentNodeClosestToPos } from '@tiptap/core';
+import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 import { CellSelection } from '@tiptap/pm/tables';
 
 /**
@@ -21,6 +21,25 @@ function deleteSelectionWithTable(editor: any): boolean {
 
   // Handle CellSelection (column/row selection within a table)
   if (selection instanceof CellSelection) {
+    // Check if ALL cells are selected → delete the whole table
+    const table = findParentNodeClosestToPos(
+      selection.ranges[0].$from,
+      (node) => node.type.name === 'table'
+    );
+    if (table) {
+      let cellCount = 0;
+      table.node.descendants((node) => {
+        if (node.type.name === 'table') return false;
+        if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+          cellCount++;
+        }
+      });
+      if (cellCount === selection.ranges.length) {
+        editor.commands.deleteTable();
+        return true;
+      }
+    }
+
     // Check if entire column(s) selected
     if (selection.isColSelection()) {
       editor.commands.deleteColumn();
@@ -181,8 +200,19 @@ function exitCodeBlockAbove(editor: any): boolean {
       .setTextSelection(codeBlockBefore + 1)
       .run();
   } else {
-    // Move cursor to the position before code block
-    editor.commands.setTextSelection(codeBlockBefore);
+    // Check what node is before the code block
+    const nodeBefore = state.doc.nodeAt(codeBlockBefore - 1);
+    if (nodeBefore) {
+      // Move cursor to the end of the node before code block
+      // codeBlockBefore - 1 places us at the end of the previous node's content
+      editor.commands.setTextSelection(codeBlockBefore - 1);
+    } else {
+      // Insert a paragraph before the code block
+      editor.chain()
+        .insertContentAt(codeBlockBefore, { type: 'paragraph' })
+        .setTextSelection(codeBlockBefore + 1)
+        .run();
+    }
   }
 
   return true;
@@ -494,5 +524,65 @@ export const KeyboardNavigation = Extension.create({
         return false;
       },
     };
+  },
+
+  addProseMirrorPlugins() {
+    const editor = this.editor;
+
+    return [
+      new Plugin({
+        key: new PluginKey('gapClickHandler'),
+        props: {
+          handleClickOn(view, pos, node, nodePos, event) {
+            // Detect clicks in the margin between two adjacent tables (or other
+            // isolating blocks). When the click lands on a table but the mouse Y
+            // is actually in the CSS margin gap, insert a paragraph between them.
+            const dom = view.domAtPos(nodePos);
+            const blockDom = dom.node instanceof HTMLElement
+              ? dom.node
+              : dom.node.parentElement;
+            if (!blockDom) return false;
+
+            const wrapper = blockDom.closest('.tableWrapper') || blockDom.closest('table');
+            if (!wrapper) return false;
+
+            const rect = wrapper.getBoundingClientRect();
+            const clickY = event.clientY;
+
+            // Click is in the bottom margin — check if there's an adjacent table below
+            if (clickY > rect.bottom) {
+              const $pos = view.state.doc.resolve(nodePos);
+              const afterPos = $pos.after($pos.depth);
+              const nodeAfter = view.state.doc.nodeAt(afterPos);
+              if (nodeAfter) {
+                // Insert paragraph between this block and the next
+                editor.chain()
+                  .insertContentAt(afterPos, { type: 'paragraph' })
+                  .setTextSelection(afterPos + 1)
+                  .focus()
+                  .run();
+                return true;
+              }
+            }
+
+            // Click is in the top margin — check if there's an adjacent table above
+            if (clickY < rect.top) {
+              const $pos = view.state.doc.resolve(nodePos);
+              const beforePos = $pos.before($pos.depth);
+              if (beforePos > 0) {
+                editor.chain()
+                  .insertContentAt(beforePos, { type: 'paragraph' })
+                  .setTextSelection(beforePos + 1)
+                  .focus()
+                  .run();
+                return true;
+              }
+            }
+
+            return false;
+          },
+        },
+      }),
+    ];
   },
 });

@@ -8,8 +8,17 @@ import { Extension } from '@tiptap/core';
 import { PluginKey } from '@tiptap/pm/state';
 import Suggestion, { SuggestionOptions, SuggestionProps } from '@tiptap/suggestion';
 import { Editor, Range } from '@tiptap/core';
-import { TableSizePicker } from '../components/TableSizePicker';
-import { LinkPicker } from '../components/LinkPicker';
+import { createElement, type ReactNode } from 'react';
+import { createRoot, Root } from 'react-dom/client';
+import {
+  Text, Heading1, Heading2, Heading3, Heading4,
+  List, ListOrdered, ListTodo, Quote, Code, Minus,
+  Table, Image, LayoutTemplate, Network, ArrowRightLeft, Link, FileText,
+} from 'lucide';
+import { LucideIcon } from '../components/LucideIcon';
+import { SlashCommandMenu, SlashCommandMenuRef } from '../components/SlashCommandMenu';
+import { TableSizePicker, type TableSize } from '../components/TableSizePicker';
+import { LinkPicker, type LinkData } from '../components/LinkPicker';
 
 /**
  * Template interface (matches src/types/index.ts)
@@ -28,9 +37,9 @@ export interface Template {
 export interface SlashCommandItem {
   title: string;
   description: string;
-  icon: string;
+  icon: ReactNode;
   searchTerms: string[];
-  category?: 'blocks' | 'templates';
+  category?: 'style' | 'lists' | 'blocks' | 'media' | 'templates';
   command: (params: { editor: Editor; range: Range }) => void;
 }
 
@@ -83,7 +92,7 @@ function templateToCommandItem(template: Template): SlashCommandItem {
   return {
     title: template.name,
     description: template.description || 'Insert template',
-    icon: template.icon || '📄',
+    icon: template.icon || slashIcon(FileText),
     searchTerms: [
       template.name.toLowerCase(),
       template.id.toLowerCase(),
@@ -106,13 +115,40 @@ function templateToCommandItem(template: Template): SlashCommandItem {
 }
 
 /**
+ * Create a LucideIcon ReactNode for use in slash command items
+ */
+const slashIcon = (icon: import('lucide').IconNode): ReactNode =>
+  createElement(LucideIcon, { icon, size: 18 });
+
+const ICON = {
+  text:         slashIcon(Text),
+  heading1:     slashIcon(Heading1),
+  heading2:     slashIcon(Heading2),
+  heading3:     slashIcon(Heading3),
+  heading4:     slashIcon(Heading4),
+  bulletList:   slashIcon(List),
+  numberedList: slashIcon(ListOrdered),
+  taskList:     slashIcon(ListTodo),
+  quote:        slashIcon(Quote),
+  codeBlock:    slashIcon(Code),
+  divider:      slashIcon(Minus),
+  table:        slashIcon(Table),
+  image:        slashIcon(Image),
+  mermaid:      slashIcon(LayoutTemplate),
+  flowchart:    slashIcon(Network),
+  sequence:     slashIcon(ArrowRightLeft),
+  link:         slashIcon(Link),
+};
+
+/**
  * Default slash commands
  */
 export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Text',
     description: 'Plain text paragraph',
-    icon: '¶',
+    icon: ICON.text,
+    category: 'style',
     searchTerms: ['text', 'paragraph', 'p'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setParagraph().run();
@@ -121,7 +157,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Heading 1',
     description: 'Large section heading',
-    icon: 'H1',
+    icon: ICON.heading1,
+    category: 'style',
     searchTerms: ['h1', 'heading1', 'title', 'large'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run();
@@ -130,7 +167,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Heading 2',
     description: 'Medium section heading',
-    icon: 'H2',
+    icon: ICON.heading2,
+    category: 'style',
     searchTerms: ['h2', 'heading2', 'subtitle'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run();
@@ -139,16 +177,28 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Heading 3',
     description: 'Small section heading',
-    icon: 'H3',
+    icon: ICON.heading3,
+    category: 'style',
     searchTerms: ['h3', 'heading3'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run();
     },
   },
   {
+    title: 'Heading 4',
+    description: 'Smallest section heading',
+    icon: ICON.heading4,
+    category: 'style',
+    searchTerms: ['h4', 'heading4'],
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setHeading({ level: 4 }).run();
+    },
+  },
+  {
     title: 'Bullet List',
     description: 'Unordered list',
-    icon: '•',
+    icon: ICON.bulletList,
+    category: 'lists',
     searchTerms: ['bullet', 'ul', 'unordered', 'list'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleBulletList().run();
@@ -157,7 +207,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Numbered List',
     description: 'Ordered list',
-    icon: '1.',
+    icon: ICON.numberedList,
+    category: 'lists',
     searchTerms: ['numbered', 'ol', 'ordered', 'list'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleOrderedList().run();
@@ -166,7 +217,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Task List',
     description: 'Checklist with checkboxes',
-    icon: '☐',
+    icon: ICON.taskList,
+    category: 'lists',
     searchTerms: ['task', 'todo', 'checkbox', 'checklist'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleTaskList().run();
@@ -175,7 +227,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Quote',
     description: 'Block quote',
-    icon: '"',
+    icon: ICON.quote,
+    category: 'blocks',
     searchTerms: ['quote', 'blockquote', 'citation'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setBlockquote().run();
@@ -184,7 +237,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Code Block',
     description: 'Fenced code block',
-    icon: '<>',
+    icon: ICON.codeBlock,
+    category: 'blocks',
     searchTerms: ['code', 'codeblock', 'pre', 'programming'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setCodeBlock().run();
@@ -193,7 +247,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Divider',
     description: 'Horizontal rule',
-    icon: '—',
+    icon: ICON.divider,
+    category: 'blocks',
     searchTerms: ['divider', 'hr', 'rule', 'line', 'separator'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHorizontalRule().run();
@@ -202,7 +257,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Table',
     description: 'Insert a table (pick size)',
-    icon: '⊞',
+    icon: ICON.table,
+    category: 'blocks',
     searchTerms: ['table', 'grid'],
     command: ({ editor, range }) => {
       // Delete the slash command text first
@@ -213,52 +269,59 @@ export const defaultCommands: SlashCommandItem[] = [
       const coords = view.coordsAtPos(editor.state.selection.from);
       const rect = new DOMRect(coords.left, coords.top, 0, coords.bottom - coords.top);
 
-      // Show table size picker
-      const picker = new TableSizePicker();
-      picker.show({
-        rect,
-        onSelect: (size) => {
-          editor
-            .chain()
-            .focus()
-            .insertTable({ rows: size.rows, cols: size.cols, withHeaderRow: true })
-            .run();
+      // Mount React TableSizePicker
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = createRoot(container);
 
-          // Ensure there's a paragraph after the table so user can click/navigate there
-          // Use setTimeout to let the editor state update after insertTable
-          setTimeout(() => {
-            const { state } = editor;
-            const { $from } = state.selection;
+      const cleanup = () => {
+        root.unmount();
+        container.remove();
+      };
 
-            // Find the table we just inserted
-            for (let depth = $from.depth; depth > 0; depth--) {
-              if ($from.node(depth).type.name === 'table') {
-                const tableEnd = $from.after(depth);
-                const nodeAfter = state.doc.nodeAt(tableEnd);
-                if (!nodeAfter || nodeAfter.type.name !== 'paragraph') {
-                  editor.chain()
-                    .insertContentAt(tableEnd, { type: 'paragraph' })
-                    .run();
-                }
-                break;
+      const onSelect = (size: TableSize) => {
+        editor
+          .chain()
+          .focus()
+          .insertTable({ rows: size.rows, cols: size.cols, withHeaderRow: true })
+          .run();
+
+        // Ensure there's a paragraph after the table so user can click/navigate there
+        setTimeout(() => {
+          const { state } = editor;
+          const { $from } = state.selection;
+
+          for (let depth = $from.depth; depth > 0; depth--) {
+            if ($from.node(depth).type.name === 'table') {
+              const tableEnd = $from.after(depth);
+              const nodeAfter = state.doc.nodeAt(tableEnd);
+              if (!nodeAfter || nodeAfter.type.name !== 'paragraph') {
+                editor.chain()
+                  .insertContentAt(tableEnd, { type: 'paragraph' })
+                  .run();
               }
+              break;
             }
-          }, 0);
+          }
+        }, 0);
 
-          picker.destroy();
-        },
-        onCancel: () => {
-          editor.chain().focus().run();
-          picker.destroy();
-        },
-      });
+        cleanup();
+      };
+
+      const onCancel = () => {
+        editor.chain().focus().run();
+        cleanup();
+      };
+
+      root.render(createElement(TableSizePicker, { rect, onSelect, onCancel }));
     },
   },
   {
     title: 'Image',
-    description: 'Insert an image',
-    icon: '🖼',
-    searchTerms: ['image', 'img', 'picture', 'photo'],
+    description: 'Insert or upload an image',
+    icon: ICON.image,
+    category: 'media',
+    searchTerms: ['image', 'img', 'picture', 'photo', 'upload'],
     command: ({ editor, range }) => {
       editor
         .chain()
@@ -268,13 +331,12 @@ export const defaultCommands: SlashCommandItem[] = [
         .run();
 
       // The image will be inserted with empty src, and the node view
-      // will show the edit field. User can then type the path.
-      // We need to select the image node to enter edit mode.
-      // Use setTimeout to let the node be inserted first.
+      // will show the drop zone UI for uploading/linking an image.
+      // Select the node so the drop zone is interactive.
       setTimeout(() => {
         const { state } = editor;
         const { selection } = state;
-        const pos = selection.from - 1; // Position of the just-inserted image
+        const pos = selection.from - 1;
 
         if (pos >= 0) {
           const node = state.doc.nodeAt(pos);
@@ -288,7 +350,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Mermaid Diagram',
     description: 'Insert a mermaid diagram',
-    icon: '◇',
+    icon: ICON.mermaid,
+    category: 'media',
     searchTerms: ['mermaid', 'diagram', 'flowchart', 'chart', 'graph'],
     command: ({ editor, range }) => {
       editor
@@ -302,7 +365,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Flowchart',
     description: 'Mermaid flowchart diagram',
-    icon: '⬡',
+    icon: ICON.flowchart,
+    category: 'media',
     searchTerms: ['flowchart', 'flow', 'diagram', 'mermaid'],
     command: ({ editor, range }) => {
       editor
@@ -316,7 +380,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Sequence Diagram',
     description: 'Mermaid sequence diagram',
-    icon: '⇄',
+    icon: ICON.sequence,
+    category: 'media',
     searchTerms: ['sequence', 'diagram', 'mermaid', 'interaction'],
     command: ({ editor, range }) => {
       editor
@@ -330,7 +395,8 @@ export const defaultCommands: SlashCommandItem[] = [
   {
     title: 'Link',
     description: 'Link to file or URL',
-    icon: '🔗',
+    icon: ICON.link,
+    category: 'media',
     searchTerms: ['link', 'url', 'file', 'document', 'reference'],
     command: ({ editor, range }) => {
       const { view } = editor;
@@ -344,37 +410,41 @@ export const defaultCommands: SlashCommandItem[] = [
       // Freeze the editor to prevent any changes while picker is open
       editor.setEditable(false);
 
-      const picker = new LinkPicker();
-      picker.show({
-        rect,
-        onSelect: (linkData: { text: string; href: string }) => {
-          // Re-enable editor before making changes
-          editor.setEditable(true);
+      // Mount React LinkPicker
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = createRoot(container);
 
-          // Use setTimeout to ensure editor is fully re-enabled before inserting
-          setTimeout(() => {
-            editor
-              .chain()
-              .focus()
-              .insertContentAt(insertPos, {
-                type: 'text',
-                marks: [{ type: 'link', attrs: { href: linkData.href } }],
-                text: linkData.text,
-              })
-              .run();
-          }, 0);
+      const cleanup = () => {
+        root.unmount();
+        container.remove();
+      };
 
-          picker.destroy();
-        },
-        onCancel: () => {
-          // Re-enable editor
-          editor.setEditable(true);
-          setTimeout(() => {
-            editor.chain().focus().run();
-          }, 0);
-          picker.destroy();
-        },
-      });
+      const onSelect = (linkData: LinkData) => {
+        editor.setEditable(true);
+        setTimeout(() => {
+          editor
+            .chain()
+            .focus()
+            .insertContentAt(insertPos, {
+              type: 'text',
+              marks: [{ type: 'link', attrs: { href: linkData.href } }],
+              text: linkData.text,
+            })
+            .run();
+        }, 0);
+        cleanup();
+      };
+
+      const onCancel = () => {
+        editor.setEditable(true);
+        setTimeout(() => {
+          editor.chain().focus().run();
+        }, 0);
+        cleanup();
+      };
+
+      root.render(createElement(LinkPicker, { rect, onSelect, onCancel }));
     },
   },
 ];
@@ -385,173 +455,51 @@ export const defaultCommands: SlashCommandItem[] = [
 export const SlashCommandPluginKey = new PluginKey('slashCommand');
 
 /**
- * Slash Command Menu - vanilla JS component
+ * Position the menu container relative to the cursor
  */
-class SlashCommandMenu {
-  private element: HTMLElement;
-  private items: SlashCommandItem[] = [];
-  private selectedIndex = 0;
-  private command: ((item: SlashCommandItem) => void) | null = null;
-
-  constructor() {
-    this.element = document.createElement('div');
-    this.element.className = 'slash-command-menu';
-    document.body.appendChild(this.element);
+function updateMenuPosition(
+  element: HTMLElement,
+  clientRect: (() => DOMRect | null) | null
+): void {
+  if (!clientRect) {
+    element.style.display = 'none';
+    return;
   }
 
-  update(props: {
-    items: SlashCommandItem[];
-    command: (item: SlashCommandItem) => void;
-    clientRect: (() => DOMRect | null) | null;
-  }) {
-    this.items = props.items;
-    this.command = props.command;
-    this.selectedIndex = 0;
-
-    this.render();
-    this.updatePosition(props.clientRect);
+  const rect = clientRect();
+  if (!rect) {
+    element.style.display = 'none';
+    return;
   }
 
-  private render() {
-    if (this.items.length === 0) {
-      this.element.innerHTML = `
-        <div class="slash-command-empty">No results</div>
-      `;
-      return;
-    }
+  element.style.display = 'block';
 
-    // Group items by category
-    const blockItems = this.items.filter((item) => item.category !== 'templates');
-    const templateItems = this.items.filter((item) => item.category === 'templates');
+  // Position below the cursor
+  const menuRect = element.getBoundingClientRect();
+  const { innerHeight, innerWidth } = window;
 
-    let html = '';
-    let globalIndex = 0;
+  let top = rect.bottom + 8;
+  let left = rect.left;
 
-    // Render block items
-    if (blockItems.length > 0) {
-      html += this.renderItems(blockItems, globalIndex);
-      globalIndex += blockItems.length;
-    }
-
-    // Render template items with category header
-    if (templateItems.length > 0) {
-      if (blockItems.length > 0) {
-        html += '<div class="slash-command-separator"></div>';
-      }
-      html += '<div class="slash-command-category">Templates</div>';
-      html += this.renderItems(templateItems, globalIndex);
-    }
-
-    this.element.innerHTML = html;
-
-    // Add click handlers
-    this.element.querySelectorAll('.slash-command-item').forEach((el) => {
-      el.addEventListener('click', () => {
-        const index = parseInt(el.getAttribute('data-index') || '0', 10);
-        this.selectItem(index);
-      });
-    });
+  // If menu overflows the bottom, flip above cursor
+  if (top + menuRect.height > innerHeight - 20) {
+    top = rect.top - menuRect.height - 8;
   }
 
-  private renderItems(items: SlashCommandItem[], startIndex: number): string {
-    return items
-      .map(
-        (item, i) => `
-        <button
-          class="slash-command-item ${startIndex + i === this.selectedIndex ? 'is-selected' : ''}"
-          data-index="${startIndex + i}"
-        >
-          <span class="slash-command-icon">${item.icon}</span>
-          <div class="slash-command-content">
-            <span class="slash-command-title">${item.title}</span>
-            <span class="slash-command-description">${item.description}</span>
-          </div>
-        </button>
-      `
-      )
-      .join('');
+  // Never go above the viewport
+  if (top < 8) {
+    top = 8;
   }
 
-  private updatePosition(clientRect: (() => DOMRect | null) | null) {
-    if (!clientRect) {
-      this.element.style.display = 'none';
-      return;
-    }
-
-    const rect = clientRect();
-    if (!rect) {
-      this.element.style.display = 'none';
-      return;
-    }
-
-    this.element.style.display = 'block';
-
-    // Position below the cursor
-    const menuRect = this.element.getBoundingClientRect();
-    const { innerHeight, innerWidth } = window;
-
-    let top = rect.bottom + 8;
-    let left = rect.left;
-
-    // Flip up if near bottom
-    if (top + menuRect.height > innerHeight - 20) {
-      top = rect.top - menuRect.height - 8;
-    }
-
-    // Keep within horizontal bounds
-    if (left + menuRect.width > innerWidth - 20) {
-      left = innerWidth - menuRect.width - 20;
-    }
-
-    this.element.style.top = `${top}px`;
-    this.element.style.left = `${left}px`;
+  // Keep within horizontal bounds
+  if (left + menuRect.width > innerWidth - 20) {
+    left = innerWidth - menuRect.width - 20;
   }
 
-  onKeyDown(event: KeyboardEvent): boolean {
-    if (event.key === 'ArrowDown') {
-      this.selectedIndex = (this.selectedIndex + 1) % this.items.length;
-      this.render();
-      return true;
-    }
-
-    if (event.key === 'ArrowUp') {
-      this.selectedIndex =
-        (this.selectedIndex - 1 + this.items.length) % this.items.length;
-      this.render();
-      return true;
-    }
-
-    if (event.key === 'Enter') {
-      this.selectItem(this.selectedIndex);
-      return true;
-    }
-
-    if (event.key === 'Escape') {
-      this.hide();
-      return true;
-    }
-
-    return false;
-  }
-
-  private selectItem(index: number) {
-    const item = this.items[index];
-    if (item && this.command) {
-      this.command(item);
-    }
-  }
-
-  show() {
-    this.element.style.display = 'block';
-  }
-
-  hide() {
-    this.element.style.display = 'none';
-  }
-
-  destroy() {
-    this.element.remove();
-  }
+  element.style.top = `${top}px`;
+  element.style.left = `${left}px`;
+  element.style.maxHeight = `${innerHeight - top - 20}px`;
+  element.style.overflow = 'auto';
 }
 
 /**
@@ -566,6 +514,7 @@ export const SlashCommand = Extension.create({
         char: '/',
         startOfLine: false,
         pluginKey: SlashCommandPluginKey,
+        decorationClass: 'slash-command-decoration',
         items: ({ query }: { query: string }) => {
           const search = query.toLowerCase();
 
@@ -591,41 +540,71 @@ export const SlashCommand = Extension.create({
           return [...filteredCommands, ...templateCommands];
         },
         render: () => {
-          let menu: SlashCommandMenu | null = null;
+          let container: HTMLElement | null = null;
+          let root: Root | null = null;
+          let menuRef: SlashCommandMenuRef | null = null;
+          let currentProps: SuggestionProps<SlashCommandItem> | null = null;
+
+          const renderMenu = (props: SuggestionProps<SlashCommandItem>) => {
+            if (!container || !root) return;
+            currentProps = props;
+
+            root.render(
+              createElement(SlashCommandMenu, {
+                ref: (ref: SlashCommandMenuRef | null) => {
+                  menuRef = ref;
+                },
+                items: props.items,
+                editor: props.editor,
+                range: props.range,
+                onSelect: (item: SlashCommandItem) => {
+                  props.command(item);
+                },
+                onClose: () => {
+                  // Delete the slash command range to properly exit the suggestion
+                  if (currentProps) {
+                    currentProps.editor
+                      .chain()
+                      .focus()
+                      .deleteRange(currentProps.range)
+                      .run();
+                  }
+                },
+              })
+            );
+
+            // Position after React paints (createRoot renders async)
+            requestAnimationFrame(() => {
+              if (container) {
+                updateMenuPosition(container, props.clientRect);
+              }
+            });
+          };
 
           return {
             onStart: (props: SuggestionProps<SlashCommandItem>) => {
-              menu = new SlashCommandMenu();
-              menu.update({
-                items: props.items,
-                command: (item) => {
-                  props.command(item);
-                },
-                clientRect: props.clientRect,
-              });
+              container = document.createElement('div');
+              container.className = 'slash-command-menu-container';
+              document.body.appendChild(container);
+              root = createRoot(container);
+
+              renderMenu(props);
             },
 
             onUpdate: (props: SuggestionProps<SlashCommandItem>) => {
-              menu?.update({
-                items: props.items,
-                command: (item) => {
-                  props.command(item);
-                },
-                clientRect: props.clientRect,
-              });
+              renderMenu(props);
             },
 
             onKeyDown: (props: { event: KeyboardEvent }) => {
-              if (props.event.key === 'Escape') {
-                menu?.hide();
-                return true;
-              }
-              return menu?.onKeyDown(props.event) || false;
+              return menuRef?.onKeyDown(props.event) || false;
             },
 
             onExit: () => {
-              menu?.destroy();
-              menu = null;
+              root?.unmount();
+              container?.remove();
+              root = null;
+              container = null;
+              menuRef = null;
             },
           };
         },

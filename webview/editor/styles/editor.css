@@ -1,6 +1,12 @@
 /* PM Toolkit - Editor Styles */
 /* Uses VS Code CSS variables for theme integration */
 
+:root {
+  /* Accent color — uses the theme's link/interactive color (always vibrant across themes) */
+  --pmtoolkit-accent: var(--vscode-textLink-foreground, #007acc);
+  --pmtoolkit-accent-bg: color-mix(in srgb, var(--pmtoolkit-accent) 15%, transparent);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -20,7 +26,7 @@ html, body {
   min-height: 100vh;
   max-width: 900px;
   margin: 0 auto;
-  padding: 24px 20px;
+  padding: 24px 40px 24px 20px;
 }
 
 /* ===== Tiptap ProseMirror Editor ===== */
@@ -164,10 +170,10 @@ html, body {
 }
 
 .ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   cursor: pointer;
-  accent-color: var(--vscode-checkbox-foreground, var(--vscode-focusBorder));
+  accent-color: var(--pmtoolkit-accent);
   margin: 0;
 }
 
@@ -184,7 +190,7 @@ html, body {
   padding: 0.25em 1em;
   border-left: 3px solid var(--vscode-textBlockQuote-border, var(--vscode-focusBorder));
   background-color: var(--vscode-textBlockQuote-background, transparent);
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
 }
 
 .ProseMirror blockquote p {
@@ -228,34 +234,37 @@ html, body {
 
 .ProseMirror hr {
   border: none;
-  border-top: 1px solid var(--vscode-panel-border);
+  border-top: 1px solid var(--vscode-panel-border, rgba(127, 127, 127, 0.25));
   margin: 1em 0;
 }
 
 /* ===== Tables ===== */
 
+.ProseMirror .tableWrapper {
+  overflow-x: auto;
+  margin: 0.5em 0 1em;
+  width: calc(100% - 24px);
+}
+
 .ProseMirror table {
   border-collapse: collapse;
-  width: calc(100% - 24px);
-  margin: 0.5em 0;
-  margin-bottom: 1em;
-  overflow: hidden;
   table-layout: fixed;
+  min-width: 100%;
 }
 
 /* Ensure clickable area after tables */
-.ProseMirror table + p {
+.ProseMirror .tableWrapper + p {
   min-height: 1.5em;
 }
 
-/* When table is last child, add pseudo-element for clicking */
-.ProseMirror table:last-child {
+/* When table is last child, add extra space for clicking */
+.ProseMirror .tableWrapper:last-child {
   margin-bottom: 2em;
 }
 
 .ProseMirror td,
 .ProseMirror th {
-  border: 1px solid var(--vscode-panel-border);
+  border: 1px solid var(--vscode-panel-border, rgba(127, 127, 127, 0.25));
   padding: 6px 10px;
   text-align: left;
   vertical-align: top;
@@ -274,12 +283,12 @@ html, body {
 }
 
 .ProseMirror tr {
-  border-bottom: 1px solid var(--vscode-panel-border);
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(127, 127, 127, 0.25));
 }
 
 /* Selected cells */
 .ProseMirror .selectedCell {
-  background-color: var(--vscode-editor-selectionBackground);
+  background-color: var(--pmtoolkit-accent-bg);
 }
 
 /* Table resize handle */
@@ -289,147 +298,416 @@ html, body {
   top: 0;
   bottom: 0;
   width: 4px;
-  background-color: var(--vscode-focusBorder);
+  background-color: var(--pmtoolkit-accent);
   cursor: col-resize;
 }
 
-/* Table add row/column buttons (fixed position, appended to body) */
-.table-add-column-btn,
-.table-add-row-btn {
+/* Table add row/column bars (fixed position, appended to body) */
+.table-add-row-bar {
+  position: fixed;
+  height: 14px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.12));
+  color: var(--vscode-editor-foreground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  z-index: 1000;
+}
+
+.table-add-column-bar {
+  position: fixed;
+  width: 14px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.12));
+  color: var(--vscode-editor-foreground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  z-index: 1000;
+}
+
+.table-add-row-bar svg,
+.table-add-column-bar svg {
+  width: 10px;
+  height: 10px;
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+/* Show bars on table hover */
+.table-add-row-bar.visible,
+.table-add-column-bar.visible {
+  opacity: 0.6;
+}
+
+/* Highlight on bar hover */
+.table-add-row-bar:hover,
+.table-add-column-bar:hover {
+  opacity: 1;
+  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.15));
+}
+
+/* Row/column grip handles */
+.table-row-grip,
+.table-col-grip {
   position: fixed;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
   padding: 0;
-  border: 1.5px solid var(--vscode-panel-border);
-  border-radius: 50%;
-  background: var(--vscode-editor-background);
-  color: var(--vscode-descriptionForeground);
-  cursor: pointer;
+  border: none;
+  background: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.12));
+  color: var(--vscode-editor-foreground);
+  cursor: grab;
   opacity: 0;
-  transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
   z-index: 1000;
 }
 
-.table-add-column-btn svg,
-.table-add-row-btn svg {
+.table-row-grip {
   width: 10px;
+  border-radius: 5px;
+}
+
+.table-col-grip {
   height: 10px;
-  stroke: currentColor;
+  border-radius: 5px;
 }
 
-/* Show button when near edge */
-.table-add-column-btn.visible,
-.table-add-row-btn.visible {
-  opacity: 0.6;
+.table-row-grip svg,
+.table-col-grip svg {
+  flex-shrink: 0;
 }
 
-/* Highlight on hover */
-.table-add-column-btn:hover,
-.table-add-row-btn:hover {
+.table-row-grip.visible,
+.table-col-grip.visible { opacity: 0.6; }
+
+.table-row-grip:hover,
+.table-col-grip:hover { opacity: 1; cursor: grab; }
+
+.table-row-grip.active,
+.table-col-grip.active {
   opacity: 1;
-  background: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
-  border-color: var(--vscode-button-background);
+  background: var(--pmtoolkit-accent);
+  color: var(--vscode-button-foreground, #fff);
 }
 
-/* ===== Images (Obsidian-style) ===== */
+.table-row-grip.dragging,
+.table-col-grip.dragging { opacity: 1; cursor: grabbing; }
 
-.ProseMirror img {
+/* Row/column selection highlight overlay */
+.table-selection-highlight {
+  position: fixed;
+  border: 2px solid var(--pmtoolkit-accent);
+  background: color-mix(in srgb, var(--pmtoolkit-accent) 8%, transparent);
+  border-radius: 4px;
+  z-index: 999;
+  pointer-events: none;
+}
+
+/* Drop indicator line */
+.table-drop-indicator {
+  position: fixed;
+  background: var(--pmtoolkit-accent);
+  z-index: 1001;
+  pointer-events: none;
+  border-radius: 1px;
+}
+
+.table-drop-indicator.row { height: 3px; }
+
+.table-drop-indicator.column { width: 3px; }
+
+/* Grip context menu */
+.table-grip-menu {
+  position: fixed;
+  min-width: 150px;
+  background-color: var(--vscode-menu-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 3px;
+  z-index: 1002;
+}
+
+.table-grip-menu-item {
+  display: block;
+  width: 100%;
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  color: var(--vscode-menu-foreground, var(--vscode-foreground, var(--vscode-editor-foreground)));
+  font-family: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.table-grip-menu-item:hover:not(.disabled) {
+  background-color: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
+  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground, var(--vscode-editor-foreground)));
+}
+
+.table-grip-menu-item.disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.table-grip-menu-item.checked::before {
+  content: '✓';
+  margin-right: 6px;
+  font-size: 11px;
+}
+
+.table-grip-menu-separator {
+  height: 1px;
+  background-color: var(--vscode-menu-border, var(--vscode-panel-border));
+  margin: 3px 0;
+}
+
+/* ===== Images ===== */
+
+/* NodeView wrapper */
+.image-node-view {
+  display: block;
+  position: relative;
+  margin: 8px 0;
+}
+
+/* Alignment via data attribute */
+.image-node-view[data-text-align="center"] {
+  text-align: center;
+}
+.image-node-view[data-text-align="center"] .image-container {
+  margin: 0 auto;
+}
+.image-node-view[data-text-align="right"] {
+  text-align: right;
+}
+.image-node-view[data-text-align="right"] .image-container {
+  margin-left: auto;
+}
+
+/* Image container (holds img + resize handles) */
+.image-container {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.image-container img.editor-image {
+  display: block;
   max-width: 100%;
   height: auto;
   border-radius: 4px;
-}
-
-.image-node-view {
-  display: inline-block;
-  position: relative;
-  /* Add generous padding for click targets between/around images */
-  padding: 4px 8px 4px 0;
-  vertical-align: bottom;
-  /* Prevent images from touching */
-  margin-bottom: 4px;
-}
-
-/* Clickable area extends beyond the visible image */
-.image-node-view::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 8px;
-  cursor: text;
-  z-index: 1;
-}
-
-/* Visual indicator when hovering the gap between images */
-.image-node-view:not(.is-editing):not(.is-selected):hover::before {
-  background: linear-gradient(to right, transparent, var(--vscode-editor-selectionBackground));
-  opacity: 0.3;
-  border-radius: 0 2px 2px 0;
-}
-
-.image-node-view img {
   cursor: pointer;
   transition: opacity 0.15s ease;
-  display: block;
-  /* Ensure consistent sizing */
-  max-width: 100%;
-  height: auto;
 }
 
-.image-node-view img:hover {
+.image-container img.editor-image:hover {
   opacity: 0.9;
 }
 
-.image-node-view.is-selected img,
-.image-node-view.is-editing img {
+/* Selected state */
+.image-node-view.is-selected .image-container {
   outline: 2px solid var(--vscode-focusBorder);
   outline-offset: 2px;
-}
-
-/* When editing, expand to show the edit field properly */
-.image-node-view.is-editing {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* Markdown edit field - shown above image when editing */
-.image-markdown-edit {
-  display: none;
-  font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, Menlo, Consolas, monospace);
-  font-size: 0.85em;
-  background-color: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.1));
-  padding: 6px 10px;
   border-radius: 4px;
-  color: var(--vscode-textLink-foreground);
-  outline: none;
-  white-space: nowrap;
-  overflow-x: auto;
-  max-width: 100%;
 }
 
-/* When editing, show markdown above the image */
-.image-node-view.is-editing .image-markdown-edit {
-  display: block;
+/* Resize handles */
+.image-resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--vscode-focusBorder);
+  border-radius: 50%;
+  background: var(--vscode-editor-background);
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s;
 }
+.image-node-view.is-selected .image-resize-handle {
+  opacity: 1;
+}
+.image-resize-nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.image-resize-ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.image-resize-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.image-resize-se { bottom: -5px; right: -5px; cursor: nwse-resize; }
 
-.image-placeholder-text {
+/* Drop Zone */
+.image-drop-zone {
+  border: 2px dashed var(--vscode-panel-border, rgba(128,128,128,0.4));
+  border-radius: 8px;
+  padding: 32px 24px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.image-drop-zone:hover,
+.image-drop-zone.is-drag-over {
+  border-color: var(--vscode-focusBorder);
+  background: var(--vscode-list-hoverBackground);
+}
+.image-drop-zone-icon {
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+.image-drop-zone-icon svg {
+  width: 32px;
+  height: 32px;
+}
+.image-drop-zone-text {
   font-size: 13px;
+  margin-bottom: 12px;
+}
+.image-drop-zone-url-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+.image-drop-zone-input {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.4));
+  background: var(--vscode-input-background, var(--vscode-editor-background));
+  color: var(--vscode-input-foreground, var(--vscode-foreground, var(--vscode-editor-foreground)));
+  border-radius: 6px;
+  width: 280px;
+  font-family: inherit;
+}
+.image-drop-zone-input:focus {
+  outline: none;
+  border-color: var(--vscode-focusBorder);
+}
+.image-drop-zone-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+.image-drop-zone-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  border: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.4));
+  background: var(--vscode-button-secondaryBackground, var(--vscode-editor-background));
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground, var(--vscode-editor-foreground)));
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.image-drop-zone-btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground, var(--vscode-list-hoverBackground));
+}
+
+/* Popover Toolbar */
+.image-popover-toolbar {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border, rgba(128,128,128,0.35)));
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 20;
+  white-space: nowrap;
+}
+.image-popover-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  padding: 0;
+}
+.image-popover-btn:hover {
+  background: var(--vscode-list-hoverBackground);
+  opacity: 1;
+}
+.image-popover-btn.is-active {
+  background: var(--vscode-list-activeSelectionBackground);
+  color: var(--vscode-list-activeSelectionForeground);
+  opacity: 1;
+}
+.image-popover-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.image-popover-separator {
+  width: 1px;
+  background: var(--vscode-panel-border, rgba(128,128,128,0.3));
+  margin: 4px 2px;
+}
+
+/* Caption */
+.image-caption {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 6px 12px;
+  border: none !important;
+  background: transparent;
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  font-weight: 400 !important;
+  font-style: italic;
+  font-family: inherit;
+  text-align: center;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.image-caption:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.image-caption::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+  font-style: italic;
+  opacity: 0.5;
 }
 
 /* ===== Selection ===== */
 
 .ProseMirror ::selection {
-  background-color: var(--vscode-editor-selectionBackground);
+  background-color: var(--pmtoolkit-accent-bg);
 }
 
 .ProseMirror .ProseMirror-selectednode {
-  outline: 2px solid var(--vscode-focusBorder);
+  outline: 2px solid var(--pmtoolkit-accent);
+}
+/* Images and mermaid nodes handle their own selection styling */
+.ProseMirror .image-node-view.ProseMirror-selectednode,
+.ProseMirror .ProseMirror-selectednode .image-node-view,
+.ProseMirror .ProseMirror-selectednode:has(.image-node-view),
+.ProseMirror .mermaid-node.ProseMirror-selectednode,
+.ProseMirror .ProseMirror-selectednode .mermaid-node,
+.ProseMirror .ProseMirror-selectednode:has(.mermaid-node) {
+  outline: none !important;
 }
 
 /* ===== Gap cursor ===== */
@@ -464,66 +742,81 @@ html, body {
 
 .ProseMirror .ProseMirror-dropcursor {
   position: absolute;
-  background-color: var(--vscode-focusBorder);
+  background-color: var(--pmtoolkit-accent);
   height: 2px;
+}
+
+/* ===== Slash Command Inline Decoration ===== */
+
+.slash-command-decoration {
+  background-color: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.1));
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+.slash-command-decoration.is-empty::after {
+  content: 'Filter…';
+  color: var(--vscode-input-placeholderForeground);
+  pointer-events: none;
 }
 
 /* ===== Slash Command Menu ===== */
 
-.slash-command-menu {
+.slash-command-menu-container {
   position: fixed;
   z-index: 9999;
+}
+
+.slash-command-menu {
   background-color: var(--vscode-menu-background, var(--vscode-editor-background));
   border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   max-height: 320px;
-  min-width: 240px;
+  min-width: 200px;
   overflow-y: auto;
-  padding: 6px;
-  display: none;
+  padding: 3px;
 }
 
 .slash-command-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
-  padding: 8px 12px;
+  padding: 4px 8px;
   border: none;
   background: none;
-  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  color: var(--vscode-menu-foreground, var(--vscode-foreground, var(--vscode-editor-foreground)));
   cursor: pointer;
   text-align: left;
-  border-radius: 6px;
+  border-radius: 4px;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .slash-command-item:hover,
 .slash-command-item.is-selected {
   background-color: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
-  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground));
+  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground, var(--vscode-editor-foreground)));
+}
+
+.slash-command-item:hover .slash-command-icon,
+.slash-command-item.is-selected .slash-command-icon {
+  opacity: 1;
 }
 
 .slash-command-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background-color: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.1));
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
+  width: 20px;
   flex-shrink: 0;
+  opacity: 0.5;
 }
 
-.slash-command-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+.slash-command-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .slash-command-title {
@@ -533,34 +826,24 @@ html, body {
   text-overflow: ellipsis;
 }
 
-.slash-command-description {
-  font-size: 11px;
-  color: var(--vscode-descriptionForeground);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .slash-command-empty {
   padding: 12px;
   text-align: center;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   font-size: 13px;
 }
 
 .slash-command-category {
-  padding: 6px 12px 4px;
+  padding: 4px 8px 2px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--vscode-descriptionForeground);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
 }
 
 .slash-command-separator {
   height: 1px;
   background-color: var(--vscode-menu-border, var(--vscode-panel-border));
-  margin: 6px 0;
+  margin: 3px 0;
 }
 
 /* ===== Table Size Picker ===== */
@@ -570,8 +853,8 @@ html, body {
   z-index: 10000;
   background-color: var(--vscode-menu-background, var(--vscode-editor-background));
   border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 12px;
   display: none;
 }
@@ -579,7 +862,7 @@ html, body {
 .table-size-picker-header {
   font-size: 12px;
   font-weight: 500;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   margin-bottom: 10px;
   text-align: center;
 }
@@ -606,13 +889,13 @@ html, body {
 }
 
 .table-size-picker-cell.is-highlighted {
-  background-color: var(--vscode-editor-selectionBackground);
-  border-color: var(--vscode-focusBorder);
+  background-color: var(--pmtoolkit-accent-bg);
+  border-color: var(--pmtoolkit-accent);
 }
 
 .table-size-picker-label {
   font-size: 12px;
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
   margin-top: 10px;
   text-align: center;
   font-weight: 500;
@@ -625,8 +908,8 @@ html, body {
   z-index: 9999;
   background-color: var(--vscode-menu-background, var(--vscode-editor-background));
   border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 280px;
   max-width: 400px;
   max-height: 320px;
@@ -638,7 +921,7 @@ html, body {
   padding: 8px 12px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -651,7 +934,7 @@ html, body {
   padding: 10px 12px;
   border: none;
   background: none;
-  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  color: var(--vscode-menu-foreground, var(--vscode-foreground, var(--vscode-editor-foreground)));
   cursor: pointer;
   text-align: left;
   font-family: inherit;
@@ -661,19 +944,21 @@ html, body {
 .link-picker-item:hover,
 .link-picker-item.is-selected {
   background-color: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
-  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground));
+  color: var(--vscode-menu-selectionForeground, var(--vscode-foreground, var(--vscode-editor-foreground)));
 }
 
 .link-picker-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background-color: var(--vscode-editor-lineHighlightBackground, rgba(127, 127, 127, 0.1));
-  border-radius: 4px;
-  font-size: 14px;
+  width: 20px;
   flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.link-picker-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .link-picker-content {
@@ -693,7 +978,7 @@ html, body {
 
 .link-picker-description {
   font-size: 11px;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -732,7 +1017,7 @@ html, body {
 .link-picker-empty {
   padding: 16px;
   text-align: center;
-  color: var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
   font-size: 13px;
 }
 
@@ -785,7 +1070,7 @@ html, body {
 
 .link-picker-btn-cancel {
   background-color: transparent;
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
 }
 
 .link-picker-btn-cancel:hover {
@@ -961,7 +1246,7 @@ html, body {
 .mermaid-error-message {
   font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, Menlo, Consolas, monospace);
   font-size: 0.85em;
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -1004,13 +1289,10 @@ html, body {
 /* ===== Bubble Menu ===== */
 
 .bubble-menu {
-  position: fixed;
-  z-index: 9999;
-  display: none;
   background-color: var(--vscode-menu-background, var(--vscode-editor-background));
   border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 4px;
 }
 
@@ -1032,7 +1314,7 @@ html, body {
   padding: 6px 8px;
   border: none;
   background: none;
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -1069,7 +1351,7 @@ html, body {
   border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border));
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 4px;
+  padding: 3px;
   min-width: 140px;
   z-index: 10000;
 }
@@ -1077,12 +1359,12 @@ html, body {
 .bubble-menu-dropdown-item {
   display: block;
   width: 100%;
-  padding: 6px 10px;
+  padding: 4px 8px;
   border: none;
   background: none;
-  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  color: var(--vscode-menu-foreground, var(--vscode-foreground, var(--vscode-editor-foreground)));
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12px;
   text-align: left;
   cursor: pointer;
   border-radius: 4px;
@@ -1121,7 +1403,7 @@ html, body {
   padding: 0;
   border: none;
   background: none;
-  color: var(--vscode-foreground);
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
   cursor: pointer;
   border-radius: 4px;
   transition: background-color 0.1s ease, color 0.1s ease;
@@ -1143,4 +1425,342 @@ html, body {
 .bubble-menu-btn svg {
   width: 16px;
   height: 16px;
+}
+
+/* ===== Editor Layout with Sidebar ===== */
+
+#editor-wrapper {
+  position: relative;
+  height: 100%;
+  /* Reserve space for block handles on the left */
+  padding-left: 42px;
+}
+
+/* ===== Block Handle ===== */
+
+.block-handle-container {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 100;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.block-handle-container:hover {
+  opacity: 1;
+}
+
+/* Show handles when hovering near blocks (set via JS positioning) */
+.block-handle-container[style] {
+  opacity: 0.4;
+}
+
+.block-handle-container:hover {
+  opacity: 1;
+}
+
+.block-handle-plus,
+.block-handle-drag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--vscode-descriptionForeground, rgba(127, 127, 127, 0.7));
+  cursor: pointer;
+  border-radius: 20px;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.block-handle-plus svg {
+  width: 12px;
+  height: 12px;
+}
+
+.block-handle-drag svg {
+  width: 8px;
+  height: 12px;
+}
+
+.block-handle-plus:hover,
+.block-handle-drag:hover {
+  background-color: var(--vscode-toolbar-hoverBackground, rgba(127, 127, 127, 0.15));
+  color: var(--vscode-foreground, var(--vscode-editor-foreground));
+}
+
+.block-handle-drag {
+  cursor: grab;
+}
+
+.block-handle-drag:active {
+  cursor: grabbing;
+}
+
+/* Block hover highlight (shown when block handle is visible) */
+.ProseMirror .block-hover {
+  background-color: var(--vscode-editor-hoverHighlightBackground, rgba(127, 127, 127, 0.08));
+  border-radius: 6px;
+}
+/* Image and mermaid nodes handle their own hover/selection styling */
+.ProseMirror .image-node-view.block-hover,
+.ProseMirror .mermaid-node.block-hover,
+.ProseMirror [data-node-view-wrapper].block-hover {
+  background-color: transparent;
+}
+
+/* Block being dragged */
+.ProseMirror .is-dragging {
+  opacity: 0.5;
+}
+
+/* Drop indicator line shown during block drag */
+.block-drop-indicator {
+  position: fixed;
+  height: 2px;
+  background: var(--vscode-focusBorder, #007fd4);
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 200;
+  display: none;
+  transform: translateY(-1px);
+}
+
+/* ===== Document Outline (Minimap Bars + Hover Popover) ===== */
+
+.document-outline {
+  position: fixed;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+}
+
+/* Vertical stack of thin bars (always visible) */
+.outline-bars {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  width: 32px;
+  padding: 8px 6px;
+}
+
+.outline-bar {
+  display: block;
+  height: 3px;
+  border: none;
+  border-radius: 2px;
+  background-color: var(--vscode-editor-foreground);
+  cursor: pointer;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  opacity: 0.35;
+  padding: 0;
+  margin: 0;
+}
+
+.outline-bar:hover {
+  opacity: 0.6;
+  background-color: var(--vscode-focusBorder);
+}
+
+.outline-bar-active {
+  opacity: 0.7;
+  background-color: var(--vscode-focusBorder);
+}
+
+/* Bar widths by heading level */
+.outline-bar-level-1 { width: 100%; }
+.outline-bar-level-2 { width: 75%; }
+.outline-bar-level-3 { width: 55%; }
+.outline-bar-level-4 { width: 40%; }
+.outline-bar-level-5 { width: 30%; }
+.outline-bar-level-6 { width: 25%; }
+
+/* Popover with heading text (appears on hover, to the left of bars) */
+.outline-popover {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 4px;
+  min-width: 140px;
+  max-width: 220px;
+  max-height: 50vh;
+  overflow-y: auto;
+  background-color: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.35)));
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 6px 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.outline-popover-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Individual heading items in popover */
+.outline-item {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--vscode-editor-foreground);
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 3px 12px;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.85;
+  transition: opacity 0.1s ease, background-color 0.1s ease;
+}
+
+.outline-item:hover {
+  opacity: 1;
+  background-color: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.1));
+}
+
+.outline-item-active {
+  opacity: 1;
+  color: var(--pmtoolkit-accent);
+  font-weight: 500;
+}
+
+/* Indent by heading level */
+.outline-item-level-1 { padding-left: 12px; }
+.outline-item-level-2 { padding-left: 24px; }
+.outline-item-level-3 { padding-left: 36px; }
+.outline-item-level-4 { padding-left: 48px; }
+.outline-item-level-5 { padding-left: 60px; }
+.outline-item-level-6 { padding-left: 72px; }
+
+/* Popover scrollbar */
+.outline-popover::-webkit-scrollbar {
+  width: 4px;
+}
+
+.outline-popover::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.outline-popover::-webkit-scrollbar-thumb {
+  background-color: var(--vscode-scrollbarSlider-background);
+  border-radius: 2px;
+}
+
+.outline-popover::-webkit-scrollbar-thumb:hover {
+  background-color: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+/* ===== Dark Theme Contrast Overrides ===== */
+/* Some dark themes (e.g. One Dark Pro Flat) define CSS variables that resolve
+   to low-contrast values. CSS fallbacks don't help because the variables ARE
+   defined — they're just too muted. These overrides use hardcoded rgba()
+   values under .vscode-dark to bypass theme variables entirely. */
+
+/* --- Outline bars (minimap) --- */
+.vscode-dark .outline-bar {
+  opacity: 0.5;
+}
+
+.vscode-dark .outline-bar:hover {
+  background-color: var(--pmtoolkit-accent);
+  opacity: 0.85;
+}
+
+.vscode-dark .outline-bar-active {
+  background-color: var(--pmtoolkit-accent);
+  opacity: 1;
+}
+
+.vscode-dark .outline-item {
+  opacity: 0.9;
+}
+
+/* --- Table borders --- */
+.vscode-dark .ProseMirror td,
+.vscode-dark .ProseMirror th {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.vscode-dark .ProseMirror tr {
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+.vscode-dark .ProseMirror hr {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+/* --- Table grip dots --- */
+.vscode-dark .table-row-grip,
+.vscode-dark .table-col-grip {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--vscode-editor-foreground);
+}
+
+.vscode-dark .table-row-grip:hover,
+.vscode-dark .table-col-grip:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.vscode-dark .table-row-grip.active,
+.vscode-dark .table-col-grip.active {
+  background: var(--pmtoolkit-accent);
+  color: var(--vscode-editor-background, #1e1e1e);
+}
+
+/* --- Table add row/column bars --- */
+.vscode-dark .table-add-row-bar,
+.vscode-dark .table-add-column-bar {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--vscode-editor-foreground);
+}
+
+.vscode-dark .table-add-row-bar:hover,
+.vscode-dark .table-add-column-bar:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* --- Grip context menu --- */
+.vscode-dark .table-grip-menu {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.vscode-dark .table-grip-menu-item {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.vscode-dark .table-grip-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.vscode-dark .table-grip-menu-separator {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Block handles --- */
+.vscode-dark .block-handle-plus,
+.vscode-dark .block-handle-drag {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.vscode-dark .block-handle-plus:hover,
+.vscode-dark .block-handle-drag:hover {
+  color: rgba(255, 255, 255, 0.8);
 }

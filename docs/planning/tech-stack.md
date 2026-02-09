@@ -256,17 +256,14 @@ Viewers (loaded on demand):
 
 ---
 
-## Framework Decision: No React
+## Framework Decision: React 18
 
-For webviews, using **vanilla TypeScript** with Tiptap (which is framework-agnostic):
+The editor webview uses **React 18** with `@tiptap/react`:
 
-**Why no React?**
-1. Tiptap works without React
-2. Smaller bundle size
-3. Simpler build configuration
-4. VS Code webviews don't need React's features
-5. dnd-kit has vanilla JS support
+**Why React was adopted (v0.5.0+):**
+1. `@tiptap/react` provides `ReactNodeViewRenderer` for complex node UIs (images, diagrams)
+2. Component-based architecture for block handles, outlines, popovers, drop zones
+3. React's state management simplifies multi-state components (e.g., image: drop zone → display → selected)
+4. esbuild's JSX support keeps build fast with `jsx: 'automatic'`
 
-**If React was needed later:**
-- Preact would be the choice (3KB vs 40KB)
-- Same API, fraction of the size
+**Bundle impact:** ~40KB gzipped for React + ReactDOM, acceptable for the DX improvement.

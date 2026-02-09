@@ -13,9 +13,14 @@
 | Word Viewer | P1 | Low | ✅ Complete |
 | Excel Viewer | P1 | Low | ✅ Complete |
 | CSV Viewer | P1 | Low | ✅ Complete |
-| Template System | P2 | Medium | Planned |
+| Template System | P2 | Medium | ✅ Complete |
 | Mermaid Diagrams | P2 | Medium | ✅ Complete |
-| Outline Panel | P2 | Low | Planned |
+| Settings Panel | P1 | Medium | ✅ Complete |
+| Bubble Menu | P1 | Medium | ✅ Complete |
+| Block Handles | P1 | Medium | ✅ Complete |
+| Document Outline | P2 | Low | ✅ Complete |
+| Image Resize/Popover | P1 | High | ✅ Complete |
+| Table Drag-to-Reorder | P1 | High | ✅ Complete |
 
 ---
 
@@ -298,19 +303,19 @@ Read-only CSV/TSV viewing with sorting.
 
 ---
 
-## F8: Template System
+## F8: Template System ✅
 
 ### Description
 Reusable content blocks inserted via slash menu.
 
 ### Requirements
 
-- [ ] Configure template folder in settings
-- [ ] Scan folder for `.md` files
-- [ ] Parse YAML frontmatter for metadata
-- [ ] Show templates in slash menu
-- [ ] Insert template content at cursor
-- [ ] Replace variables on insert
+- [x] Configure template folder in settings
+- [x] Scan folder for `.md` files
+- [x] Parse YAML frontmatter for metadata
+- [x] Show templates in slash menu
+- [x] Insert template content at cursor
+- [x] Replace variables on insert
 
 ### Template Format
 
@@ -382,21 +387,79 @@ Render Mermaid diagram code blocks as interactive diagrams.
 
 ---
 
-## F10: Outline Panel
+## F10: Document Outline ✅
 
 ### Description
 Document outline showing heading structure.
 
 ### Requirements
 
-- [ ] Extract H1-H6 headings
-- [ ] Display as collapsible tree
-- [ ] Indent by heading level
-- [ ] Click to scroll to heading
-- [ ] Update on content change
-- [ ] Show/hide toggle
+- [x] Extract H1-H6 headings
+- [x] Horizontal bar style with width indicating heading level
+- [x] Click to scroll to heading
+- [x] Update on content change (via transaction listener)
 
 ### Acceptance Criteria
-1. Outline shows document structure
-2. Clicking navigates to heading
-3. Updates in real-time as you type
+1. ✅ Outline shows document structure
+2. ✅ Clicking navigates to heading
+3. ✅ Updates in real-time as you type
+
+---
+
+## F11: Bubble Menu ✅
+
+### Description
+Floating toolbar on text selection for quick formatting.
+
+### Requirements
+
+- [x] Block type dropdown (Text, H1-H3, lists, quote, code block)
+- [x] Formatting buttons: Bold, Italic, Strikethrough, Inline code
+- [x] Link button with file picker and URL form
+
+---
+
+## F12: Block Handles ✅
+
+### Description
+Drag handle and plus button in the editor gutter for each block.
+
+### Requirements
+
+- [x] Drag handle (⠿) for reordering blocks via ProseMirror native drag
+- [x] Plus button (+) for inserting new blocks via slash command
+- [x] Show on hover, positioned in editor padding zone
+
+---
+
+## F13: Image System ✅
+
+### Description
+Full image management with drop zone, resize, alignment, and VS Code integration.
+
+### Requirements
+
+- [x] Drop zone for empty images (file drop, URL input, browse button)
+- [x] Resize handles with pointer-event-based dragging
+- [x] Popover toolbar for alignment (left/center/right), replace, delete
+- [x] Image captions with toggle
+- [x] Width/alignment persisted as HTML comments in markdown
+- [x] VS Code file picker integration (saveImage, requestFilePicker)
+- [x] Relative path resolution via requestImageUrl
+- [x] `imageAssetsPath` setting
+
+---
+
+## F14: Table Controls ✅
+
+### Description
+Visual controls for table manipulation.
+
+### Requirements
+
+- [x] Full-width/height pill bars for adding rows/columns
+- [x] Persisted column widths with horizontal scroll
+- [x] Row grippers for drag-to-reorder (skip header)
+- [x] Column grippers for drag-to-reorder
+- [x] Drop indicator lines during drag
+- [x] Right-click context menus on grippers (insert/delete row/column)

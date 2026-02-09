@@ -1,7 +1,7 @@
 # Settings Panel Design
 
-**Issue:** #5 - Improve extension settings (COMPLETED)
-**Date:** 2026-02-02
+**Issue:** #5 - Improve extension settings (COMPLETED)\
+**Date:** 2026-02-02\
 **Released:** v0.4.0
 
 ## Overview
@@ -11,7 +11,7 @@ Dedicated settings panel for PM Toolkit with organized sections for Editor, Temp
 ## Access Points
 
 | Location | Trigger | Details |
-|----------|---------|---------|
+| --- | --- | --- |
 | Command Palette | `PM Toolkit: PM Toolkit Settings` | Always available |
 | Editor overflow menu | `...` → "PM Toolkit Settings" | When PM Toolkit editor is active |
 | Editor title bar | View Source icon | Separate from settings (unchanged) |
@@ -67,7 +67,7 @@ Dedicated settings panel for PM Toolkit with organized sections for Editor, Temp
 ## Settings
 
 | Setting | Type | Default | Range |
-|---------|------|---------|-------|
+| --- | --- | --- | --- |
 | `pmtoolkit.editorFontSize` | number | 14 | 10-24 |
 | `pmtoolkit.templateFolder` | string | `""` | — |
 | `pmtoolkit.templateWatchEnabled` | boolean | `true` | — |
@@ -80,7 +80,7 @@ Dedicated settings panel for PM Toolkit with organized sections for Editor, Temp
 ### Files
 
 | File | Purpose |
-|------|---------|
+| --- | --- |
 | `src/settings/SettingsPanel.ts` | WebviewPanel with inline HTML/CSS/JS |
 | `package.json` | Commands, menu contributions, configuration schema |
 | `src/extension.ts` | Command registration |
@@ -105,6 +105,7 @@ Dedicated settings panel for PM Toolkit with organized sections for Editor, Temp
 ## Testing
 
 22 E2E tests in `tests/e2e/settings-panel.spec.ts`:
+
 - Layout and content display
 - All input controls and toggles
 - Message passing to extension

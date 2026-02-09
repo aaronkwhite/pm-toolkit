@@ -101,13 +101,14 @@ export class SettingsPanel {
       templateFolder: config.get<string>('templateFolder', ''),
       templateWatchEnabled: config.get<boolean>('templateWatchEnabled', true),
       editorFontSize: config.get<number>('editorFontSize', 14),
+      imageAssetsPath: config.get<string>('imageAssetsPath', 'assets'),
       kanbanSaveDelay: config.get<number>('kanbanSaveDelay', 150),
       kanbanDefaultColumns: config.get<string>('kanbanDefaultColumns', 'Backlog, In Progress, Done'),
       kanbanShowThumbnails: config.get<boolean>('kanbanShowThumbnails', true),
     };
 
     // Get version from package.json
-    const extension = vscode.extensions.getExtension('pm-toolkit.pm-toolkit');
+    const extension = vscode.extensions.getExtension('aaronkwhite.pm-toolkit');
     const version = extension?.packageJSON?.version || '0.0.0';
 
     this.panel.webview.html = this.getHtmlForWebview(this.panel.webview, settings, version);
@@ -119,6 +120,7 @@ export class SettingsPanel {
       templateFolder: string;
       templateWatchEnabled: boolean;
       editorFontSize: number;
+      imageAssetsPath: string;
       kanbanSaveDelay: number;
       kanbanDefaultColumns: string;
       kanbanShowThumbnails: boolean;
@@ -263,14 +265,14 @@ export class SettingsPanel {
       border-color: var(--vscode-foreground);
     }
 
-    /* Primary button (green) */
+    /* Primary button */
     .btn-primary {
       padding: 6px 16px;
       font-size: 13px;
       font-weight: 500;
       border: none;
-      background: #2e7d32;
-      color: white;
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
       border-radius: 6px;
       cursor: pointer;
       font-family: inherit;
@@ -278,7 +280,7 @@ export class SettingsPanel {
     }
 
     .btn-primary:hover {
-      background: #1b5e20;
+      background: var(--vscode-button-hoverBackground);
     }
 
     /* Toggle switch - Cursor style (green, pill-shaped) */
@@ -321,7 +323,7 @@ export class SettingsPanel {
     }
 
     .toggle input:checked + .toggle-slider {
-      background-color: #2e7d32;
+      background-color: var(--vscode-button-background);
     }
 
     .toggle input:checked + .toggle-slider:before {
@@ -415,7 +417,7 @@ export class SettingsPanel {
 </head>
 <body>
   <h1 class="page-title">PM Toolkit</h1>
-  <p class="page-tagline">Notion-like editing in Cursor/VS Code — markdown, kanban, and diagrams in one extension.</p>
+  <p class="page-tagline">Your docs. Your editor. Visual markdown, kanban boards, and diagrams — right where you code.</p>
 
   <div class="section-label">Editor</div>
   <div class="card">
@@ -427,6 +429,15 @@ export class SettingsPanel {
       <div class="setting-control">
         <input type="number" class="number-input" id="editorFontSize" value="${settings.editorFontSize}" min="10" max="24" />
         <span class="input-suffix">px</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div class="setting-content">
+        <div class="setting-title">Image Assets Path</div>
+        <p class="setting-description">Directory where uploaded images are saved (relative to the document)</p>
+      </div>
+      <div class="setting-control">
+        <input type="text" class="text-input" id="imageAssetsPath" value="${escapeHtml(settings.imageAssetsPath || 'assets')}" placeholder="assets" />
       </div>
     </div>
   </div>
@@ -530,6 +541,14 @@ export class SettingsPanel {
           value: value
         });
       }
+    });
+
+    document.getElementById('imageAssetsPath').addEventListener('change', (e) => {
+      vscode.postMessage({
+        type: 'updateSetting',
+        key: 'imageAssetsPath',
+        value: e.target.value.trim() || 'assets'
+      });
     });
 
     document.getElementById('kanbanDefaultColumns').addEventListener('change', (e) => {
