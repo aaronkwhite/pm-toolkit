@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
+    "prebuild": "git fetch origin main --depth=1 2>/dev/null && git show origin/main:CHANGELOG.md > CHANGELOG.md 2>/dev/null || true",
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro"
