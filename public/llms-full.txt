@@ -26,7 +26,7 @@ Open any .md file and PM Toolkit automatically activates. You'll see the visual 
 
 ## Visual Editor
 
-PM Toolkit gives you a full WYSIWYG editing experience for markdown files. Type naturally and see formatted output in real time — headings, bold, italic, lists, links, and more render instantly.
+PM Toolkit gives you a full WYSIWYG editing experience for markdown files. Built on React 18 and Tiptap, the editor renders formatted output in real time — headings, bold, italic, lists, links, and more appear instantly as you type.
 
 Keyboard shortcuts for common formatting:
 
@@ -36,20 +36,32 @@ Keyboard shortcuts for common formatting:
 - Inline code: Cmd+E
 - Link: Cmd+K
 
+### Block Handles
+
+Hover near the left edge of any block to reveal drag handles. Drag any block to reorder it, or click the + button to insert new content between blocks.
+
 ### Bubble Menu
 
 Select any text to see the floating toolbar. It gives quick access to:
 
-- Block type (paragraph, headings, lists, quote, code block)
+- Block type (paragraph, headings 1-4, lists, quote, code block)
 - Text formatting (bold, italic, strikethrough, code)
 - Link insertion
+
+### Document Outline
+
+The sidebar shows a collapsible document outline generated from your headings. Click any heading to jump to that section. The outline updates in real time as you edit.
+
+### Save Guard
+
+Every save is validated before it touches your file. PM Toolkit blocks corrupted content — webview URIs, internal data attributes, or excessive HTML — from ever reaching disk.
 
 ## Slash Commands
 
 Type / at the beginning of a new line to open the command menu. Available commands:
 
 - /text — Plain text paragraph
-- /h1, /h2, /h3 — Headings
+- /h1, /h2, /h3, /h4 — Headings
 - /bullet — Bullet list
 - /numbered — Numbered list
 - /task — Task list with checkboxes
@@ -70,8 +82,12 @@ Templates you've created also appear in the slash command menu.
 Insert a table with /table and pick dimensions from the visual grid. Once inserted:
 
 - Tab moves to the next cell, Shift+Tab moves back
-- Grip controls on rows and columns let you add, delete, or reorder
+- Grip handles on rows and columns for drag-to-reorder with drop indicators
+- Right-click grip handles for insert, delete, and header row toggle
+- Add bars appear on the last row and column for quick expansion
+- Column widths persist, with horizontal scroll for wide tables
 - Cmd+Enter exits the table to continue writing below
+- Select all cells and press Delete to remove the entire table
 
 ## Images
 
@@ -86,9 +102,10 @@ Once inserted, click an image to:
 
 - Resize by dragging corner handles
 - Align left, center, or right using the floating toolbar
+- Caption — toggle captions on or off (maps to markdown alt text)
 - Replace or delete from the popover menu
 
-Images are saved alongside your markdown file in the workspace.
+Images are saved to a configurable assets directory (see Settings). Width and alignment are persisted as HTML comments in markdown.
 
 ## Kanban Boards
 
@@ -109,11 +126,7 @@ Write mermaid diagrams inside fenced code blocks marked mermaid and they render 
 - /flowchart — Flowchart diagram
 - /sequence — Sequence diagram
 
-Diagrams automatically adapt to your light/dark theme. Click the Edit button on any diagram to modify the source.
-
-## Document Outline
-
-The sidebar shows a document outline generated from your headings. Click any heading in the outline to jump to that section. The outline updates in real time as you edit.
+Diagrams automatically adapt to your light/dark theme. They default to fit-to-view mode so the full diagram is always visible — toggle to scroll/zoom for large diagrams. Click the Edit button on any diagram to modify the source.
 
 ## Templates
 
@@ -162,10 +175,11 @@ PM Toolkit includes read-only viewers for common file formats:
 
 ## Settings
 
-- pmtoolkit.editorFontSize — Font size (10-24px), default 16
+- pmtoolkit.editorFontSize — Font size (10-24px), default 14
 - pmtoolkit.templateFolder — Path to template folder
-- pmtoolkit.kanbanSaveDelay — Save delay in ms (50-2000), default 300
-- pmtoolkit.kanbanDefaultColumns — Default board columns, default "To Do, In Progress, Done"
+- pmtoolkit.imageAssetsPath — Directory for uploaded images (relative to document), default "assets"
+- pmtoolkit.kanbanSaveDelay — Save delay in ms (50-2000), default 150
+- pmtoolkit.kanbanDefaultColumns — Default board columns, default "Backlog, In Progress, Done"
 - pmtoolkit.kanbanShowThumbnails — Show card thumbnails, default true
 
 ## FAQ

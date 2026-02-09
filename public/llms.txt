@@ -6,11 +6,14 @@
 PM Toolkit is a free, open-source Visual Studio Code and Cursor extension that provides a visual markdown editing experience. It includes a WYSIWYG editor, kanban boards, mermaid diagrams, document outline, image handling, templates, and file viewers — all backed by plain markdown files you own.
 
 ## Features
-- WYSIWYG Markdown Editor with slash commands and bubble menu
+- WYSIWYG Markdown Editor built on React 18 with slash commands and bubble menu
+- Block handles for drag-to-reorder any block
 - Kanban boards backed by plain markdown files
-- Image drop, resize, and alignment
-- Mermaid diagram rendering (flowcharts, sequence diagrams)
-- Document outline with heading navigation
+- Image drop, resize, alignment, and captions
+- Table controls with drag-to-reorder, context menus, and persisted column widths
+- Mermaid diagram rendering with fit-to-view (flowcharts, sequence diagrams)
+- Document outline with collapsible heading navigation
+- Save guard that validates content before writing to disk
 - Reusable templates with dynamic variables
 - File viewers for PDF, Word, Excel, and CSV
 - Keyboard shortcuts for all common formatting
