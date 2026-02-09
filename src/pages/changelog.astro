@@ -2,14 +2,19 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import FinalCTA from '../components/FinalCTA.astro';
+import { readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 
-// Read CHANGELOG.md from the main branch at build time
+// Read CHANGELOG.md — prefer working tree, fall back to main branch
 let changelogRaw = '';
 try {
-  changelogRaw = execSync('git show main:CHANGELOG.md', { encoding: 'utf-8' });
+  changelogRaw = readFileSync(new URL('../../CHANGELOG.md', import.meta.url), 'utf-8');
 } catch {
-  changelogRaw = '## No changelog available\n\nCould not read CHANGELOG.md from the main branch.';
+  try {
+    changelogRaw = execSync('git show main:CHANGELOG.md', { encoding: 'utf-8' });
+  } catch {
+    changelogRaw = '## No changelog available\n\nCould not read CHANGELOG.md.';
+  }
 }
 
 // Parse the changelog into structured data
