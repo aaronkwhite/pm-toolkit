@@ -85,14 +85,16 @@ const marketplaceLinks = [
 
       <!-- Screenshot centered on top -->
       <div class="absolute z-20 top-[6%] bottom-[6%] left-5 right-5 sm:left-8 sm:right-8 lg:left-10 lg:right-10 flex items-center justify-center animate-float">
-        <img
-          src="/images/pmtoolkit-visual-editor.png"
-          srcset="/images/pmtoolkit-visual-editor.png 1160w, /images/pmtoolkit-visual-editor@2x.png 2320w"
-          sizes="(max-width: 1024px) 100vw, 900px"
-          alt="PM Toolkit visual markdown editor in Cursor"
-          loading="eager"
-          class="w-full rounded-2xl"
-        />
+        <div class="w-full rounded-2xl overflow-hidden">
+          <img
+            src="/images/pmtoolkit-visual-editor.png"
+            srcset="/images/pmtoolkit-visual-editor.png 1160w, /images/pmtoolkit-visual-editor@2x.png 2320w"
+            sizes="(max-width: 1024px) 100vw, 900px"
+            alt="PM Toolkit visual markdown editor in Cursor"
+            loading="eager"
+            class="w-full block"
+          />
+        </div>
       </div>
     </div>
   </div>
