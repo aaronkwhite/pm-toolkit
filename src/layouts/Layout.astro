@@ -14,6 +14,16 @@ const {
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const ogImageURL = new URL('/images/og-image.png', Astro.site);
 
+// Fetch latest version from GitHub at build time
+let version = '0.5.0';
+try {
+  const releaseRes = await fetch('https://api.github.com/repos/aaronkwhite/pm-toolkit/releases/latest');
+  if (releaseRes.ok) {
+    const release = await releaseRes.json();
+    version = (release.tag_name || 'v0.5.0').replace(/^v/, '');
+  }
+} catch {}
+
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
@@ -35,7 +45,7 @@ const jsonLd = {
     'https://marketplace.visualstudio.com/items?itemName=aaronkwhite.pm-toolkit',
     'https://open-vsx.org/extension/aaronkwhite/pm-toolkit',
   ],
-  softwareVersion: '0.5.0',
+  softwareVersion: version,
   aggregateRating: {
     '@type': 'AggregateRating',
     ratingValue: '5',

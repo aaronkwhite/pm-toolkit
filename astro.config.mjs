@@ -4,7 +4,7 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://pmtoolkit.netlify.app',
+  site: 'https://getpmtoolkit.com',
   output: 'static',
   integrations: [sitemap()],
   vite: {

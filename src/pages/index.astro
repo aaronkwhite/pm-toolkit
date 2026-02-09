@@ -3,17 +3,17 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
 import Testimonial from '../components/Testimonial.astro';
-import Features from '../components/Features.astro';
 import BentoGrid from '../components/BentoGrid.astro';
 import FinalCTA from '../components/FinalCTA.astro';
 ---
 
 <Layout>
+  <!-- Top-of-viewport glow -->
+  <div class="absolute top-0 left-0 w-full h-[36rem] pointer-events-none z-0" style="background: radial-gradient(ellipse 80% 100% at 50% 0%, color-mix(in srgb, var(--color-primary) 35%, transparent) 0%, transparent 70%);"></div>
   <Header />
   <main>
     <Hero />
     <Testimonial />
-    <Features />
     <BentoGrid />
     <FinalCTA />
   </main>
