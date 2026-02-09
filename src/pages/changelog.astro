@@ -2,16 +2,14 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import FinalCTA from '../components/FinalCTA.astro';
-import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 
-// Read CHANGELOG.md from origin/main so it works in CI (shallow clone of docs branch)
-// and locally (where main is available). The fetch ensures the ref exists in CI.
+// Read CHANGELOG.md from repo root (committed to docs branch)
 let changelogRaw = '';
 try {
-  try { execSync('git fetch origin main --depth=1', { stdio: 'ignore' }); } catch {}
-  changelogRaw = execSync('git show origin/main:CHANGELOG.md', { encoding: 'utf-8' });
+  changelogRaw = readFileSync(new URL('../../CHANGELOG.md', import.meta.url), 'utf-8');
 } catch {
-  changelogRaw = '## No changelog available\n\nCould not read CHANGELOG.md from main branch.';
+  changelogRaw = '## No changelog available\n\nCould not read CHANGELOG.md.';
 }
 
 // Parse the changelog into structured data
