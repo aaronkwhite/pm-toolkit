@@ -489,6 +489,7 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
   isolation: isolate;
 }
 
+
 .hero-screenshot::before,
 .hero-screenshot::after {
   content: '';
@@ -506,6 +507,8 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
     transparent 100%
   );
   animation: gradientRotate 4s linear infinite;
+  /* Safari ignores border-radius on animated pseudo-elements — clip-path enforces it */
+  clip-path: inset(0 round 3rem);
 }
 
 .hero-screenshot::before {
