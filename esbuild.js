@@ -34,7 +34,7 @@ const extensionConfig = {
   platform: 'node',
   target: 'node18',
   outfile: 'dist/extension.js',
-  external: ['vscode'],
+  external: ['vscode', 'puppeteer-core'],
   sourcemap: !production,
   minify: production,
   plugins: [buildStatusPlugin],

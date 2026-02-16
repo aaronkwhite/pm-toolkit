@@ -25,6 +25,7 @@ import { SlashCommand, setTemplates } from './extensions/SlashCommand'
 import { ImageNode } from './extensions/ImageNode'
 import { MermaidNode } from './extensions/MermaidNode'
 import { TableControls } from './extensions/TableControls'
+import { MarkdownPaste } from './extensions/MarkdownPaste'
 
 // VS Code API type
 declare global {
@@ -117,9 +118,10 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
         bulletListMarker: '-',
         linkify: false,
         breaks: false,
-        transformPastedText: true,
+        transformPastedText: false,
         transformCopiedText: true,
       }),
+      MarkdownPaste,
       SlashCommand,
       KeyboardNavigation,
     ],
@@ -166,18 +168,20 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
             // Preprocess mermaid blocks to protect them from double-parsing
             const processedContent = preprocessMermaidBlocks(content)
 
-            // Parse the content using the markdown parser
-            const doc = editor.storage.markdown.parser.parse(processedContent)
-
-            // Set content without adding to undo history
-            // The chain() command with setMeta must be done in the same transaction
+            // Set content without adding to undo history.
+            // Pass markdown directly to setContent — tiptap-markdown's override
+            // handles parsing. Don't pass preserveWhitespace: 'full' globally;
+            // code_block's own parseDOM rule already sets it for <pre> elements.
+            // (Using preserveWhitespace: 'full' here would cause tiptap core to
+            // redirect through insertContentAt, which tiptap-markdown also overrides,
+            // leading to a triple-parse that corrupts code blocks with blank lines.)
             editor
               .chain()
               .command(({ tr }) => {
                 tr.setMeta('addToHistory', false)
                 return true
               })
-              .setContent(doc, false, { preserveWhitespace: 'full' })
+              .setContent(processedContent, false)
               .run()
 
             isUpdatingFromExtension.current = false
@@ -216,6 +220,25 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
           if (message.payload?.templates) {
             setTemplates(message.payload.templates)
           }
+          break
+        }
+
+        // PDF export request from extension
+        case 'requestPdfExport': {
+          let html = editor.getHTML()
+
+          // Replace mermaid code blocks with rendered SVGs from the DOM
+          const mermaidDiagrams = document.querySelectorAll('.mermaid-diagram svg')
+          const mermaidPres = html.match(/<pre[^>]*data-type="mermaid"[^>]*>[\s\S]*?<\/pre>/g) || []
+
+          mermaidDiagrams.forEach((svg, index) => {
+            if (mermaidPres[index]) {
+              const svgHtml = svg.outerHTML
+              html = html.replace(mermaidPres[index], `<div class="mermaid-diagram">${svgHtml}</div>`)
+            }
+          })
+
+          getVSCode().postMessage({ type: 'exportPdf', payload: { htmlContent: html } })
           break
         }
       }

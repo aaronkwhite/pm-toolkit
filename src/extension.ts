@@ -181,6 +181,41 @@ export function activate(context: vscode.ExtensionContext) {
       SettingsPanel.createOrShow(context.extensionUri);
     })
   );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('pmtoolkit.exportToPdf', async () => {
+      const panel = MarkdownEditorProvider.getActivePanel();
+      if (!panel) {
+        vscode.window.showErrorMessage('No active PM Toolkit editor to export.');
+        return;
+      }
+
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: 'Exporting to PDF...',
+          cancellable: false,
+        },
+        async () => {
+          return new Promise<void>((resolve) => {
+            const disposable = MarkdownEditorProvider.onExportComplete(() => {
+              disposable.dispose();
+              resolve();
+            });
+
+            // Request the webview to send its HTML
+            panel.webview.postMessage({ type: 'requestPdfExport' });
+
+            // Timeout after 30 seconds
+            setTimeout(() => {
+              disposable.dispose();
+              resolve();
+            }, 30000);
+          });
+        }
+      );
+    })
+  );
 }
 
 export function deactivate() {
