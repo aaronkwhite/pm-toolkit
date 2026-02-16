@@ -218,6 +218,25 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
           }
           break
         }
+
+        // PDF export request from extension
+        case 'requestPdfExport': {
+          let html = editor.getHTML()
+
+          // Replace mermaid code blocks with rendered SVGs from the DOM
+          const mermaidDiagrams = document.querySelectorAll('.mermaid-diagram svg')
+          const mermaidPres = html.match(/<pre[^>]*data-type="mermaid"[^>]*>[\s\S]*?<\/pre>/g) || []
+
+          mermaidDiagrams.forEach((svg, index) => {
+            if (mermaidPres[index]) {
+              const svgHtml = svg.outerHTML
+              html = html.replace(mermaidPres[index], `<div class="mermaid-diagram">${svgHtml}</div>`)
+            }
+          })
+
+          getVSCode().postMessage({ type: 'exportPdf', payload: { htmlContent: html } })
+          break
+        }
       }
     }
 

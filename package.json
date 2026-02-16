@@ -160,6 +160,12 @@
         "title": "PM Toolkit Settings",
         "category": "PM Toolkit",
         "icon": "$(gear)"
+      },
+      {
+        "command": "pmtoolkit.exportToPdf",
+        "title": "Export to PDF",
+        "category": "PM Toolkit",
+        "icon": "$(file-pdf)"
       }
     ],
     "menus": {
@@ -171,6 +177,11 @@
         }
       ],
       "editor/title": [
+        {
+          "command": "pmtoolkit.exportToPdf",
+          "when": "activeCustomEditorId == pmtoolkit.markdownEditor",
+          "group": "1_modification"
+        },
         {
           "command": "pmtoolkit.openSettings",
           "when": "activeCustomEditorId =~ /pmtoolkit\\./",
@@ -231,6 +242,47 @@
           "type": "boolean",
           "default": true,
           "description": "Show image thumbnails on kanban cards by default"
+        },
+        "pmtoolkit.pdfChromePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to Chrome/Chromium executable for PDF export (auto-detected if empty)"
+        },
+        "pmtoolkit.pdfPageSize": {
+          "type": "string",
+          "default": "A4",
+          "enum": [
+            "A4",
+            "Letter",
+            "Legal",
+            "Tabloid"
+          ],
+          "description": "Page size for PDF export"
+        },
+        "pmtoolkit.pdfMarginTop": {
+          "type": "string",
+          "default": "20mm",
+          "description": "Top margin for PDF export"
+        },
+        "pmtoolkit.pdfMarginBottom": {
+          "type": "string",
+          "default": "20mm",
+          "description": "Bottom margin for PDF export"
+        },
+        "pmtoolkit.pdfMarginLeft": {
+          "type": "string",
+          "default": "15mm",
+          "description": "Left margin for PDF export"
+        },
+        "pmtoolkit.pdfMarginRight": {
+          "type": "string",
+          "default": "15mm",
+          "description": "Right margin for PDF export"
+        },
+        "pmtoolkit.pdfPrintBackground": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include background colors/images in PDF export (e.g., code block backgrounds)"
         }
       }
     }
@@ -268,6 +320,7 @@
     "mermaid": "^11.4.0",
     "papaparse": "^5.4.1",
     "pdfjs-dist": "^4.9.155",
+    "puppeteer-core": "^24.37.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tiptap-markdown": "^0.8.10",

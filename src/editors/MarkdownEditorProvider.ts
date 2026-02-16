@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import { HTMLBuilder } from './HTMLBuilder';
 import { ExtensionToWebviewMessage, WebviewToExtensionMessage, FileInfo } from '../types';
 import { TemplateManager } from '../templates/TemplateManager';
 import { validateMarkdown } from '../../shared/validateMarkdown';
+import { exportToPdf } from '../export/PdfExporter';
 
 /**
  * Convert relative image paths in markdown to webview URIs
@@ -67,6 +69,24 @@ function convertImagePathsToWebview(
 export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = 'pmtoolkit.markdownEditor';
 
+  /** Map of document URI string → webview panel, for active editors */
+  private static activeEditors = new Map<string, vscode.WebviewPanel>();
+
+  /** Event emitter for PDF export completion */
+  private static _onExportComplete = new vscode.EventEmitter<{ pdfPath?: string; error?: string }>();
+  public static readonly onExportComplete = MarkdownEditorProvider._onExportComplete.event;
+
+  /**
+   * Get the webview panel for the currently active markdown editor tab.
+   */
+  public static getActivePanel(): vscode.WebviewPanel | undefined {
+    const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+    if (!activeTab?.input) return undefined;
+    const input = activeTab.input as { uri?: vscode.Uri };
+    if (!input.uri) return undefined;
+    return MarkdownEditorProvider.activeEditors.get(input.uri.toString());
+  }
+
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly templateManager: TemplateManager
@@ -94,6 +114,9 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     webviewPanel: vscode.WebviewPanel,
     _token: vscode.CancellationToken
   ): Promise<void> {
+    // Track this editor panel
+    MarkdownEditorProvider.activeEditors.set(document.uri.toString(), webviewPanel);
+
     // Get the document's directory for local image resolution
     const documentDir = vscode.Uri.joinPath(document.uri, '..');
 
@@ -375,6 +398,41 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
             }
             break;
 
+          case 'exportPdf':
+            // Webview sent editor HTML for PDF export
+            try {
+              const htmlContent = message.payload.htmlContent;
+              const cssPath = path.join(this.context.extensionPath, 'dist', 'webview', 'editor.css');
+              const cssContent = fs.existsSync(cssPath) ? fs.readFileSync(cssPath, 'utf-8') : '';
+
+              const pdfPath = await exportToPdf({
+                htmlContent,
+                documentUri: document.uri,
+                cssContent,
+              });
+
+              MarkdownEditorProvider._onExportComplete.fire({ pdfPath });
+
+              const openFile = 'Open File';
+              const openFolder = 'Open Folder';
+              const choice = await vscode.window.showInformationMessage(
+                `PDF exported: ${path.basename(pdfPath)}`,
+                openFile,
+                openFolder
+              );
+
+              if (choice === openFile) {
+                await vscode.env.openExternal(vscode.Uri.file(pdfPath));
+              } else if (choice === openFolder) {
+                await vscode.env.openExternal(vscode.Uri.file(path.dirname(pdfPath)));
+              }
+            } catch (err: any) {
+              const errorMsg = err?.message || 'Unknown error';
+              MarkdownEditorProvider._onExportComplete.fire({ error: errorMsg });
+              vscode.window.showErrorMessage(`PDF export failed: ${errorMsg}`);
+            }
+            break;
+
           case 'requestFiles':
             // Webview is requesting list of workspace files for link picker
             try {
@@ -467,6 +525,7 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
 
     // Cleanup on dispose
     webviewPanel.onDidDispose(() => {
+      MarkdownEditorProvider.activeEditors.delete(document.uri.toString());
       messageHandler.dispose();
       changeDocumentSubscription.dispose();
       templateChangeSubscription.dispose();

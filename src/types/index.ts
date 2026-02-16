@@ -18,7 +18,8 @@ export type ExtensionToWebviewMessage =
   | { type: 'imageUrl'; payload: { originalPath: string; webviewUrl: string } }
   | { type: 'imageSaved'; payload: { originalPath: string; webviewUrl: string } }
   | { type: 'filePickerResult'; payload: { originalPath: string; webviewUrl: string } }
-  | { type: 'files'; payload: { files: FileInfo[]; currentFilePath: string } };
+  | { type: 'files'; payload: { files: FileInfo[]; currentFilePath: string } }
+  | { type: 'requestPdfExport' };
 
 /**
  * Messages sent from Webview to Extension
@@ -33,7 +34,8 @@ export type WebviewToExtensionMessage =
   | { type: 'saveImage'; payload: { filename: string; data: string } }
   | { type: 'requestFilePicker' }
   | { type: 'requestFiles'; payload: { search?: string } }
-  | { type: 'openFile'; payload: { path: string } };
+  | { type: 'openFile'; payload: { path: string } }
+  | { type: 'exportPdf'; payload: { htmlContent: string } };
 
 /**
  * Template definition from YAML frontmatter
