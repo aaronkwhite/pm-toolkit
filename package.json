@@ -2,7 +2,7 @@
   "name": "pm-toolkit",
   "displayName": "PM Toolkit",
   "description": "Visual markdown editor, kanban boards, and file viewers — right where you code.",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "publisher": "aaronkwhite",
   "license": "MIT",
   "icon": "images/pm-toolkit-icon-light.png",

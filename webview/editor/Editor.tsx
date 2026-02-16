@@ -168,18 +168,20 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
             // Preprocess mermaid blocks to protect them from double-parsing
             const processedContent = preprocessMermaidBlocks(content)
 
-            // Parse the content using the markdown parser
-            const doc = editor.storage.markdown.parser.parse(processedContent)
-
-            // Set content without adding to undo history
-            // The chain() command with setMeta must be done in the same transaction
+            // Set content without adding to undo history.
+            // Pass markdown directly to setContent — tiptap-markdown's override
+            // handles parsing. Don't pass preserveWhitespace: 'full' globally;
+            // code_block's own parseDOM rule already sets it for <pre> elements.
+            // (Using preserveWhitespace: 'full' here would cause tiptap core to
+            // redirect through insertContentAt, which tiptap-markdown also overrides,
+            // leading to a triple-parse that corrupts code blocks with blank lines.)
             editor
               .chain()
               .command(({ tr }) => {
                 tr.setMeta('addToHistory', false)
                 return true
               })
-              .setContent(doc, false, { preserveWhitespace: 'full' })
+              .setContent(processedContent, false)
               .run()
 
             isUpdatingFromExtension.current = false

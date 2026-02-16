@@ -5,6 +5,12 @@ All notable changes to PM Toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-02-16
+
+### Fixed
+
+- Code blocks with blank lines (e.g., two class definitions separated by a blank line) no longer split into separate blocks when loaded or pasted
+
 ## [0.7.0] - 2026-02-16
 
 ### Added
@@ -16,10 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Configurable page size (A4, Letter, Legal, Tabloid), margins, and background printing
   - PDF saved next to the source `.md` file with "Open File" / "Open Folder" actions
   - Manual browser path override via `pmtoolkit.pdfChromePath` setting
-
-### Fixed
-
-- Code blocks with blank lines (e.g., two class definitions separated by a blank line) no longer split into separate blocks when pasted
 
 ## [0.6.0] - 2026-02-08
 
@@ -242,6 +244,7 @@ The biggest release yet. The entire editor has been rebuilt on React 18, images 
 
 - **Custom File Icons**: Kanban files show dedicated icon in file explorer
 
+[0.7.1]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.7.1
 [0.7.0]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.7.0
 [0.6.0]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.6.0
 [0.5.0]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.5.0
