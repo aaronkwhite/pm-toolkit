@@ -29,6 +29,21 @@ scripts/**
 # Node modules (bundled into dist/)
 node_modules/**
 
+# Source maps (not needed in production)
+**/*.js.map
+
+# Astro website artifacts (from docs branch)
+.astro/**
+dist/index.html
+dist/favicon.png
+dist/robots.txt
+dist/sitemap-*.xml
+dist/llms*.txt
+dist/_astro/**
+dist/changelog/**
+dist/docs/**
+dist/images/**
+
 # Package files
 *.vsix
 

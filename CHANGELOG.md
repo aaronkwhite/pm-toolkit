@@ -5,6 +5,17 @@ All notable changes to PM Toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.3] - 2026-02-16
+
+### Changed
+
+- PDF export now uses Chrome's native `--print-to-pdf` CLI instead of `puppeteer-core`, eliminating a 14MB dependency
+- Extension package reduced from 21MB to 2MB by fixing `.vscodeignore` to exclude source maps and stale website build artifacts
+
+### Removed
+
+- `puppeteer-core` dependency — PDF export uses zero external dependencies
+
 ## [0.7.2] - 2026-02-16
 
 ### Fixed
@@ -250,6 +261,7 @@ The biggest release yet. The entire editor has been rebuilt on React 18, images 
 
 - **Custom File Icons**: Kanban files show dedicated icon in file explorer
 
+[0.7.3]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.7.3
 [0.7.2]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.7.2
 [0.7.1]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.7.1
 [0.7.0]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.7.0

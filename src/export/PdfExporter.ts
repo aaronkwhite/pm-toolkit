@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import puppeteer from 'puppeteer-core';
+import * as crypto from 'crypto';
+import * as os from 'os';
+import { execFile } from 'child_process';
 
 /**
  * Platform-specific Chrome/Chromium executable paths to search
@@ -272,16 +274,40 @@ const PDF_CSS = `
   }
 `;
 
+interface PrintOptions {
+  pageSize: string;
+  marginTop: string;
+  marginBottom: string;
+  marginLeft: string;
+  marginRight: string;
+  printBackground: boolean;
+}
+
 /**
  * Build a standalone HTML document for PDF rendering
  */
 export function prepareHtml(
   htmlContent: string,
   documentDir: string,
-  cssContent: string
+  cssContent: string,
+  printOptions?: PrintOptions
 ): string {
   const processedCss = replaceCssVariables(cssContent);
   const processedHtml = resolveImagePaths(htmlContent, documentDir);
+
+  let pageCss = '';
+  if (printOptions) {
+    pageCss = `@page {
+      size: ${printOptions.pageSize};
+      margin: ${printOptions.marginTop} ${printOptions.marginRight} ${printOptions.marginBottom} ${printOptions.marginLeft};
+    }`;
+    if (printOptions.printBackground) {
+      pageCss += `* {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }`;
+    }
+  }
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -290,6 +316,7 @@ export function prepareHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>${processedCss}</style>
   <style>${PDF_CSS}</style>
+  <style>${pageCss}</style>
 </head>
 <body>
   <div id="editor">
@@ -310,7 +337,8 @@ export interface PdfExportOptions {
 }
 
 /**
- * Export editor HTML to PDF using puppeteer-core
+ * Export editor HTML to PDF using Chrome's --print-to-pdf CLI flag.
+ * No puppeteer dependency — talks to Chrome directly via child_process.
  */
 export async function exportToPdf(options: PdfExportOptions): Promise<string> {
   const { htmlContent, documentUri, cssContent } = options;
@@ -331,39 +359,43 @@ export async function exportToPdf(options: PdfExportOptions): Promise<string> {
   const marginRight = config.get<string>('pdfMarginRight', '15mm');
   const printBackground = config.get<boolean>('pdfPrintBackground', true);
 
-  // Prepare HTML
-  const fullHtml = prepareHtml(htmlContent, documentDir, cssContent);
-
-  // Launch browser and generate PDF
-  const browser = await puppeteer.launch({
-    executablePath: chromePath,
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  // Prepare HTML with @page CSS for margins/size
+  const fullHtml = prepareHtml(htmlContent, documentDir, cssContent, {
+    pageSize, marginTop, marginBottom, marginLeft, marginRight, printBackground,
   });
 
+  // Write HTML to temp file (Chrome needs a file:// URL)
+  const tempId = crypto.randomBytes(8).toString('hex');
+  const tempHtmlPath = path.join(os.tmpdir(), `pmtoolkit-${tempId}.html`);
+
   try {
-    const page = await browser.newPage();
+    fs.writeFileSync(tempHtmlPath, fullHtml, 'utf-8');
 
-    // Allow file:// access for local images
-    await page.setContent(fullHtml, {
-      waitUntil: 'networkidle0',
-    });
+    const args = [
+      '--headless',
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-gpu',
+      '--disable-extensions',
+      '--no-pdf-header-footer',
+      '--allow-file-access-from-files',
+      '--run-all-compositor-stages-before-draw',
+      `--print-to-pdf=${pdfPath}`,
+      `file://${tempHtmlPath}`,
+    ];
 
-    // Generate PDF
-    await page.pdf({
-      path: pdfPath,
-      format: pageSize as any,
-      margin: {
-        top: marginTop,
-        bottom: marginBottom,
-        left: marginLeft,
-        right: marginRight,
-      },
-      printBackground,
+    await new Promise<void>((resolve, reject) => {
+      execFile(chromePath, args, { timeout: 30_000 }, (error, _stdout, stderr) => {
+        if (error) {
+          reject(new Error(`Chrome PDF export failed: ${error.message}\n${stderr}`));
+        } else {
+          resolve();
+        }
+      });
     });
 
     return pdfPath;
   } finally {
-    await browser.close();
+    try { fs.unlinkSync(tempHtmlPath); } catch {}
   }
 }
