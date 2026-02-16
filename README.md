@@ -34,6 +34,7 @@ Type `/` for slash commands. Select text for instant formatting. Drag in images.
 - **Mermaid diagrams** — Flowcharts, sequence diagrams, and more render inline with fit-to-view
 - **Templates** — Create reusable document templates and insert them via `/` commands
 - **Task lists** — Interactive checkboxes that save to standard markdown syntax
+- **PDF export** — Export any document to a pixel-perfect PDF via Command Palette or the title bar button
 - **Smart navigation** — Arrow keys and Cmd+Enter move through code blocks and tables naturally
 
 ### Tasks without context switching
@@ -134,6 +135,16 @@ Create reusable document templates that appear in the slash command menu.
 
 Templates are regular markdown files. The filename becomes the template name in the menu.
 
+### PDF Export
+
+Export any markdown document to PDF — the output looks identical to the editor.
+
+1. Open a `.md` file in PM Toolkit
+2. Run **PM Toolkit: Export to PDF** from the Command Palette, or click the PDF icon in the editor title bar
+3. The PDF is saved next to your `.md` file
+
+Requires Chrome, Chromium, Edge, or Brave installed (auto-detected). Set a custom path with `pmtoolkit.pdfChromePath` if needed.
+
 ## Configuration
 
 Access settings via the **PM Toolkit Settings** command (from the editor `...` menu or Command Palette), or through `Code` → `Settings` → `Extensions` → `PM Toolkit`.
@@ -147,6 +158,10 @@ Access settings via the **PM Toolkit Settings** command (from the editor `...` m
 | `pmtoolkit.kanbanShowThumbnails` | Show image thumbnails on kanban cards | true |
 | `pmtoolkit.kanbanSaveDelay` | Delay before saving kanban changes (50-2000ms) | 150 |
 | `pmtoolkit.imageAssetsPath` | Directory where uploaded images are saved (relative to the document) | assets |
+| `pmtoolkit.pdfChromePath` | Path to Chrome/Chromium for PDF export (auto-detected if empty) | — |
+| `pmtoolkit.pdfPageSize` | Page size for PDF export | A4 |
+| `pmtoolkit.pdfMarginTop` / `Bottom` / `Left` / `Right` | PDF margins | 20mm / 20mm / 15mm / 15mm |
+| `pmtoolkit.pdfPrintBackground` | Include background colors in PDF (e.g., code blocks) | true |
 
 ## Built With
 
@@ -163,6 +178,7 @@ PM Toolkit is built on solid open-source foundations:
 | [Mammoth](https://github.com/mwilliamson/mammoth.js) | Word document conversion | BSD-2 |
 | [SheetJS](https://sheetjs.com) | Excel parsing | Apache 2.0 |
 | [Papa Parse](https://www.papaparse.com) | CSV parsing | MIT |
+| [Puppeteer](https://pptr.dev) | PDF export (puppeteer-core) | Apache 2.0 |
 
 ## Contributing
 

@@ -25,6 +25,7 @@ import { SlashCommand, setTemplates } from './extensions/SlashCommand'
 import { ImageNode } from './extensions/ImageNode'
 import { MermaidNode } from './extensions/MermaidNode'
 import { TableControls } from './extensions/TableControls'
+import { MarkdownPaste } from './extensions/MarkdownPaste'
 
 // VS Code API type
 declare global {
@@ -117,9 +118,10 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
         bulletListMarker: '-',
         linkify: false,
         breaks: false,
-        transformPastedText: true,
+        transformPastedText: false,
         transformCopiedText: true,
       }),
+      MarkdownPaste,
       SlashCommand,
       KeyboardNavigation,
     ],
