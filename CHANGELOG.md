@@ -5,6 +5,24 @@ All notable changes to PM Toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-02-16
+
+### Fixed
+
+- Code blocks with blank lines (e.g., two class definitions separated by a blank line) no longer split into separate blocks when loaded or pasted
+
+## [0.7.0] - 2026-02-16
+
+### Added
+
+- **PDF Export** — Export any markdown document to a pixel-perfect PDF via Command Palette or the editor title bar
+  - Uses Chrome's rendering engine (via `puppeteer-core`) for output identical to the editor
+  - Selectable text, proper tables, images, and Mermaid SVG diagrams
+  - Auto-detects Chrome, Chromium, Edge, or Brave on macOS, Windows, and Linux
+  - Configurable page size (A4, Letter, Legal, Tabloid), margins, and background printing
+  - PDF saved next to the source `.md` file with "Open File" / "Open Folder" actions
+  - Manual browser path override via `pmtoolkit.pdfChromePath` setting
+
 ## [0.6.0] - 2026-02-08
 
 The biggest release yet. The entire editor has been rebuilt on React 18, images and tables got ground-up redesigns, and new features like block handles, document outline, and save validation make PM Toolkit feel like a proper writing tool.
@@ -226,6 +244,8 @@ The biggest release yet. The entire editor has been rebuilt on React 18, images 
 
 - **Custom File Icons**: Kanban files show dedicated icon in file explorer
 
+[0.7.1]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.7.1
+[0.7.0]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.7.0
 [0.6.0]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.6.0
 [0.5.0]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.5.0
 [0.4.7]: https://github.com/aaronkwhite/pm-toolkit/releases/tag/v0.4.7

@@ -121,6 +121,18 @@ Write mermaid diagrams inside fenced code blocks marked **mermaid** and they ren
 
 Diagrams automatically adapt to your light/dark theme. They default to fit-to-view mode so the full diagram is always visible — toggle to scroll/zoom for large diagrams. Click the **Edit** button on any diagram to modify the source.
 
+## PDF Export
+
+Export any markdown document to a pixel-perfect PDF — the output looks identical to the editor.
+
+1. Open a `.md` file in PM Toolkit
+2. Run **PM Toolkit: Export to PDF** from the Command Palette (`Cmd+Shift+P`), or click the PDF icon in the editor title bar
+3. The PDF is saved next to your `.md` file
+
+Requires Chrome, Chromium, Edge, or Brave installed (auto-detected on macOS, Windows, and Linux). Set a custom browser path with the `pmtoolkit.pdfChromePath` setting if needed.
+
+The PDF includes selectable text, tables, images, and Mermaid diagrams rendered as SVGs. Configure page size, margins, and background printing in settings.
+
 ## Templates
 
 Create reusable document templates:
@@ -203,6 +215,10 @@ Open settings via the editor overflow menu (`...`) or run **PM Toolkit Settings*
 | `pmtoolkit.kanbanSaveDelay` | Save delay in ms (50-2000) | 150 |
 | `pmtoolkit.kanbanDefaultColumns` | Default board columns | Backlog, In Progress, Done |
 | `pmtoolkit.kanbanShowThumbnails` | Show card thumbnails | true |
+| `pmtoolkit.pdfChromePath` | Path to Chrome/Chromium for PDF export (auto-detected if empty) | — |
+| `pmtoolkit.pdfPageSize` | Page size for PDF export (A4, Letter, Legal, Tabloid) | A4 |
+| `pmtoolkit.pdfMarginTop` / `Bottom` / `Left` / `Right` | PDF margins | 20mm / 20mm / 15mm / 15mm |
+| `pmtoolkit.pdfPrintBackground` | Include background colors in PDF | true |
 
 ## FAQ
 
