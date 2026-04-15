@@ -2016,3 +2016,36 @@ html, body {
 .pm-callout-warning::before { content: 'Warning';   color: #9a6700; }
 .pm-callout-caution { border-color: #cf222e; background: rgba(207,34,46,0.08); }
 .pm-callout-caution::before { content: 'Caution';   color: #cf222e; }
+
+/* ===== Wiki Links ===== */
+.pm-wiki-link {
+  color: var(--vscode-textLink-foreground, #3794ff);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0 1px;
+  display: inline;
+}
+.pm-wiki-link:hover {
+  background: var(--vscode-textLink-foreground, #3794ff);
+  color: var(--vscode-editor-background, #1e1e1e);
+}
+.pm-wiki-link-popup {
+  background: var(--vscode-editorWidget-background, #252526);
+  border: 1px solid var(--vscode-editorWidget-border, #454545);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 200px;
+  max-width: 320px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.pm-wiki-link-item {
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--vscode-foreground, #ccc);
+}
+.pm-wiki-link-item:hover { background: var(--vscode-list-hoverBackground, rgba(90,93,94,0.31)); }
+.pm-wiki-link-empty { padding: 8px 12px; font-size: 13px; color: var(--vscode-descriptionForeground, #aaa); }
