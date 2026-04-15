@@ -489,6 +489,32 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
             break;
           }
 
+          case 'addSelectionToChat': {
+            const selectedText = (message as { type: 'addSelectionToChat'; payload: { selectedText: string } }).payload?.selectedText ?? '';
+            if (!selectedText) break;
+            const prompt = `\`\`\`markdown\n${selectedText}\n\`\`\``;
+            const chatCommands = [
+              'aipopup.action.modal.generate',           // Cursor
+              'workbench.panel.chat.view.copilot.focus',  // Windsurf / VS Code Copilot
+              'workbench.action.chat.open',               // VS Code AI
+            ];
+            let opened = false;
+            for (const cmd of chatCommands) {
+              try {
+                await vscode.commands.executeCommand(cmd, { query: prompt });
+                opened = true;
+                break;
+              } catch {
+                // Command not available — try next
+              }
+            }
+            if (!opened) {
+              await vscode.env.clipboard.writeText(selectedText);
+              vscode.window.showInformationMessage('Selection copied to clipboard (no AI chat panel found)');
+            }
+            break;
+          }
+
           case 'requestFiles':
             // Webview is requesting list of workspace files for link picker
             try {

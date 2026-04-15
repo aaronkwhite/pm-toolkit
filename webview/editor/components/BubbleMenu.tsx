@@ -24,7 +24,7 @@ import type { Editor } from '@tiptap/core'
 import { createElement } from 'react'
 import { createRoot, Root } from 'react-dom/client'
 import type { IconNode } from 'lucide'
-import { Bold, Italic, Strikethrough, Code, Link2, ChevronDown, MessageSquare } from 'lucide'
+import { Bold, Italic, Strikethrough, Code, Link2, ChevronDown, MessageSquare, MessageCircle } from 'lucide'
 import { LinkPicker, type LinkData } from './LinkPicker'
 import { LucideIcon } from './LucideIcon'
 
@@ -401,6 +401,19 @@ export function BubbleMenuToolbar({ editor }: BubbleMenuToolbarProps) {
                   type="button"
                 >
                   <LucideIcon icon={MessageSquare} size={16} strokeWidth={2.5} />
+                </button>
+                <button
+                  className="bubble-menu-btn"
+                  title="Copy to chat"
+                  type="button"
+                  onClick={() => {
+                    const { from, to } = editor.state.selection;
+                    const selectedText = editor.state.doc.textBetween(from, to, '\n');
+                    if (!selectedText.trim()) return;
+                    window.vscode?.postMessage({ type: 'addSelectionToChat', payload: { selectedText } });
+                  }}
+                >
+                  <LucideIcon icon={MessageCircle} size={16} strokeWidth={2.5} />
                 </button>
               </div>
             </>
