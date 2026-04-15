@@ -1764,3 +1764,67 @@ html, body {
 .vscode-dark .block-handle-drag:hover {
   color: rgba(255, 255, 255, 0.8);
 }
+
+/* ===== Find & Replace Bar ===== */
+
+.pm-find-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--vscode-editorWidget-background, #252526);
+  border-bottom: 1px solid var(--vscode-editorWidget-border, #454545);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pm-find-row,
+.pm-replace-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pm-find-input,
+.pm-replace-input {
+  flex: 1;
+  background: var(--vscode-input-background, #3c3c3c);
+  color: var(--vscode-input-foreground, #cccccc);
+  border: 1px solid var(--vscode-input-border, transparent);
+  padding: 3px 6px;
+  font-size: 13px;
+  border-radius: 3px;
+  outline: none;
+}
+
+.pm-find-counter {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground, #aaa);
+  white-space: nowrap;
+  min-width: 60px;
+}
+
+.pm-find-match {
+  background: var(--vscode-editor-findMatchHighlightBackground, rgba(234, 92, 0, 0.33));
+  border-radius: 2px;
+}
+
+.pm-find-match-active {
+  background: var(--vscode-editor-findMatchBackground, rgba(246, 185, 77, 0.7));
+  border-radius: 2px;
+}
+
+.pm-find-bar button {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--vscode-icon-foreground, #cccccc);
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.pm-find-bar button:hover {
+  background: var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.31));
+}

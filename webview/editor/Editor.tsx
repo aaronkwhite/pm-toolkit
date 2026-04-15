@@ -17,6 +17,7 @@ import { validateMarkdown } from '../../shared/validateMarkdown'
 import { BlockHandle } from './components/BlockHandle'
 import { DocumentOutline } from './components/DocumentOutline'
 import { BubbleMenuToolbar } from './components/BubbleMenu'
+import { FindReplaceBar } from './components/FindReplaceBar'
 
 // Extensions
 import { CustomParagraph } from './extensions/CustomParagraph'
@@ -26,6 +27,7 @@ import { ImageNode } from './extensions/ImageNode'
 import { MermaidNode } from './extensions/MermaidNode'
 import { TableControls } from './extensions/TableControls'
 import { MarkdownPaste } from './extensions/MarkdownPaste'
+import { FindReplace } from './extensions/FindReplace'
 
 // VS Code API type
 declare global {
@@ -124,6 +126,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       MarkdownPaste,
       SlashCommand,
       KeyboardNavigation,
+      FindReplace,
     ],
     content: initialContent,
     onUpdate: ({ editor }) => {
@@ -223,6 +226,16 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
           break
         }
 
+        case 'openFind': {
+          window.dispatchEvent(new CustomEvent('open-find'))
+          break
+        }
+
+        case 'openFindReplace': {
+          window.dispatchEvent(new CustomEvent('open-find-replace'))
+          break
+        }
+
         // PDF export request from extension
         case 'requestPdfExport': {
           let html = editor.getHTML()
@@ -272,6 +285,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
 
   return (
     <div id="editor-wrapper">
+      <FindReplaceBar editor={editor} />
       <BlockHandle editor={editor} />
       <EditorContent editor={editor} />
       <BubbleMenuToolbar editor={editor} />
