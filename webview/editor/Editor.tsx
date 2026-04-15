@@ -236,6 +236,13 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
           break
         }
 
+        // HTML export request from extension
+        case 'requestHtmlExport': {
+          const html = editor.getHTML()
+          window.vscode?.postMessage({ type: 'exportHtml', html })
+          break
+        }
+
         // PDF export request from extension
         case 'requestPdfExport': {
           let html = editor.getHTML()

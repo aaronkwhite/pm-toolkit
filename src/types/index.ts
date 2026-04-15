@@ -20,6 +20,7 @@ export type ExtensionToWebviewMessage =
   | { type: 'filePickerResult'; payload: { originalPath: string; webviewUrl: string } }
   | { type: 'files'; payload: { files: FileInfo[]; currentFilePath: string } }
   | { type: 'requestPdfExport' }
+  | { type: 'requestHtmlExport' }
   | { type: 'openFind' }
   | { type: 'openFindReplace' };
 
@@ -38,6 +39,7 @@ export type WebviewToExtensionMessage =
   | { type: 'requestFiles'; payload: { search?: string } }
   | { type: 'openFile'; payload: { path: string } }
   | { type: 'exportPdf'; payload: { htmlContent: string } }
+  | { type: 'exportHtml'; html: string }
   | { type: 'findBarOpen'; open: boolean };
 
 /**

@@ -6,6 +6,7 @@ import { ExtensionToWebviewMessage, WebviewToExtensionMessage, FileInfo } from '
 import { TemplateManager } from '../templates/TemplateManager';
 import { validateMarkdown } from '../../shared/validateMarkdown';
 import { exportToPdf } from '../export/PdfExporter';
+import { exportToHtml } from '../export/HtmlExporter';
 
 /**
  * Convert relative image paths in markdown to webview URIs
@@ -431,6 +432,10 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
               MarkdownEditorProvider._onExportComplete.fire({ error: errorMsg });
               vscode.window.showErrorMessage(`PDF export failed: ${errorMsg}`);
             }
+            break;
+
+          case 'exportHtml':
+            await exportToHtml(document, message.html);
             break;
 
           case 'findBarOpen':
