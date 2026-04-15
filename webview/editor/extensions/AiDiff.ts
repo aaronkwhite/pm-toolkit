@@ -17,6 +17,7 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import type { Node } from '@tiptap/pm/model';
 import type { DiffRegion } from '../types/diff';
 
 export type { DiffRegion };
@@ -37,6 +38,37 @@ declare module '@tiptap/core' {
       clearDiff: () => ReturnType;
     };
   }
+}
+
+/**
+ * Maps a character offset within the plain text content of a ProseMirror doc
+ * to a ProseMirror position.
+ *
+ * doc.textContent gives the concatenated text of all leaf nodes (no node boundaries).
+ * But PM positions count node-open and node-close tokens too.
+ *
+ * Strategy: walk the doc using doc.nodesBetween, accumulating text length,
+ * until we've consumed `targetOffset` text characters — then return the PM pos.
+ */
+function textOffsetToPmPos(doc: Node, targetOffset: number): number {
+  let textConsumed = 0;
+  let result = 0;
+
+  doc.nodesBetween(0, doc.content.size, (node, pos) => {
+    if (textConsumed >= targetOffset) return false; // already found it
+    if (node.isText) {
+      const text = node.text!;
+      if (textConsumed + text.length >= targetOffset) {
+        result = pos + (targetOffset - textConsumed);
+        textConsumed = targetOffset;
+        return false;
+      }
+      textConsumed += text.length;
+    }
+    return true;
+  });
+
+  return result;
 }
 
 function createRemovedWidget(oldText: string): HTMLElement {
@@ -116,9 +148,15 @@ export const AiDiff = Extension.create({
     return {
       showDiff:
         (regions: DiffRegion[], mode: string) =>
-        ({ dispatch, tr }: any) => {
+        ({ dispatch, tr, editor }: any) => {
           if (dispatch) {
-            tr.setMeta(aiDiffKey, { regions, mode });
+            const doc = editor.state.doc;
+            const remapped = regions.map((r: DiffRegion) => ({
+              ...r,
+              fromPos: textOffsetToPmPos(doc, r.fromPos),
+              toPos: textOffsetToPmPos(doc, r.toPos),
+            }));
+            tr.setMeta(aiDiffKey, { regions: remapped, mode });
             dispatch(tr);
           }
           return true;
