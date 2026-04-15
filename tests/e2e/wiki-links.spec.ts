@@ -16,7 +16,9 @@ test('wiki link serializes back to [[filename]] syntax', async ({ page }) => {
   await editor.simulateInit('See [[my-file]] here.');
   await page.waitForTimeout(200);
   await page.locator('.ProseMirror').click();
-  await page.waitForTimeout(350);
+  // Use the helper's canonical debounce wait instead of a magic number so
+  // this test stays in sync if the debounce constant changes.
+  await editor.waitForSync();
   const content = await editor.getContent();
   expect(content).toContain('[[my-file]]');
 });

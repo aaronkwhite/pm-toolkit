@@ -596,6 +596,7 @@ export function MermaidNodeView({
           </button>
           <button
             className="mermaid-toolbar-btn"
+            type="button"
             title="Full screen"
             onMouseDown={e => { e.preventDefault(); setIsFullscreen(true); }}
             style={{

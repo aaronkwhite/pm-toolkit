@@ -67,18 +67,33 @@ export const WikiLink = Node.create({
   },
 
   addProseMirrorPlugins() {
-    let resolveFiles: ((items: { id: string; label: string }[]) => void) | null = null;
+    // Each pending request gets its own unique token so concurrent calls
+    // never clobber each other. The Map keeps tokens alive until settled.
+    const pending = new Map<number, (items: { id: string; label: string }[]) => void>();
+    let nextToken = 0;
 
-    // Listen for files message and resolve pending request
-    window.addEventListener('message', (event: MessageEvent) => {
+    // Listen for files message and resolve the matching pending request.
+    // The handler is stored so it can be removed when the editor is destroyed.
+    const filesHandler = (event: MessageEvent) => {
       const msg = event.data;
-      if (msg.type === 'files' && msg.payload?.files && resolveFiles) {
-        const files = (msg.payload.files as { name: string; relativePath: string }[])
-          .filter(f => f.relativePath.endsWith('.md'))
-          .map(f => ({ id: f.name, label: f.name }));
-        resolveFiles(files);
-        resolveFiles = null;
-      }
+      if (msg.type !== 'files' || !msg.payload?.files) return;
+      const token: number = msg.payload.token ?? -1;
+      const resolve = pending.get(token);
+      if (!resolve) return;
+      pending.delete(token);
+      const files = (msg.payload.files as { name: string; relativePath: string }[])
+        .filter(f => f.relativePath.endsWith('.md'))
+        .map(f => ({ id: f.name, label: f.name }));
+      resolve(files);
+    };
+    window.addEventListener('message', filesHandler);
+
+    // Remove the listener when the editor instance is destroyed, preventing
+    // the handler from accumulating across hot reloads or React strict-mode
+    // double-mounts.
+    this.editor.on('destroy', () => {
+      window.removeEventListener('message', filesHandler);
+      pending.clear();
     });
 
     return [
@@ -94,10 +109,17 @@ export const WikiLink = Node.create({
         },
         items: ({ query }: { query: string }) => {
           return new Promise<{ id: string; label: string }[]>(resolve => {
+            const token = nextToken++;
             // Timeout fallback in case no files message arrives
-            const timeout = setTimeout(() => { resolveFiles = null; resolve([]); }, 2000);
-            resolveFiles = (items) => { clearTimeout(timeout); resolve(items); };
-            window.vscode?.postMessage({ type: 'requestFiles', payload: { search: query } });
+            const timeout = setTimeout(() => {
+              pending.delete(token);
+              resolve([]);
+            }, 2000);
+            pending.set(token, (items) => {
+              clearTimeout(timeout);
+              resolve(items);
+            });
+            window.vscode?.postMessage({ type: 'requestFiles', payload: { search: query, token } });
           });
         },
         render: () => {

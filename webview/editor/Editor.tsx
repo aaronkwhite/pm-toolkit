@@ -193,14 +193,15 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
             // Update comments panel from the incoming markdown
             setComments(parseCommentsFromMarkdown(content))
 
-            // Preprocess wiki links FIRST so [[target]] → <wikilink> before other transforms
-            const wikiProcessed = preprocessWikiLinksToHtml(content)
+            // Preprocess callout syntax FIRST — its HTML-escaping of body text
+            // would destroy <wikilink> or <comment> tags if they ran earlier.
+            const calloutProcessed = preprocessCalloutsToHtml(content)
 
-            // Preprocess callout syntax → HTML before other transforms
-            const calloutProcessed = preprocessCalloutsToHtml(wikiProcessed)
+            // Preprocess wiki links so [[target]] → <wikilink> before comment/mermaid
+            const wikiProcessed = preprocessWikiLinksToHtml(calloutProcessed)
 
             // Preprocess comment syntax → HTML so Tiptap's HTML parser picks it up
-            const commentProcessed = preprocessCommentsToHtml(calloutProcessed)
+            const commentProcessed = preprocessCommentsToHtml(wikiProcessed)
 
             // Preprocess mermaid blocks to protect them from double-parsing
             const processedContent = preprocessMermaidBlocks(commentProcessed)
@@ -366,9 +367,9 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
-      const wikiProcessed = preprocessWikiLinksToHtml(updated)
-      const calloutProcessed = preprocessCalloutsToHtml(wikiProcessed)
-      const commentProcessed = preprocessCommentsToHtml(calloutProcessed)
+      const calloutProcessed = preprocessCalloutsToHtml(updated)
+      const wikiProcessed = preprocessWikiLinksToHtml(calloutProcessed)
+      const commentProcessed = preprocessCommentsToHtml(wikiProcessed)
       const processedContent = preprocessMermaidBlocks(commentProcessed)
       editor
         .chain()
@@ -407,9 +408,9 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
-      const wikiProcessed = preprocessWikiLinksToHtml(updated)
-      const calloutProcessed = preprocessCalloutsToHtml(wikiProcessed)
-      const commentProcessed = preprocessCommentsToHtml(calloutProcessed)
+      const calloutProcessed = preprocessCalloutsToHtml(updated)
+      const wikiProcessed = preprocessWikiLinksToHtml(calloutProcessed)
+      const commentProcessed = preprocessCommentsToHtml(wikiProcessed)
       const processedContent = preprocessMermaidBlocks(commentProcessed)
       editor
         .chain()

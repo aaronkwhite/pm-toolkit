@@ -40,4 +40,5 @@ test('empty document shows zero counts', async ({ page }) => {
   await editor.simulateInit('');
   await page.waitForTimeout(200);
   await expect(page.locator('.pm-status-bar')).toContainText('0 words');
+  await expect(page.locator('.pm-status-bar')).toContainText('0 lines');
 });

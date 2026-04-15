@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Editor } from '@tiptap/core';
+import type { Editor, EditorEvents } from '@tiptap/core';
 import type { Node } from '@tiptap/pm/model';
 
 interface Props { editor: Editor }
@@ -24,14 +24,18 @@ export function StatusBar({ editor }: Props) {
 
   useEffect(() => {
     if (!editor) return;
-    const update = () => {
-      const doc = editor.state.doc;
-      const text = doc.textContent;
-      setWords(countWords(text));
+    const update = ({ transaction }: EditorEvents['transaction']) => {
+      // Selection-only transactions cannot change word or line counts.
+      if (!transaction.docChanged) return;
+      const doc = transaction.doc;
+      setWords(countWords(doc.textContent));
       setLines(countLines(doc));
     };
     editor.on('transaction', update);
-    update(); // initial
+    // Seed counts from the current document without a transaction.
+    const doc = editor.state.doc;
+    setWords(countWords(doc.textContent));
+    setLines(countLines(doc));
     return () => { editor.off('transaction', update); };
   }, [editor]);
 

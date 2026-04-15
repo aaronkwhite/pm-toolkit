@@ -35,6 +35,8 @@ test('callout serializes back to > [!TYPE] syntax', async ({ page }) => {
   await page.locator('.ProseMirror').click();
   await page.waitForTimeout(350); // wait for debounce
   const content = await editor.getContent();
-  expect(content).toContain('[!NOTE]');
+  // Verify full round-trip: type tag present and body line carries the '> ' prefix.
+  expect(content).toMatch(/>\s*\[!NOTE\]/);
+  expect(content).toMatch(/>\s+Remember this\./);
   expect(content).toContain('Remember this.');
 });
