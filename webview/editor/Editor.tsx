@@ -150,13 +150,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       }
 
       updateTimeout.current = window.setTimeout(() => {
-        let markdown = editor.storage.markdown.getMarkdown()
-
-        // Post-process: convert <mark data-comment="X">text</mark> back to ==text==^[X]
-        markdown = markdown.replace(
-          /<mark data-comment="([^"]*)">([\s\S]*?)<\/mark>/g,
-          (_match, comment, text) => `==${text}==^[${comment}]`
-        )
+        const markdown = editor.storage.markdown.getMarkdown()
 
         const validation = validateMarkdown(markdown)
         if (!validation.valid) {

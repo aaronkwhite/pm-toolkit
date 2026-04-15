@@ -7,8 +7,9 @@
  * On load, `preprocessCommentsToHtml` converts the markdown syntax to
  * <mark data-comment="..."> HTML before Tiptap parses it.
  *
- * On save, a post-processing pass in Editor.tsx converts any residual
- * <mark data-comment="..."> HTML back to the ==text==^[comment] syntax.
+ * On save, `addStorage().markdown.serialize` emits the ==text==^[comment]
+ * syntax natively via tiptap-markdown's mark serializer, so formatted text
+ * (bold, italic, etc.) inside a comment round-trips correctly.
  */
 
 import { Mark } from '@tiptap/core';
@@ -102,8 +103,24 @@ export const CommentMark = Mark.create({
     ];
   },
 
-  // Serialization is handled by a post-processing pass in Editor.tsx that
-  // converts <mark data-comment="X">text</mark> back to ==text==^[X].
-  // We intentionally omit addStorage().markdown.serialize to avoid
-  // interfering with tiptap-markdown's mark serializer pipeline.
+  addStorage() {
+    return {
+      markdown: {
+        serialize: {
+          open: '==',
+          close(_state: any, mark: any) {
+            const commentText = mark.attrs.commentText ?? ''
+            return `==${commentText ? `^[${commentText}]` : ''}`
+          },
+          mixable: true,
+          expelEnclosingWhitespace: true,
+        },
+        parse: {
+          updateDOM(_element: HTMLElement) {
+            // Handled by preprocessCommentsToHtml before setContent
+          },
+        },
+      },
+    }
+  },
 });

@@ -32,6 +32,22 @@ test('comment text appears in comments panel', async ({ page }) => {
   await expect(page.locator('.pm-comment-highlight')).toContainText('this important thing');
 });
 
+test('comment containing bold text round-trips correctly', async ({ page }) => {
+  const editor = new EditorHelper(page);
+  await editor.load();
+  // Load markdown with a comment on text that also contains bold
+  await editor.simulateInit('Hello ==**world**==^[important note] today.');
+  await page.waitForTimeout(300);
+  // The comment mark should be visible
+  await expect(page.locator('.pm-comment-mark')).toBeVisible();
+  // After waiting for a debounce cycle, the serialized content should preserve the comment
+  await page.waitForTimeout(300);
+  const content = await editor.getContent();
+  // The comment syntax should be preserved (not turned into raw HTML)
+  expect(content).not.toContain('<mark data-comment');
+  expect(content).toContain('^[important note]');
+});
+
 test('comment button in bubble menu opens inline input', async ({ page }) => {
   const editor = new EditorHelper(page);
   await editor.load();
