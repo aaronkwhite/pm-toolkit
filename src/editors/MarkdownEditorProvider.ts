@@ -490,7 +490,7 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
           }
 
           case 'addSelectionToChat': {
-            const selectedText = (message as { type: 'addSelectionToChat'; payload: { selectedText: string } }).payload?.selectedText ?? '';
+            const selectedText = message.payload?.selectedText ?? '';
             if (!selectedText) break;
             const prompt = `\`\`\`markdown\n${selectedText}\n\`\`\``;
             const chatCommands = [
@@ -518,6 +518,7 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
           case 'requestFiles':
             // Webview is requesting list of workspace files for link picker
             try {
+              const requestToken = message.payload?.token;
               const searchQuery = message.payload?.search?.toLowerCase() || '';
               const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
 
@@ -570,6 +571,7 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
                   payload: {
                     files: limitedFiles,
                     currentFilePath: document.uri.fsPath,
+                    ...(requestToken !== undefined && { token: requestToken }),
                   },
                 };
                 webviewPanel.webview.postMessage(filesMessage);
