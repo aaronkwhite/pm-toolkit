@@ -192,6 +192,15 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand('pmtoolkit.exportToHtml', () => {
+      MarkdownEditorProvider.getActivePanel()?.webview.postMessage({ type: 'requestHtmlExport' });
+    }),
+    vscode.commands.registerCommand('pmtoolkit.exportAsMarkdown', async () => {
+      await MarkdownEditorProvider.exportActiveDocumentAsMarkdown();
+    })
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand('pmtoolkit.exportToPdf', async () => {
       const panel = MarkdownEditorProvider.getActivePanel();
       if (!panel) {

@@ -174,6 +174,14 @@
       {
         "command": "pmtoolkit.findReplace",
         "title": "PM Toolkit: Find and Replace"
+      },
+      {
+        "command": "pmtoolkit.exportToHtml",
+        "title": "PM Toolkit: Export to HTML"
+      },
+      {
+        "command": "pmtoolkit.exportAsMarkdown",
+        "title": "PM Toolkit: Export as Markdown"
       }
     ],
     "keybindings": [
@@ -191,6 +199,16 @@
       }
     ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "pmtoolkit.exportToHtml",
+          "when": "activeCustomEditorId == 'pmtoolkit.markdownEditor'"
+        },
+        {
+          "command": "pmtoolkit.exportAsMarkdown",
+          "when": "activeCustomEditorId == 'pmtoolkit.markdownEditor'"
+        }
+      ],
       "explorer/context": [
         {
           "command": "pmtoolkit.openAsKanban",
@@ -201,6 +219,16 @@
       "editor/title": [
         {
           "command": "pmtoolkit.exportToPdf",
+          "when": "activeCustomEditorId == pmtoolkit.markdownEditor",
+          "group": "1_modification"
+        },
+        {
+          "command": "pmtoolkit.exportToHtml",
+          "when": "activeCustomEditorId == pmtoolkit.markdownEditor",
+          "group": "1_modification"
+        },
+        {
+          "command": "pmtoolkit.exportAsMarkdown",
           "when": "activeCustomEditorId == pmtoolkit.markdownEditor",
           "group": "1_modification"
         },
