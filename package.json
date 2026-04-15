@@ -166,6 +166,28 @@
         "title": "Export to PDF",
         "category": "PM Toolkit",
         "icon": "$(file-pdf)"
+      },
+      {
+        "command": "pmtoolkit.find",
+        "title": "PM Toolkit: Find"
+      },
+      {
+        "command": "pmtoolkit.findReplace",
+        "title": "PM Toolkit: Find and Replace"
+      }
+    ],
+    "keybindings": [
+      {
+        "key": "ctrl+f",
+        "mac": "cmd+f",
+        "command": "pmtoolkit.find",
+        "when": "activeCustomEditorId == 'pmtoolkit.markdownEditor' && !pmtoolkit.findBarOpen"
+      },
+      {
+        "key": "ctrl+h",
+        "mac": "cmd+h",
+        "command": "pmtoolkit.findReplace",
+        "when": "activeCustomEditorId == 'pmtoolkit.markdownEditor'"
       }
     ],
     "menus": {

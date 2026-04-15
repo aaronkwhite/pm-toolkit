@@ -183,6 +183,15 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    vscode.commands.registerCommand('pmtoolkit.find', () => {
+      MarkdownEditorProvider.getActivePanel()?.webview.postMessage({ type: 'openFind' });
+    }),
+    vscode.commands.registerCommand('pmtoolkit.findReplace', () => {
+      MarkdownEditorProvider.getActivePanel()?.webview.postMessage({ type: 'openFindReplace' });
+    })
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand('pmtoolkit.exportToPdf', async () => {
       const panel = MarkdownEditorProvider.getActivePanel();
       if (!panel) {

@@ -433,6 +433,10 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
             }
             break;
 
+          case 'findBarOpen':
+            vscode.commands.executeCommand('setContext', 'pmtoolkit.findBarOpen', message.open);
+            break;
+
           case 'requestFiles':
             // Webview is requesting list of workspace files for link picker
             try {
