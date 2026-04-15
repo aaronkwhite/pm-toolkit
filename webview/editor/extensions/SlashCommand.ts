@@ -14,6 +14,7 @@ import {
   Text, Heading1, Heading2, Heading3, Heading4,
   List, ListOrdered, ListTodo, Quote, Code, Minus,
   Table, Image, LayoutTemplate, Network, ArrowRightLeft, Link, FileText,
+  Info, AlertTriangle, Lightbulb,
 } from 'lucide';
 import { LucideIcon } from '../components/LucideIcon';
 import { SlashCommandMenu, SlashCommandMenuRef } from '../components/SlashCommandMenu';
@@ -138,6 +139,9 @@ const ICON = {
   flowchart:    slashIcon(Network),
   sequence:     slashIcon(ArrowRightLeft),
   link:         slashIcon(Link),
+  calloutNote:  slashIcon(Info),
+  calloutWarn:  slashIcon(AlertTriangle),
+  calloutTip:   slashIcon(Lightbulb),
 };
 
 /**
@@ -232,6 +236,42 @@ export const defaultCommands: SlashCommandItem[] = [
     searchTerms: ['quote', 'blockquote', 'citation'],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setBlockquote().run();
+    },
+  },
+  {
+    title: 'Note',
+    description: 'Note callout block',
+    icon: ICON.calloutNote,
+    category: 'blocks' as const,
+    searchTerms: ['note', 'callout', 'info'],
+    command: ({ editor, range }: { editor: any; range: any }) => {
+      editor.chain().focus().deleteRange(range)
+        .insertContent({ type: 'callout', attrs: { type: 'note' }, content: [{ type: 'text', text: ' ' }] })
+        .run();
+    },
+  },
+  {
+    title: 'Warning',
+    description: 'Warning callout block',
+    icon: ICON.calloutWarn,
+    category: 'blocks' as const,
+    searchTerms: ['warning', 'callout', 'alert'],
+    command: ({ editor, range }: { editor: any; range: any }) => {
+      editor.chain().focus().deleteRange(range)
+        .insertContent({ type: 'callout', attrs: { type: 'warning' }, content: [{ type: 'text', text: ' ' }] })
+        .run();
+    },
+  },
+  {
+    title: 'Tip',
+    description: 'Tip callout block',
+    icon: ICON.calloutTip,
+    category: 'blocks' as const,
+    searchTerms: ['tip', 'callout', 'hint'],
+    command: ({ editor, range }: { editor: any; range: any }) => {
+      editor.chain().focus().deleteRange(range)
+        .insertContent({ type: 'callout', attrs: { type: 'tip' }, content: [{ type: 'text', text: ' ' }] })
+        .run();
     },
   },
   {

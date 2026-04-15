@@ -38,6 +38,7 @@ import {
   parseCommentsFromMarkdown,
   type ParsedComment,
 } from './extensions/CommentMark'
+import { preprocessCalloutsToHtml, CalloutBlock } from './extensions/CalloutBlock'
 
 // VS Code API type
 declare global {
@@ -140,6 +141,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       FindReplace,
       AiDiff,
       CommentMark,
+      CalloutBlock,
     ],
     content: initialContent,
     onUpdate: ({ editor }) => {
@@ -189,8 +191,11 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
             // Update comments panel from the incoming markdown
             setComments(parseCommentsFromMarkdown(content))
 
+            // Preprocess callout syntax → HTML before other transforms
+            const calloutProcessed = preprocessCalloutsToHtml(content)
+
             // Preprocess comment syntax → HTML so Tiptap's HTML parser picks it up
-            const commentProcessed = preprocessCommentsToHtml(content)
+            const commentProcessed = preprocessCommentsToHtml(calloutProcessed)
 
             // Preprocess mermaid blocks to protect them from double-parsing
             const processedContent = preprocessMermaidBlocks(commentProcessed)
@@ -356,7 +361,8 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
-      const commentProcessed = preprocessCommentsToHtml(updated)
+      const calloutProcessed = preprocessCalloutsToHtml(updated)
+      const commentProcessed = preprocessCommentsToHtml(calloutProcessed)
       const processedContent = preprocessMermaidBlocks(commentProcessed)
       editor
         .chain()
@@ -395,7 +401,8 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
-      const commentProcessed = preprocessCommentsToHtml(updated)
+      const calloutProcessed = preprocessCalloutsToHtml(updated)
+      const commentProcessed = preprocessCommentsToHtml(calloutProcessed)
       const processedContent = preprocessMermaidBlocks(commentProcessed)
       editor
         .chain()

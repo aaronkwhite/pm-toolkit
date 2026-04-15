@@ -1990,3 +1990,29 @@ html, body {
   max-width: 100%;
   height: auto;
 }
+
+/* ===== Callout Blocks ===== */
+.pm-callout {
+  border-left: 4px solid;
+  border-radius: 0 6px 6px 0;
+  padding: 10px 14px;
+  margin: 12px 0;
+  display: block;
+  font-size: inherit;
+}
+.pm-callout::before {
+  font-weight: 600;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 4px;
+}
+.pm-callout-note    { border-color: #0969da; background: rgba(9,105,218,0.08); }
+.pm-callout-note::before    { content: 'Note';      color: #0969da; }
+.pm-callout-tip     { border-color: #1a7f37; background: rgba(26,127,55,0.08); }
+.pm-callout-tip::before     { content: 'Tip';       color: #1a7f37; }
+.pm-callout-important { border-color: #8250df; background: rgba(130,80,223,0.08); }
+.pm-callout-important::before { content: 'Important'; color: #8250df; }
+.pm-callout-warning { border-color: #9a6700; background: rgba(154,103,0,0.08); }
+.pm-callout-warning::before { content: 'Warning';   color: #9a6700; }
+.pm-callout-caution { border-color: #cf222e; background: rgba(207,34,46,0.08); }
+.pm-callout-caution::before { content: 'Caution';   color: #cf222e; }
