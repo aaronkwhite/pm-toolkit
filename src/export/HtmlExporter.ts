@@ -176,6 +176,15 @@ const HTML_CSS = `
   s, del { text-decoration: line-through; color: #6b7280; }
 `;
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 /**
  * Build a self-contained HTML document wrapping the editor's body HTML.
  */
@@ -185,7 +194,7 @@ function buildHtmlDocument(title: string, bodyHtml: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
+  <title>${escapeHtml(title)}</title>
   <style>${HTML_CSS}</style>
 </head>
 <body>

@@ -213,7 +213,11 @@ export const FindReplace = Extension.create({
           if (!match) return false;
 
           if (dispatch) {
-            tr.replaceWith(match.from, match.to, state.schema.text(replacement));
+            if (replacement === '') {
+              tr.delete(match.from, match.to);
+            } else {
+              tr.replaceWith(match.from, match.to, state.schema.text(replacement));
+            }
             // After replace, recompute matches
             const newMatches = findMatches(tr.doc, pluginState.query);
             const newActiveIndex = Math.min(pluginState.activeIndex, Math.max(0, newMatches.length - 1));
@@ -236,7 +240,11 @@ export const FindReplace = Extension.create({
             // Replace from end to start to preserve positions
             const matches = [...pluginState.matches].reverse();
             for (const match of matches) {
-              tr.replaceWith(match.from, match.to, state.schema.text(replacement));
+              if (replacement === '') {
+                tr.delete(match.from, match.to);
+              } else {
+                tr.replaceWith(match.from, match.to, state.schema.text(replacement));
+              }
             }
             tr.setMeta(findReplaceKey, { matches: [], activeIndex: 0 });
             dispatch(tr);
