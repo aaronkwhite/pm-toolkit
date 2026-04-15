@@ -34,7 +34,10 @@ Type `/` for slash commands. Select text for instant formatting. Drag in images.
 - **Mermaid diagrams** — Flowcharts, sequence diagrams, and more render inline with fit-to-view
 - **Templates** — Create reusable document templates and insert them via `/` commands
 - **Task lists** — Interactive checkboxes that save to standard markdown syntax
-- **PDF export** — Export any document to a pixel-perfect PDF via Command Palette or the title bar button
+- **Search & Replace** — `Cmd/Ctrl+F` to find, `Cmd/Ctrl+H` to find and replace. Matches highlight inline with a counter and keyboard navigation
+- **Export** — Export to PDF (pixel-perfect via Chrome), HTML (self-contained, opens in any browser), or clean Markdown — all from the editor title bar
+- **Inline Comments** — Select text and click the comment icon to attach a note. Stored as `==text==^[comment]` directly in the markdown file — portable and version-controlled
+- **AI Diff Mode** — Highlights changes made by Cursor, Claude Code, or any AI tool that edits the file. `cursor` mode for tools with their own review UI; `claude-code` mode adds Accept All / Reject All buttons in PM Toolkit
 - **Smart navigation** — Arrow keys and Cmd+Enter move through code blocks and tables naturally
 
 ### Tasks without context switching
@@ -79,6 +82,8 @@ Search for "PM Toolkit" in the Extensions view (`Cmd+Shift+X` / `Ctrl+Shift+X`).
 - `Cmd/Ctrl + B` — Bold
 - `Cmd/Ctrl + I` — Italic
 - `Cmd/Ctrl + K` — Insert link
+- `Cmd/Ctrl + F` — Find
+- `Cmd/Ctrl + H` — Find and replace
 - `Cmd/Ctrl + Z` — Undo
 - `Cmd/Ctrl + Shift + Z` — Redo
 - `Cmd/Ctrl + Enter` — Exit code block or table (insert paragraph below)

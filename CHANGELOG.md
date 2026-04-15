@@ -5,6 +5,16 @@ All notable changes to PM Toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-04-14
+
+### Added
+
+- **Search & Replace** — Find text with `Cmd/Ctrl+F`. Matches highlight inline with a counter ("2 of 5"). Navigate with `Enter` / `Shift+Enter`, replace the current match or all matches at once. `Cmd/Ctrl+H` opens find+replace. `Escape` closes.
+- **Export to HTML** — Export any markdown document to a self-contained `.html` file with inlined CSS. Opens in any browser. Available from the editor title bar menu.
+- **Export as Markdown** — Export a clean `.md` file with comment annotations stripped. Available from the editor title bar menu alongside PDF and HTML export.
+- **AI Diff Mode** — When Cursor, Claude Code, or another AI tool edits an open file, PM Toolkit highlights added (green), removed (red), and changed (yellow) content. Configure via `pmtoolkit.diff.aiDiffMode`: `cursor` mode highlights changes and lets your AI tool handle accept/reject; `claude-code` mode adds Accept All / Reject All buttons directly in PM Toolkit.
+- **Inline Comments** — Select text and click the comment icon in the bubble menu to attach a comment. Comments are stored as `==highlighted text==^[comment]` directly in the markdown file — no sidecar files, fully portable, version-control friendly. View, edit, and delete from the comments panel below the editor.
+
 ## [0.7.3] - 2026-02-16
 
 ### Changed
