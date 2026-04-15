@@ -10,7 +10,7 @@ import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 import { Markdown } from 'tiptap-markdown'
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { validateMarkdown } from '../../shared/validateMarkdown'
 
 // Components
@@ -19,6 +19,7 @@ import { DocumentOutline } from './components/DocumentOutline'
 import { BubbleMenuToolbar } from './components/BubbleMenu'
 import { FindReplaceBar } from './components/FindReplaceBar'
 import { DiffToolbar } from './components/DiffToolbar'
+import { CommentsPanel } from './components/CommentsPanel'
 
 // Extensions
 import { CustomParagraph } from './extensions/CustomParagraph'
@@ -30,6 +31,12 @@ import { TableControls } from './extensions/TableControls'
 import { MarkdownPaste } from './extensions/MarkdownPaste'
 import { FindReplace } from './extensions/FindReplace'
 import { AiDiff } from './extensions/AiDiff'
+import {
+  CommentMark,
+  preprocessCommentsToHtml,
+  parseCommentsFromMarkdown,
+  type ParsedComment,
+} from './extensions/CommentMark'
 
 // VS Code API type
 declare global {
@@ -81,6 +88,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
   const isUpdatingFromExtension = useRef(false)
   const updateTimeout = useRef<number | null>(null)
   const lastKnownContent = useRef(initialContent)
+  const [comments, setComments] = useState<ParsedComment[]>([])
 
   console.log('[PM Toolkit] About to call useEditor')
   const editor = useEditor({
@@ -130,6 +138,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       KeyboardNavigation,
       FindReplace,
       AiDiff,
+      CommentMark,
     ],
     content: initialContent,
     onUpdate: ({ editor }) => {
@@ -141,12 +150,23 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       }
 
       updateTimeout.current = window.setTimeout(() => {
-        const markdown = editor.storage.markdown.getMarkdown()
+        let markdown = editor.storage.markdown.getMarkdown()
+
+        // Post-process: convert <mark data-comment="X">text</mark> back to ==text==^[X]
+        markdown = markdown.replace(
+          /<mark data-comment="([^"]*)">([\s\S]*?)<\/mark>/g,
+          (_match, comment, text) => `==${text}==^[${comment}]`
+        )
+
         const validation = validateMarkdown(markdown)
         if (!validation.valid) {
           console.warn('[PM Toolkit] Save blocked:', validation.reason)
           return
         }
+
+        // Update comments panel from the serialized markdown
+        setComments(parseCommentsFromMarkdown(markdown))
+
         if (markdown !== lastKnownContent.current) {
           lastKnownContent.current = markdown
           getVSCode().postMessage({ type: 'update', payload: { content: markdown } })
@@ -171,8 +191,14 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
             isUpdatingFromExtension.current = true
             lastKnownContent.current = content
 
+            // Update comments panel from the incoming markdown
+            setComments(parseCommentsFromMarkdown(content))
+
+            // Preprocess comment syntax → HTML so Tiptap's HTML parser picks it up
+            const commentProcessed = preprocessCommentsToHtml(content)
+
             // Preprocess mermaid blocks to protect them from double-parsing
-            const processedContent = preprocessMermaidBlocks(content)
+            const processedContent = preprocessMermaidBlocks(commentProcessed)
 
             // Set content without adding to undo history.
             // Pass markdown directly to setContent — tiptap-markdown's override
@@ -313,6 +339,70 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
     window.vscode?.postMessage({ type: 'rejectAllDiff' })
   }, [editor])
 
+  const handleDeleteComment = useCallback(
+    (_id: string, highlightText: string) => {
+      const current = lastKnownContent.current
+      // Remove ==highlightText==^[any comment] and replace with just the highlighted text
+      const updated = current.replace(
+        new RegExp(
+          `==${highlightText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}==\\^\\[[^\\]]*\\]`,
+          'g'
+        ),
+        highlightText
+      )
+      if (updated === current) return
+      lastKnownContent.current = updated
+      setComments(parseCommentsFromMarkdown(updated))
+      isUpdatingFromExtension.current = true
+      const commentProcessed = preprocessCommentsToHtml(updated)
+      const processedContent = preprocessMermaidBlocks(commentProcessed)
+      editor
+        .chain()
+        .command(({ tr }) => {
+          tr.setMeta('addToHistory', false)
+          return true
+        })
+        .setContent(processedContent, false)
+        .run()
+      isUpdatingFromExtension.current = false
+      getVSCode().postMessage({ type: 'update', payload: { content: updated } })
+      getVSCode().setState({ content: updated })
+    },
+    [editor]
+  )
+
+  const handleEditComment = useCallback(
+    (_id: string, highlightText: string, newCommentText: string) => {
+      const current = lastKnownContent.current
+      // Replace ==highlightText==^[oldComment] with ==highlightText==^[newCommentText]
+      const updated = current.replace(
+        new RegExp(
+          `==${highlightText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}==\\^\\[[^\\]]*\\]`,
+          'g'
+        ),
+        `==${highlightText}==^[${newCommentText}]`
+      )
+      if (updated === current) return
+      lastKnownContent.current = updated
+      setComments(parseCommentsFromMarkdown(updated))
+      isUpdatingFromExtension.current = true
+      const commentProcessed = preprocessCommentsToHtml(updated)
+      const processedContent = preprocessMermaidBlocks(commentProcessed)
+      editor
+        .chain()
+        .command(({ tr }) => {
+          tr.setMeta('addToHistory', false)
+          return true
+        })
+        .setContent(processedContent, false)
+        .run()
+      isUpdatingFromExtension.current = false
+      getVSCode().postMessage({ type: 'update', payload: { content: updated } })
+      getVSCode().setState({ content: updated })
+    },
+    [editor]
+  )
+
   return (
     <div id="editor-wrapper">
       <DiffToolbar editor={editor} onAccept={handleAcceptAllDiff} onReject={handleRejectAllDiff} />
@@ -321,6 +411,11 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       <EditorContent editor={editor} />
       <BubbleMenuToolbar editor={editor} />
       <DocumentOutline editor={editor} />
+      <CommentsPanel
+        comments={comments}
+        onDelete={handleDeleteComment}
+        onEdit={handleEditComment}
+      />
     </div>
   )
 }

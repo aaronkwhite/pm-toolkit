@@ -1829,6 +1829,85 @@ html, body {
   background: var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.31));
 }
 
+/* ===== Inline Comment Mark ===== */
+
+.pm-comment-mark {
+  background: rgba(255, 220, 0, 0.3);
+  border-bottom: 2px solid rgba(255, 180, 0, 0.6);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+/* ===== Comments Panel ===== */
+
+.pm-comments-panel {
+  border-top: 1px solid var(--vscode-editorWidget-border, #454545);
+  padding: 8px 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.pm-comments-header {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--vscode-descriptionForeground, #aaa);
+  margin-bottom: 8px;
+}
+
+.pm-comment-entry {
+  border-left: 3px solid var(--vscode-focusBorder, #007fd4);
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.pm-comment-highlight {
+  font-style: italic;
+  color: var(--vscode-descriptionForeground, #aaa);
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.pm-comment-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.pm-comment-actions button,
+.pm-comment-edit-actions button {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--vscode-textLink-foreground, #3794ff);
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.pm-comment-edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pm-comment-edit-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.pm-comment-textarea {
+  width: 100%;
+  font-size: 13px;
+  resize: vertical;
+  background: var(--vscode-input-background, #3c3c3c);
+  color: var(--vscode-input-foreground, #ccc);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  padding: 4px;
+}
+
 /* ── AI Diff decorations ─────────────────────────────────────────────────── */
 
 .pm-diff-added { background: rgba(40, 167, 69, 0.2); border-bottom: 2px solid rgba(40, 167, 69, 0.5); }
