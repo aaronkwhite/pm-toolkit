@@ -26,6 +26,14 @@ test('singular word form works', async ({ page }) => {
   await expect(page.locator('.pm-status-bar')).toContainText('1 word');
 });
 
+test('singular line form works', async ({ page }) => {
+  const editor = new EditorHelper(page);
+  await editor.load();
+  await editor.simulateInit('Hello world');
+  await page.waitForTimeout(200);
+  await expect(page.locator('.pm-status-bar')).toContainText('1 line');
+});
+
 test('empty document shows zero counts', async ({ page }) => {
   const editor = new EditorHelper(page);
   await editor.load();
