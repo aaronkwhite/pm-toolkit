@@ -24,7 +24,7 @@ import type { Editor } from '@tiptap/core'
 import { createElement } from 'react'
 import { createRoot, Root } from 'react-dom/client'
 import type { IconNode } from 'lucide'
-import { Bold, Italic, Strikethrough, Code, Link2, ChevronDown } from 'lucide'
+import { Bold, Italic, Strikethrough, Code, Link2, ChevronDown, MessageSquare } from 'lucide'
 import { LinkPicker, type LinkData } from './LinkPicker'
 import { LucideIcon } from './LucideIcon'
 
@@ -280,6 +280,18 @@ export function BubbleMenuToolbar({ editor }: BubbleMenuToolbarProps) {
     root.render(createElement(LinkPicker, { rect, onSelect: handleSelect, onCancel: handleCancel }))
   }, [editor, cleanupLinkPicker])
 
+  const handleCommentClick = useCallback(() => {
+    const { state } = editor
+    const { from, to } = state.selection
+    const selectedText = state.doc.textBetween(from, to)
+    if (!selectedText) return
+
+    const commentText = window.prompt('Add comment:', '')
+    if (commentText === null || commentText === '') return
+
+    editor.chain().focus().setMark('comment', { commentText }).run()
+  }, [editor])
+
   const currentBlockType = getCurrentBlockType()
 
   return (
@@ -352,6 +364,14 @@ export function BubbleMenuToolbar({ editor }: BubbleMenuToolbarProps) {
               type="button"
             >
               <LucideIcon icon={Link2} size={16} strokeWidth={2.5} />
+            </button>
+            <button
+              className={`bubble-menu-btn${editor.isActive('comment') ? ' is-active' : ''}`}
+              title="Add comment"
+              onClick={() => handleCommentClick()}
+              type="button"
+            >
+              <LucideIcon icon={MessageSquare} size={16} strokeWidth={2.5} />
             </button>
           </div>
         </div>
