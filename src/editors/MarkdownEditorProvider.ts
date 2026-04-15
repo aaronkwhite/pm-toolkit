@@ -6,6 +6,7 @@ import { ExtensionToWebviewMessage, WebviewToExtensionMessage, FileInfo } from '
 import { TemplateManager } from '../templates/TemplateManager';
 import { validateMarkdown } from '../../shared/validateMarkdown';
 import { exportToPdf } from '../export/PdfExporter';
+import { exportToHtml } from '../export/HtmlExporter';
 
 /**
  * Convert relative image paths in markdown to webview URIs
@@ -72,6 +73,9 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
   /** Map of document URI string → webview panel, for active editors */
   private static activeEditors = new Map<string, vscode.WebviewPanel>();
 
+  /** Map of document URI string → TextDocument, for active editors */
+  private static activeDocuments = new Map<string, vscode.TextDocument>();
+
   /** Event emitter for PDF export completion */
   private static _onExportComplete = new vscode.EventEmitter<{ pdfPath?: string; error?: string }>();
   public static readonly onExportComplete = MarkdownEditorProvider._onExportComplete.event;
@@ -87,6 +91,33 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     return MarkdownEditorProvider.activeEditors.get(input.uri.toString());
   }
 
+  /**
+   * Get the TextDocument for the currently active markdown editor tab.
+   */
+  public static getActiveDocument(): vscode.TextDocument | undefined {
+    const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+    if (!activeTab?.input) return undefined;
+    const input = activeTab.input as { uri?: vscode.Uri };
+    if (!input.uri) return undefined;
+    return MarkdownEditorProvider.activeDocuments.get(input.uri.toString());
+  }
+
+  /**
+   * Export the active markdown document, stripping comment syntax.
+   */
+  public static async exportActiveDocumentAsMarkdown(): Promise<void> {
+    const instance = MarkdownEditorProvider._instance;
+    const document = MarkdownEditorProvider.getActiveDocument();
+    if (!instance || !document) {
+      vscode.window.showErrorMessage('No active PM Toolkit editor to export.');
+      return;
+    }
+    await instance.exportAsMarkdown(document);
+  }
+
+  /** Singleton provider instance, set during register() */
+  private static _instance: MarkdownEditorProvider | undefined;
+
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly templateManager: TemplateManager
@@ -97,6 +128,7 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     templateManager: TemplateManager
   ): vscode.Disposable {
     const provider = new MarkdownEditorProvider(context, templateManager);
+    MarkdownEditorProvider._instance = provider;
     return vscode.window.registerCustomEditorProvider(
       MarkdownEditorProvider.viewType,
       provider,
@@ -114,8 +146,9 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     webviewPanel: vscode.WebviewPanel,
     _token: vscode.CancellationToken
   ): Promise<void> {
-    // Track this editor panel
+    // Track this editor panel and document
     MarkdownEditorProvider.activeEditors.set(document.uri.toString(), webviewPanel);
+    MarkdownEditorProvider.activeDocuments.set(document.uri.toString(), document);
 
     // Get the document's directory for local image resolution
     const documentDir = vscode.Uri.joinPath(document.uri, '..');
@@ -433,6 +466,29 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
             }
             break;
 
+          case 'exportHtml':
+            await exportToHtml(document, message.html);
+            break;
+
+          case 'findBarOpen':
+            vscode.commands.executeCommand('setContext', 'pmtoolkit.findBarOpen', message.open);
+            break;
+
+          case 'acceptAllDiff':
+            // User accepted — diff is already in the file, just clear the UI
+            webviewPanel.webview.postMessage({ type: 'clearDiff' });
+            break;
+
+          case 'rejectAllDiff': {
+            // Revert the file to lastKnownContent
+            const revertEdit = new vscode.WorkspaceEdit();
+            const fullRange = new vscode.Range(0, 0, document.lineCount, 0);
+            revertEdit.replace(document.uri, fullRange, lastKnownContent ?? '');
+            await vscode.workspace.applyEdit(revertEdit);
+            webviewPanel.webview.postMessage({ type: 'clearDiff' });
+            break;
+          }
+
           case 'requestFiles':
             // Webview is requesting list of workspace files for link picker
             try {
@@ -502,10 +558,22 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
 
     // Handle document changes from outside (git, other editors, etc.)
     const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
-      (e) => {
+      async (e) => {
         if (e.document.uri.toString() === document.uri.toString()) {
           // Only notify webview if this wasn't from the webview itself
           if (!pendingWebviewUpdate && e.contentChanges.length > 0) {
+            const aiDiffMode = vscode.workspace.getConfiguration('pmtoolkit').get<string>('diff.aiDiffMode', 'off');
+            if (
+              aiDiffMode !== 'off' &&
+              !pendingWebviewUpdate &&
+              document.getText() !== lastKnownContent
+            ) {
+              const { computeDiffRegions } = await import('../diff/diffComputation');
+              const regions = computeDiffRegions(lastKnownContent ?? '', document.getText());
+              if (regions.length > 0) {
+                webviewPanel.webview.postMessage({ type: 'showDiff', regions, mode: aiDiffMode });
+              }
+            }
             updateWebview();
           }
         }
@@ -526,10 +594,56 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
     // Cleanup on dispose
     webviewPanel.onDidDispose(() => {
       MarkdownEditorProvider.activeEditors.delete(document.uri.toString());
+      MarkdownEditorProvider.activeDocuments.delete(document.uri.toString());
       messageHandler.dispose();
       changeDocumentSubscription.dispose();
       templateChangeSubscription.dispose();
     });
+  }
+
+  private stripCommentSyntax(markdown: string): string {
+    // ==text==^[comment] → text  (inline footnote style)
+    let result = markdown.replace(/==((?:(?!==)[\s\S])+)==\^\[[^\]]*\]/g, '$1');
+    // Collect footnote-style comment labels: ==text==[^N]
+    const commentLabels = new Set<string>();
+    const refScan = /==((?:(?!==)[\s\S])+)==\[\^(\w+)\]/g;
+    let m: RegExpExecArray | null;
+    while ((m = refScan.exec(markdown)) !== null) {
+      commentLabels.add(m[2]);
+    }
+    // ==text==[^N] → text
+    result = result.replace(/==((?:(?!==)[\s\S])+)==(?:\[\^\w+\])+/g, '$1');
+    // Remove footnote definitions for comment labels
+    for (const label of commentLabels) {
+      const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      result = result.replace(
+        new RegExp(`^\\[\\^${escaped}\\]:[ \\t]+[^\\n]*(?:\\n(?!\\[\\^|\\n)[^\\n]*)*\\n?`, 'gm'),
+        ''
+      );
+    }
+    return result;
+  }
+
+  private async exportAsMarkdown(document: vscode.TextDocument): Promise<void> {
+    const baseName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
+    const defaultUri = vscode.Uri.file(
+      path.join(path.dirname(document.uri.fsPath), `${baseName}-export.md`)
+    );
+    const target = await vscode.window.showSaveDialog({
+      defaultUri,
+      filters: { 'Markdown Files': ['md'] },
+      title: 'Export as Markdown',
+    });
+    if (!target) return;
+    const content = this.stripCommentSyntax(document.getText());
+    await vscode.workspace.fs.writeFile(target, Buffer.from(content, 'utf-8'));
+    const action = await vscode.window.showInformationMessage(
+      `Exported to ${path.basename(target.fsPath)}`,
+      'Open File'
+    );
+    if (action === 'Open File') {
+      vscode.env.openExternal(target);
+    }
   }
 
   private async updateDocument(

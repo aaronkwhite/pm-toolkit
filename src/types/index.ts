@@ -8,6 +8,21 @@ export interface FileInfo {
 }
 
 /**
+ * Diff region types — mirrored from src/diff/diffComputation.ts
+ * for use in message type definitions.
+ */
+export type DiffRegionType = 'added' | 'removed' | 'changed';
+
+export interface DiffRegion {
+  id: string;
+  type: DiffRegionType;
+  fromPos: number;
+  toPos: number;
+  oldText: string;
+  newText: string;
+}
+
+/**
  * Messages sent from Extension to Webview
  */
 export type ExtensionToWebviewMessage =
@@ -19,7 +34,12 @@ export type ExtensionToWebviewMessage =
   | { type: 'imageSaved'; payload: { originalPath: string; webviewUrl: string } }
   | { type: 'filePickerResult'; payload: { originalPath: string; webviewUrl: string } }
   | { type: 'files'; payload: { files: FileInfo[]; currentFilePath: string } }
-  | { type: 'requestPdfExport' };
+  | { type: 'requestPdfExport' }
+  | { type: 'requestHtmlExport' }
+  | { type: 'openFind' }
+  | { type: 'openFindReplace' }
+  | { type: 'showDiff'; regions: DiffRegion[]; mode: string }
+  | { type: 'clearDiff' };
 
 /**
  * Messages sent from Webview to Extension
@@ -35,7 +55,11 @@ export type WebviewToExtensionMessage =
   | { type: 'requestFilePicker' }
   | { type: 'requestFiles'; payload: { search?: string } }
   | { type: 'openFile'; payload: { path: string } }
-  | { type: 'exportPdf'; payload: { htmlContent: string } };
+  | { type: 'exportPdf'; payload: { htmlContent: string } }
+  | { type: 'exportHtml'; html: string }
+  | { type: 'findBarOpen'; open: boolean }
+  | { type: 'acceptAllDiff' }
+  | { type: 'rejectAllDiff' };
 
 /**
  * Template definition from YAML frontmatter

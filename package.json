@@ -166,9 +166,49 @@
         "title": "Export to PDF",
         "category": "PM Toolkit",
         "icon": "$(file-pdf)"
+      },
+      {
+        "command": "pmtoolkit.find",
+        "title": "PM Toolkit: Find"
+      },
+      {
+        "command": "pmtoolkit.findReplace",
+        "title": "PM Toolkit: Find and Replace"
+      },
+      {
+        "command": "pmtoolkit.exportToHtml",
+        "title": "PM Toolkit: Export to HTML"
+      },
+      {
+        "command": "pmtoolkit.exportAsMarkdown",
+        "title": "PM Toolkit: Export as Markdown"
+      }
+    ],
+    "keybindings": [
+      {
+        "key": "ctrl+f",
+        "mac": "cmd+f",
+        "command": "pmtoolkit.find",
+        "when": "activeCustomEditorId == 'pmtoolkit.markdownEditor' && !pmtoolkit.findBarOpen"
+      },
+      {
+        "key": "ctrl+h",
+        "mac": "cmd+h",
+        "command": "pmtoolkit.findReplace",
+        "when": "activeCustomEditorId == 'pmtoolkit.markdownEditor'"
       }
     ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "pmtoolkit.exportToHtml",
+          "when": "activeCustomEditorId == 'pmtoolkit.markdownEditor'"
+        },
+        {
+          "command": "pmtoolkit.exportAsMarkdown",
+          "when": "activeCustomEditorId == 'pmtoolkit.markdownEditor'"
+        }
+      ],
       "explorer/context": [
         {
           "command": "pmtoolkit.openAsKanban",
@@ -179,6 +219,16 @@
       "editor/title": [
         {
           "command": "pmtoolkit.exportToPdf",
+          "when": "activeCustomEditorId == pmtoolkit.markdownEditor",
+          "group": "1_modification"
+        },
+        {
+          "command": "pmtoolkit.exportToHtml",
+          "when": "activeCustomEditorId == pmtoolkit.markdownEditor",
+          "group": "1_modification"
+        },
+        {
+          "command": "pmtoolkit.exportAsMarkdown",
           "when": "activeCustomEditorId == pmtoolkit.markdownEditor",
           "group": "1_modification"
         },
@@ -283,6 +333,17 @@
           "type": "boolean",
           "default": true,
           "description": "Include background colors/images in PDF export (e.g., code block backgrounds)"
+        },
+        "pmtoolkit.diff.aiDiffMode": {
+          "type": "string",
+          "enum": ["off", "cursor", "claude-code"],
+          "enumDescriptions": [
+            "Off — Do not highlight AI-made changes",
+            "Cursor/Windsurf mode — Highlight changes in PM Toolkit only. Finalize in your AI tool.",
+            "Claude Code mode — Show PM Toolkit Accept/Reject buttons. For AI tools that write directly to the file."
+          ],
+          "default": "off",
+          "description": "Controls how PM Toolkit shows AI-made changes"
         }
       }
     }
@@ -314,19 +375,21 @@
     "@tiptap/react": "^2.27.2",
     "@tiptap/starter-kit": "^2.11.5",
     "@tiptap/suggestion": "^2.11.5",
+    "diff-match-patch": "^1.0.5",
     "gray-matter": "^4.0.3",
     "lucide": "^0.469.0",
     "mammoth": "^1.8.0",
     "mermaid": "^11.4.0",
     "papaparse": "^5.4.1",
     "pdfjs-dist": "^4.9.155",
-"react": "^18.3.1",
+    "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tiptap-markdown": "^0.8.10",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
+    "@types/diff-match-patch": "^1.0.36",
     "@types/express": "^4.17.21",
     "@types/node": "^20.17.14",
     "@types/papaparse": "^5.3.15",
@@ -342,5 +405,10 @@
     "tsx": "^4.7.0",
     "typescript": "^5.7.3",
     "wait-on": "^7.2.0"
+  },
+  "overrides": {
+    "@xmldom/xmldom": ">=0.8.12",
+    "path-to-regexp": "^0.1.13",
+    "axios": ">=1.15.0"
   }
 }
