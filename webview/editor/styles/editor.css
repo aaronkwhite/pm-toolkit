@@ -1952,3 +1952,16 @@ html, body {
   color: var(--vscode-foreground, #ccc);
   padding: 3px 10px; border-radius: 3px; cursor: pointer;
 }
+
+/* ===== Status Bar ===== */
+.pm-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground, #aaa);
+  border-top: 1px solid var(--vscode-editorWidget-border, #454545);
+  user-select: none;
+}
+.pm-status-bar-sep { opacity: 0.5; }

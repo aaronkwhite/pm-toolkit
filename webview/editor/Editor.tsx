@@ -20,6 +20,7 @@ import { BubbleMenuToolbar } from './components/BubbleMenu'
 import { FindReplaceBar } from './components/FindReplaceBar'
 import { DiffToolbar } from './components/DiffToolbar'
 import { CommentsPanel } from './components/CommentsPanel'
+import { StatusBar } from './components/StatusBar'
 
 // Extensions
 import { CustomParagraph } from './extensions/CustomParagraph'
@@ -424,6 +425,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
         onDelete={handleDeleteComment}
         onEdit={handleEditComment}
       />
+      <StatusBar editor={editor} />
     </div>
   )
 }
