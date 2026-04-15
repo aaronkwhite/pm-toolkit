@@ -16,6 +16,7 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import type { NodeViewProps } from '@tiptap/react'
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import mermaid from 'mermaid'
 import { Text, Minimize2, Maximize2 } from 'lucide'
 import { LucideIcon } from '../components/LucideIcon'
@@ -121,6 +122,7 @@ export function MermaidNodeView({
   getPos,
 }: MermaidNodeViewProps) {
   const [isEditing, setIsEditing] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('fit')
   const [renderedSvg, setRenderedSvg] = useState<string>('')
   const [renderError, setRenderError] = useState<string | null>(null)
@@ -253,6 +255,18 @@ export function MermaidNodeView({
       textareaRef.current.select()
     }
   }, [isEditing])
+
+  /**
+   * Close fullscreen overlay on Escape key
+   */
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsFullscreen(false);
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [isFullscreen]);
 
   /**
    * Undo/redo helpers
@@ -580,6 +594,19 @@ export function MermaidNodeView({
           >
             {viewMode === 'scroll' ? <LucideIcon icon={Minimize2} size={16} /> : <LucideIcon icon={Maximize2} size={16} />}
           </button>
+          <button
+            className="mermaid-toolbar-btn"
+            title="Full screen"
+            onMouseDown={e => { e.preventDefault(); setIsFullscreen(true); }}
+            style={{
+              border: 'none',
+              background: 'none',
+              outline: 'none',
+              color: iconColor,
+            }}
+          >
+            <LucideIcon icon={Maximize2} size={14} strokeWidth={2} />
+          </button>
         </div>
       </div>
 
@@ -598,6 +625,21 @@ export function MermaidNodeView({
           onBlur={() => exitEditMode(true)}
         />
       </div>
+
+      {/* Fullscreen overlay */}
+      {isFullscreen && createPortal(
+        <div
+          className="pm-mermaid-fullscreen"
+          onClick={() => setIsFullscreen(false)}
+        >
+          <div
+            className="pm-mermaid-fullscreen-content"
+            onClick={e => e.stopPropagation()}
+            dangerouslySetInnerHTML={{ __html: renderedSvg || '' }}
+          />
+        </div>,
+        document.body
+      )}
     </NodeViewWrapper>
   )
 }

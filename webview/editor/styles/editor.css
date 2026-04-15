@@ -1965,3 +1965,28 @@ html, body {
   user-select: none;
 }
 .pm-status-bar-sep { opacity: 0.5; }
+
+/* ===== Mermaid Fullscreen ===== */
+.pm-mermaid-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+.pm-mermaid-fullscreen-content {
+  max-width: 90vw;
+  max-height: 90vh;
+  background: var(--vscode-editor-background, #1e1e1e);
+  border-radius: 8px;
+  padding: 24px;
+  overflow: auto;
+  cursor: default;
+}
+.pm-mermaid-fullscreen-content svg {
+  max-width: 100%;
+  height: auto;
+}
