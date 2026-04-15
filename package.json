@@ -333,6 +333,17 @@
           "type": "boolean",
           "default": true,
           "description": "Include background colors/images in PDF export (e.g., code block backgrounds)"
+        },
+        "pmtoolkit.diff.aiDiffMode": {
+          "type": "string",
+          "enum": ["off", "cursor", "claude-code"],
+          "enumDescriptions": [
+            "Off — Do not highlight AI-made changes",
+            "Cursor/Windsurf mode — Highlight changes in PM Toolkit only. Finalize in your AI tool.",
+            "Claude Code mode — Show PM Toolkit Accept/Reject buttons. For AI tools that write directly to the file."
+          ],
+          "default": "off",
+          "description": "Controls how PM Toolkit shows AI-made changes"
         }
       }
     }

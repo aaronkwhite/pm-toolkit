@@ -474,6 +474,21 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
             vscode.commands.executeCommand('setContext', 'pmtoolkit.findBarOpen', message.open);
             break;
 
+          case 'acceptAllDiff':
+            // User accepted — diff is already in the file, just clear the UI
+            webviewPanel.webview.postMessage({ type: 'clearDiff' });
+            break;
+
+          case 'rejectAllDiff': {
+            // Revert the file to lastKnownContent
+            const revertEdit = new vscode.WorkspaceEdit();
+            const fullRange = new vscode.Range(0, 0, document.lineCount, 0);
+            revertEdit.replace(document.uri, fullRange, lastKnownContent ?? '');
+            await vscode.workspace.applyEdit(revertEdit);
+            webviewPanel.webview.postMessage({ type: 'clearDiff' });
+            break;
+          }
+
           case 'requestFiles':
             // Webview is requesting list of workspace files for link picker
             try {
@@ -543,10 +558,22 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
 
     // Handle document changes from outside (git, other editors, etc.)
     const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
-      (e) => {
+      async (e) => {
         if (e.document.uri.toString() === document.uri.toString()) {
           // Only notify webview if this wasn't from the webview itself
           if (!pendingWebviewUpdate && e.contentChanges.length > 0) {
+            const aiDiffMode = vscode.workspace.getConfiguration('pmtoolkit').get<string>('diff.aiDiffMode', 'off');
+            if (
+              aiDiffMode !== 'off' &&
+              !pendingWebviewUpdate &&
+              document.getText() !== lastKnownContent
+            ) {
+              const { computeDiffRegions } = await import('../diff/diffComputation');
+              const regions = computeDiffRegions(lastKnownContent ?? '', document.getText());
+              if (regions.length > 0) {
+                webviewPanel.webview.postMessage({ type: 'showDiff', regions, mode: aiDiffMode });
+              }
+            }
             updateWebview();
           }
         }
