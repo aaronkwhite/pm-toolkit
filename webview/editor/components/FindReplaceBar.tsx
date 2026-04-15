@@ -16,7 +16,10 @@ export function FindReplaceBar({ editor }: FindReplaceBarProps) {
 
   const findInputRef = useRef<HTMLInputElement>(null);
 
-  // Subscribe to plugin state changes
+  // Subscribe to plugin state changes.
+  // Derive isOpen / showReplace directly from pluginState so this callback
+  // never captures stale React state (which would require adding them to deps
+  // and re-subscribing on every toggle).
   useEffect(() => {
     if (!editor) return;
 
@@ -24,12 +27,8 @@ export function FindReplaceBar({ editor }: FindReplaceBarProps) {
       const state = findReplaceKey.getState(editor.state);
       if (state) {
         setPluginState({ ...state });
-        if (state.isOpen !== isOpen) {
-          setIsOpen(state.isOpen);
-        }
-        if (state.showReplace !== showReplace) {
-          setShowReplace(state.showReplace);
-        }
+        setIsOpen(state.isOpen);
+        setShowReplace(state.showReplace);
       }
     };
 
@@ -68,9 +67,7 @@ export function FindReplaceBar({ editor }: FindReplaceBarProps) {
 
   // Post findBarOpen message when isOpen changes
   useEffect(() => {
-    if (typeof window.vscode !== 'undefined') {
-      window.vscode.postMessage({ type: 'findBarOpen', open: isOpen });
-    }
+    window.vscode?.postMessage({ type: 'findBarOpen', open: isOpen });
   }, [isOpen]);
 
   // Focus input when opened

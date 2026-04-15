@@ -1,6 +1,20 @@
+/**
+ * Find & Replace Extension
+ *
+ * ProseMirror plugin that implements case-insensitive find/replace with
+ * inline highlight decorations for all matches and a distinct highlight for
+ * the active match.  All state lives in the plugin so React only reads it —
+ * the source of truth is never split between component state and plugin state.
+ *
+ * CSS classes applied by this extension:
+ *   .pm-find-match          — every match
+ *   .pm-find-match-active   — the currently selected match
+ */
+
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 
 export interface FindReplaceState {
   query: string;
@@ -12,14 +26,37 @@ export interface FindReplaceState {
 
 const findReplaceKey = new PluginKey<FindReplaceState>('findReplace');
 
-function findMatches(doc: any, query: string): { from: number; to: number }[] {
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    findReplace: {
+      /** Open the find bar (no replace row). */
+      openFind: () => ReturnType;
+      /** Open the find bar with the replace row visible. */
+      openFindReplace: () => ReturnType;
+      /** Update the search query and recompute matches. */
+      setFindQuery: (query: string) => ReturnType;
+      /** Advance to the next match and scroll it into view. */
+      findNext: () => ReturnType;
+      /** Go back to the previous match and scroll it into view. */
+      findPrev: () => ReturnType;
+      /** Replace the currently active match with the given string. */
+      replaceCurrent: (replacement: string) => ReturnType;
+      /** Replace every match in the document with the given string. */
+      replaceAll: (replacement: string) => ReturnType;
+      /** Close the find bar and clear all match state. */
+      closeFind: () => ReturnType;
+    };
+  }
+}
+
+function findMatches(doc: ProseMirrorNode, query: string): { from: number; to: number }[] {
   if (!query) return [];
   const matches: { from: number; to: number }[] = [];
   const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-  doc.descendants((node: any, pos: number) => {
+  doc.descendants((node: ProseMirrorNode, pos: number) => {
     if (!node.isText) return;
     let m;
-    while ((m = regex.exec(node.text)) !== null) {
+    while ((m = regex.exec(node.text!)) !== null) {
       matches.push({ from: pos + m.index, to: pos + m.index + m[0].length });
     }
   });
@@ -57,6 +94,9 @@ export const FindReplace = Extension.create({
               return next;
             }
 
+            // Only recompute when the doc changed AND the meta did not already
+            // supply fresh matches (e.g. replaceCurrent computes its own matches
+            // on the post-replace doc and passes them via meta above).
             if (tr.docChanged && pluginState.query) {
               return {
                 ...pluginState,
@@ -129,24 +169,15 @@ export const FindReplace = Extension.create({
 
           const nextIndex = (pluginState.activeIndex + 1) % pluginState.matches.length;
           if (dispatch) {
-            tr.setMeta(findReplaceKey, { activeIndex: nextIndex });
-            dispatch(tr);
-
-            // Scroll active match into view
             const match = pluginState.matches[nextIndex];
+            tr.setMeta(findReplaceKey, { activeIndex: nextIndex });
             if (match) {
-              const newTr = state.tr.setSelection(
-                TextSelection.create(state.doc, match.from, match.to)
-              );
-              // We only want to scroll, not actually change selection in a way that breaks things
-              // Use the view's scrollIntoView after dispatch
-              setTimeout(() => {
-                const view = (this as any).editor?.view;
-                if (view) {
-                  view.dispatch(view.state.tr.scrollIntoView());
-                }
-              }, 0);
+              // Move the ProseMirror selection to the match so that
+              // scrollIntoView() brings it into the visible viewport.
+              tr.setSelection(TextSelection.create(state.doc, match.from, match.to));
+              tr.scrollIntoView();
             }
+            dispatch(tr);
           }
           return true;
         },
@@ -161,7 +192,12 @@ export const FindReplace = Extension.create({
             (pluginState.activeIndex - 1 + pluginState.matches.length) %
             pluginState.matches.length;
           if (dispatch) {
+            const match = pluginState.matches[prevIndex];
             tr.setMeta(findReplaceKey, { activeIndex: prevIndex });
+            if (match) {
+              tr.setSelection(TextSelection.create(state.doc, match.from, match.to));
+              tr.scrollIntoView();
+            }
             dispatch(tr);
           }
           return true;
