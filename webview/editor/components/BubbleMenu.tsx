@@ -148,6 +148,9 @@ interface BubbleMenuToolbarProps {
 
 export function BubbleMenuToolbar({ editor }: BubbleMenuToolbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [commentMode, setCommentMode] = useState(false)
+  const [commentInput, setCommentInput] = useState('')
+  const commentInputRef = useRef<HTMLInputElement>(null)
   const linkPickerContainerRef = useRef<HTMLDivElement | null>(null)
   const linkPickerRootRef = useRef<Root | null>(null)
 
@@ -281,15 +284,23 @@ export function BubbleMenuToolbar({ editor }: BubbleMenuToolbarProps) {
   }, [editor, cleanupLinkPicker])
 
   const handleCommentClick = useCallback(() => {
-    const { state } = editor
-    const { from, to } = state.selection
-    const selectedText = state.doc.textBetween(from, to)
-    if (!selectedText) return
+    setCommentMode(true)
+    setCommentInput('')
+    setTimeout(() => commentInputRef.current?.focus(), 0)
+  }, [])
 
-    const commentText = window.prompt('Add comment:', '')
-    if (commentText === null || commentText === '') return
+  const handleCommentConfirm = useCallback(() => {
+    if (commentInput.trim()) {
+      editor.chain().focus().setMark('comment', { commentText: commentInput.trim() }).run()
+    }
+    setCommentMode(false)
+    setCommentInput('')
+  }, [editor, commentInput])
 
-    editor.chain().focus().setMark('comment', { commentText }).run()
+  const handleCommentCancel = useCallback(() => {
+    setCommentMode(false)
+    setCommentInput('')
+    editor.view.focus()
   }, [editor])
 
   const currentBlockType = getCurrentBlockType()
@@ -319,61 +330,81 @@ export function BubbleMenuToolbar({ editor }: BubbleMenuToolbarProps) {
         }}
       >
         <div className="bubble-menu-content">
-          <div className={`bubble-menu-block-dropdown${dropdownOpen ? ' is-open' : ''}`}>
-            <button
-              className="bubble-menu-block-btn"
-              title="Change block type"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              type="button"
-            >
-              <span className="bubble-menu-block-label">{currentBlockType.label}</span>
-              <LucideIcon icon={ChevronDown} size={12} strokeWidth={2.5} />
-            </button>
-            {dropdownOpen && (
-              <div className="bubble-menu-dropdown">
-                {blockTypes.map((type) => (
+          {commentMode ? (
+            <div className="bubble-menu-comment-input">
+              <input
+                ref={commentInputRef}
+                className="bubble-menu-comment-field"
+                placeholder="Add comment..."
+                value={commentInput}
+                onChange={e => setCommentInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') { e.preventDefault(); handleCommentConfirm(); }
+                  if (e.key === 'Escape') handleCommentCancel();
+                }}
+              />
+              <button type="button" onClick={handleCommentConfirm} title="Add comment">✓</button>
+              <button type="button" onClick={handleCommentCancel} title="Cancel">✕</button>
+            </div>
+          ) : (
+            <>
+              <div className={`bubble-menu-block-dropdown${dropdownOpen ? ' is-open' : ''}`}>
+                <button
+                  className="bubble-menu-block-btn"
+                  title="Change block type"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  type="button"
+                >
+                  <span className="bubble-menu-block-label">{currentBlockType.label}</span>
+                  <LucideIcon icon={ChevronDown} size={12} strokeWidth={2.5} />
+                </button>
+                {dropdownOpen && (
+                  <div className="bubble-menu-dropdown">
+                    {blockTypes.map((type) => (
+                      <button
+                        key={type.id}
+                        className={`bubble-menu-dropdown-item${type.check(editor) ? ' is-active' : ''}`}
+                        onClick={() => handleBlockTypeSelect(type)}
+                        type="button"
+                      >
+                        {type.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="bubble-menu-separator" />
+              <div className="bubble-menu-marks">
+                {markButtons.map((btn) => (
                   <button
-                    key={type.id}
-                    className={`bubble-menu-dropdown-item${type.check(editor) ? ' is-active' : ''}`}
-                    onClick={() => handleBlockTypeSelect(type)}
+                    key={btn.id}
+                    className={`bubble-menu-btn${btn.check(editor) ? ' is-active' : ''}`}
+                    title={`${btn.title} (${btn.shortcut})`}
+                    onClick={() => handleMarkClick(btn)}
                     type="button"
                   >
-                    {type.label}
+                    <LucideIcon icon={btn.icon} size={16} strokeWidth={2.5} />
                   </button>
                 ))}
+                <button
+                  className={`bubble-menu-btn${editor.isActive('link') ? ' is-active' : ''}`}
+                  title="Link (\u2318K)"
+                  onClick={() => handleLinkClick()}
+                  type="button"
+                >
+                  <LucideIcon icon={Link2} size={16} strokeWidth={2.5} />
+                </button>
+                <button
+                  className={`bubble-menu-btn${editor.isActive('comment') ? ' is-active' : ''}`}
+                  title="Add comment"
+                  onClick={() => handleCommentClick()}
+                  type="button"
+                >
+                  <LucideIcon icon={MessageSquare} size={16} strokeWidth={2.5} />
+                </button>
               </div>
-            )}
-          </div>
-          <div className="bubble-menu-separator" />
-          <div className="bubble-menu-marks">
-            {markButtons.map((btn) => (
-              <button
-                key={btn.id}
-                className={`bubble-menu-btn${btn.check(editor) ? ' is-active' : ''}`}
-                title={`${btn.title} (${btn.shortcut})`}
-                onClick={() => handleMarkClick(btn)}
-                type="button"
-              >
-                <LucideIcon icon={btn.icon} size={16} strokeWidth={2.5} />
-              </button>
-            ))}
-            <button
-              className={`bubble-menu-btn${editor.isActive('link') ? ' is-active' : ''}`}
-              title="Link (\u2318K)"
-              onClick={() => handleLinkClick()}
-              type="button"
-            >
-              <LucideIcon icon={Link2} size={16} strokeWidth={2.5} />
-            </button>
-            <button
-              className={`bubble-menu-btn${editor.isActive('comment') ? ' is-active' : ''}`}
-              title="Add comment"
-              onClick={() => handleCommentClick()}
-              type="button"
-            >
-              <LucideIcon icon={MessageSquare} size={16} strokeWidth={2.5} />
-            </button>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </TiptapBubbleMenu>

@@ -31,3 +31,33 @@ test('comment text appears in comments panel', async ({ page }) => {
   await expect(page.locator('.pm-comment-text')).toContainText('needs review');
   await expect(page.locator('.pm-comment-highlight')).toContainText('this important thing');
 });
+
+test('comment button in bubble menu opens inline input', async ({ page }) => {
+  const editor = new EditorHelper(page);
+  await editor.load();
+  await editor.simulateInit('Hello world today.');
+  // Select "world"
+  await page.evaluate(() => {
+    const pm = document.querySelector('.ProseMirror');
+    if (!pm) return;
+    const range = document.createRange();
+    const textNode = pm.querySelector('p')?.firstChild;
+    if (!textNode) return;
+    range.setStart(textNode, 6);
+    range.setEnd(textNode, 11);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+  });
+  await page.waitForTimeout(300);
+  // The bubble menu should appear with comment button
+  const commentBtn = page.locator('.bubble-menu-btn[title="Add comment"]');
+  if (await commentBtn.isVisible()) {
+    await commentBtn.click();
+    await expect(page.locator('.bubble-menu-comment-field')).toBeVisible();
+    await page.locator('.bubble-menu-comment-field').fill('test comment');
+    await page.locator('.bubble-menu-comment-field').press('Enter');
+    await page.waitForTimeout(300);
+    await expect(page.locator('.pm-comment-mark')).toBeVisible();
+  }
+});

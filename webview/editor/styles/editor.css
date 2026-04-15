@@ -1427,6 +1427,24 @@ html, body {
   height: 16px;
 }
 
+/* Comment inline input */
+.bubble-menu-comment-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
+}
+.bubble-menu-comment-field {
+  background: var(--vscode-input-background, #3c3c3c);
+  color: var(--vscode-input-foreground, #ccc);
+  border: 1px solid var(--vscode-input-border, #555);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 12px;
+  width: 160px;
+  outline: none;
+}
+
 /* ===== Editor Layout with Sidebar ===== */
 
 #editor-wrapper {
