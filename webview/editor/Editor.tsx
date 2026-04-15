@@ -334,16 +334,23 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
   }, [editor])
 
   const handleDeleteComment = useCallback(
-    (_id: string, highlightText: string) => {
+    (id: string, highlightText: string) => {
+      const index = parseInt(id.replace('comment-', ''), 10)
+      if (isNaN(index)) return
       const current = lastKnownContent.current
-      // Remove ==highlightText==^[any comment] and replace with just the highlighted text
-      const updated = current.replace(
-        new RegExp(
-          `==${highlightText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}==\\^\\[[^\\]]*\\]`,
-          'g'
-        ),
-        highlightText
+      const pattern = new RegExp(
+        `==${highlightText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}==\\^\\[[^\\]]*\\]`,
+        'g'
       )
+      let occurrence = 0
+      const updated = current.replace(pattern, (match) => {
+        if (occurrence === index) {
+          occurrence++
+          return highlightText // remove comment, keep text
+        }
+        occurrence++
+        return match // leave other occurrences unchanged
+      })
       if (updated === current) return
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
@@ -367,15 +374,22 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
 
   const handleEditComment = useCallback(
     (_id: string, highlightText: string, newCommentText: string) => {
+      const index = parseInt(_id.replace('comment-', ''), 10)
+      if (isNaN(index)) return
       const current = lastKnownContent.current
-      // Replace ==highlightText==^[oldComment] with ==highlightText==^[newCommentText]
-      const updated = current.replace(
-        new RegExp(
-          `==${highlightText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}==\\^\\[[^\\]]*\\]`,
-          'g'
-        ),
-        `==${highlightText}==^[${newCommentText}]`
+      const pattern = new RegExp(
+        `==${highlightText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}==\\^\\[[^\\]]*\\]`,
+        'g'
       )
+      let occurrence = 0
+      const updated = current.replace(pattern, (match) => {
+        if (occurrence === index) {
+          occurrence++
+          return `==${highlightText}==^[${newCommentText}]`
+        }
+        occurrence++
+        return match // leave other occurrences unchanged
+      })
       if (updated === current) return
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))

@@ -48,6 +48,22 @@ test('comment containing bold text round-trips correctly', async ({ page }) => {
   expect(content).toContain('^[important note]');
 });
 
+test('deleting one comment does not affect other comments with same highlight text', async ({ page }) => {
+  const editor = new EditorHelper(page);
+  await editor.load();
+  await editor.simulateInit(
+    'See ==world==^[first note] and ==world==^[second note] here.'
+  );
+  await page.waitForTimeout(300);
+  await expect(page.locator('.pm-comment-entry')).toHaveCount(2);
+  // Delete the first comment
+  await page.locator('.pm-comment-entry').first().locator('button', { hasText: 'Delete' }).click();
+  await page.waitForTimeout(300);
+  // Second comment should still exist
+  await expect(page.locator('.pm-comment-entry')).toHaveCount(1);
+  await expect(page.locator('.pm-comment-text')).toContainText('second note');
+});
+
 test('comment button in bubble menu opens inline input', async ({ page }) => {
   const editor = new EditorHelper(page);
   await editor.load();
