@@ -18,6 +18,7 @@ import { BlockHandle } from './components/BlockHandle'
 import { DocumentOutline } from './components/DocumentOutline'
 import { BubbleMenuToolbar } from './components/BubbleMenu'
 import { FindReplaceBar } from './components/FindReplaceBar'
+import { DiffToolbar } from './components/DiffToolbar'
 
 // Extensions
 import { CustomParagraph } from './extensions/CustomParagraph'
@@ -28,6 +29,7 @@ import { MermaidNode } from './extensions/MermaidNode'
 import { TableControls } from './extensions/TableControls'
 import { MarkdownPaste } from './extensions/MarkdownPaste'
 import { FindReplace } from './extensions/FindReplace'
+import { AiDiff } from './extensions/AiDiff'
 
 // VS Code API type
 declare global {
@@ -127,6 +129,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       SlashCommand,
       KeyboardNavigation,
       FindReplace,
+      AiDiff,
     ],
     content: initialContent,
     onUpdate: ({ editor }) => {
@@ -236,6 +239,16 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
           break
         }
 
+        case 'showDiff': {
+          editor.commands.showDiff(message.regions, message.mode)
+          break
+        }
+
+        case 'clearDiff': {
+          editor.commands.clearDiff()
+          break
+        }
+
         // HTML export request from extension
         case 'requestHtmlExport': {
           const html = editor.getHTML()
@@ -290,8 +303,19 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
 
   console.log('[PM Toolkit] Rendering full editor UI')
 
+  const handleAcceptAllDiff = useCallback(() => {
+    editor.commands.clearDiff()
+    window.vscode?.postMessage({ type: 'acceptAllDiff' })
+  }, [editor])
+
+  const handleRejectAllDiff = useCallback(() => {
+    editor.commands.clearDiff()
+    window.vscode?.postMessage({ type: 'rejectAllDiff' })
+  }, [editor])
+
   return (
     <div id="editor-wrapper">
+      <DiffToolbar editor={editor} onAccept={handleAcceptAllDiff} onReject={handleRejectAllDiff} />
       <FindReplaceBar editor={editor} />
       <BlockHandle editor={editor} />
       <EditorContent editor={editor} />

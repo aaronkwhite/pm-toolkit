@@ -1828,3 +1828,30 @@ html, body {
 .pm-find-bar button:hover {
   background: var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.31));
 }
+
+/* ── AI Diff decorations ─────────────────────────────────────────────────── */
+
+.pm-diff-added { background: rgba(40, 167, 69, 0.2); border-bottom: 2px solid rgba(40, 167, 69, 0.5); }
+.pm-diff-changed { background: rgba(255, 193, 7, 0.2); border-bottom: 2px solid rgba(255, 193, 7, 0.5); }
+.pm-diff-removed { background: rgba(220, 53, 69, 0.15); text-decoration: line-through; color: rgba(220, 53, 69, 0.8); pointer-events: none; }
+
+.pm-diff-toolbar {
+  position: sticky; top: 0; z-index: 99;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--vscode-editorWidget-background, #252526);
+  border-bottom: 1px solid var(--vscode-editorWidget-border, #454545);
+  padding: 6px 12px; font-size: 13px;
+}
+
+.pm-diff-accept {
+  background: var(--vscode-button-background, #0e639c);
+  color: var(--vscode-button-foreground, #fff);
+  border: none; padding: 3px 10px; border-radius: 3px; cursor: pointer;
+}
+
+.pm-diff-reject {
+  background: none;
+  border: 1px solid var(--vscode-button-border, #666);
+  color: var(--vscode-foreground, #ccc);
+  padding: 3px 10px; border-radius: 3px; cursor: pointer;
+}
