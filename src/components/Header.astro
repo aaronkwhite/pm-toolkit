@@ -55,8 +55,25 @@ const currentPath = Astro.url.pathname;
 <script>
   const header = document.getElementById('main-header');
   if (header) {
-    const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 8);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
+    let lastY = window.scrollY;
+    let ticking = false;
+
+    const update = () => {
+      const y = window.scrollY;
+      header.classList.toggle('scrolled', y > 8);
+      // Hide when scrolling down past 80px, reveal when scrolling up
+      if (y > 80) {
+        header.classList.toggle('nav-hidden', y > lastY);
+      } else {
+        header.classList.remove('nav-hidden');
+      }
+      lastY = y;
+      ticking = false;
+    };
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    }, { passive: true });
+    update();
   }
 </script>
