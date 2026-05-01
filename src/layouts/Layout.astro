@@ -62,7 +62,7 @@ const jsonLd = {
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="canonical" href={canonicalURL} />
 
     <!-- Primary Meta Tags -->
@@ -98,12 +98,13 @@ const jsonLd = {
     <!-- Dark mode script - runs before page renders to prevent flash -->
     <script is:inline>
       (function() {
-        const stored = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        if (stored === 'dark' || (!stored && prefersDark)) {
-          document.documentElement.classList.add('dark');
-        }
+        try {
+          var t = localStorage.getItem('pmt-theme');
+          if (t !== 'light' && t !== 'dark') {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', t);
+        } catch(e) {}
       })();
     </script>
 
@@ -127,16 +128,15 @@ const jsonLd = {
       function initTheme() {
         const toggle = document.getElementById('theme-toggle');
         if (!toggle) return;
-
         toggle.addEventListener('click', () => {
-          const isDark = document.documentElement.classList.toggle('dark');
-          localStorage.setItem('theme', isDark ? 'dark' : 'light');
+          const current = document.documentElement.getAttribute('data-theme');
+          const next = current === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          localStorage.setItem('pmt-theme', next);
         });
-
-        // Listen for system preference changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-          if (!localStorage.getItem('theme')) {
-            document.documentElement.classList.toggle('dark', e.matches);
+          if (!localStorage.getItem('pmt-theme')) {
+            document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
           }
         });
       }
@@ -154,9 +154,9 @@ const jsonLd = {
           const threshold = 200; // pixels before header bg appears
 
           if (scrollY > threshold) {
-            header.classList.add('header-scrolled');
+            header.classList.add('scrolled');
           } else {
-            header.classList.remove('header-scrolled');
+            header.classList.remove('scrolled');
           }
 
           ticking = false;

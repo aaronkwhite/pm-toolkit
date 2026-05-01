@@ -1,101 +1,97 @@
 ---
-// Fetch latest release version from GitHub at build time
-const releaseRes = await fetch('https://api.github.com/repos/aaronkwhite/pm-toolkit/releases/latest');
-const release = await releaseRes.json();
-const version = release.tag_name || 'v0.5.0';
-
-const marketplaceLinks = [
-  {
-    href: 'https://open-vsx.org/extension/aaronkwhite/pm-toolkit',
-    label: 'Install for Cursor',
-    primary: true,
-  },
-  {
-    href: 'https://marketplace.visualstudio.com/items?itemName=aaronkwhite.pm-toolkit',
-    label: 'Install for VS Code',
-    primary: false,
-  },
-];
-
+let version = 'v0.9.0';
+try {
+  const releaseRes = await fetch('https://api.github.com/repos/aaronkwhite/pm-toolkit/releases/latest');
+  if (releaseRes.ok) {
+    const release = await releaseRes.json();
+    version = release.tag_name || version;
+  }
+} catch {}
 ---
 
-<section class="relative overflow-hidden py-20 sm:py-28 lg:py-36 gradient-mesh noise-overlay">
+<!-- Page-level grid: aurora wash + animated grid lines + mint pulses -->
+<div class="page-grid" aria-hidden="true">
+  <div class="aurora"></div>
+  <div class="grid-overlay">
+    <!-- Horizontal pulses -->
+    <div class="grid-pulse h" style="top:56px; --pulse-duration:9.2s; --pulse-delay:-1.4s;"></div>
+    <div class="grid-pulse h" style="top:168px; --pulse-duration:11.0s; --pulse-delay:-5.8s;"></div>
+    <div class="grid-pulse h" style="top:280px; --pulse-duration:8.4s; --pulse-delay:-3.2s;"></div>
+    <div class="grid-pulse h" style="top:448px; --pulse-duration:12.6s; --pulse-delay:-7.5s;"></div>
+    <!-- Vertical pulses -->
+    <div class="grid-pulse v" style="left:112px; --pulse-duration:10.4s; --pulse-delay:-2.1s;"></div>
+    <div class="grid-pulse v" style="left:336px; --pulse-duration:13.8s; --pulse-delay:-6.6s;"></div>
+    <div class="grid-pulse v" style="left:616px; --pulse-duration:9.6s; --pulse-delay:-4.3s;"></div>
+    <div class="grid-pulse v" style="left:896px; --pulse-duration:11.8s; --pulse-delay:-0.8s;"></div>
+  </div>
+</div>
 
-  <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center max-w-3xl mx-auto mb-16">
+<section class="hero-section">
+  <div style="max-width: 1200px; margin: 0 auto; padding-inline: clamp(20px, 4vw, 48px);">
+    <div class="hero-new">
       <!-- Badge -->
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-secondary)]/20 border border-[var(--color-primary)]/30 mb-8" style="opacity: 0; animation: fadeIn 0.5s ease-out 700ms both;">
-        <svg class="w-5 h-5 text-[var(--color-primary)]" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-        </svg>
-        <span class="text-sm font-semibold gradient-text">FREE FOREVER</span>
+      <div class="hero-eyebrow-new">
+        <span class="chip-dot"></span>
+        Free forever · {version}
       </div>
 
-      <!-- Headline -->
-      <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tighter mb-6 animate-fade-in-up" style="color: var(--text-primary);">
-        Your docs.<br class="sm:hidden" />
-        <span class="gradient-text">Your editor.</span>
+      <!-- Animated headline -->
+      <h1 class="type-headline" id="hero-headline" aria-label="Your docs. Your editor.">
+        <span class="word">Your</span>&nbsp;<span class="word">docs.</span>&nbsp;<span class="word word-accent">Your</span>&nbsp;<span class="word word-accent">editor.</span>
       </h1>
 
       <!-- Subheadline -->
-      <p class="text-xl sm:text-2xl mb-12 animate-fade-in-up delay-150" style="color: var(--text-secondary);">
+      <p class="hero-sub-new" id="hero-sub">
         Visual markdown, kanban boards, and diagrams — right where you code.
       </p>
 
       <!-- CTAs -->
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6 animate-fade-in-up delay-300">
-        {
-          marketplaceLinks.map((link) => (
-            <a
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              class:list={[
-                'btn gap-2',
-                link.primary ? 'btn-primary' : 'btn-secondary',
-              ]}
-            >
-              {link.label}
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
-          ))
-        }
+      <div class="hero-cta-new" id="hero-cta">
+        <a class="btn-new btn-accent-new" href="https://open-vsx.org/extension/aaronkwhite/pm-toolkit" target="_blank" rel="noopener noreferrer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l7.07 17 2.51-7.42 7.42-2.51L3 3z"/></svg>
+          Install for Cursor
+        </a>
+        <a class="btn-new btn-ghost-new" href="https://marketplace.visualstudio.com/items?itemName=aaronkwhite.pm-toolkit" target="_blank" rel="noopener noreferrer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4l-9 8 9 8V4z"/><path d="M21 4L7 13l-4-3 4-3 14-3z" opacity="0.6"/></svg>
+          Install for VS Code
+        </a>
       </div>
 
       <!-- Version -->
-      <p class="text-sm mb-12" style="color: var(--text-muted); opacity: 0; animation: fadeInUp 0.7s ease-out 800ms both;">
-        {version}
-      </p>
+      <p class="hero-version-new" id="hero-version">{version} · MIT licensed · open source</p>
 
-    </div>
-
-    <!-- Hero Screenshot -->
-    <div class="hero-screenshot relative max-w-5xl mx-auto animate-fade-in-up delay-500 rounded-[3rem]">
-      <!-- Gradient background card -->
-      <div class="relative z-10" style="clip-path: inset(0 round 3rem)">
+      <!-- Hero screenshot -->
+      <div class="hero-media-new" id="hero-media">
         <img
-          src="/images/gradient-background.png"
-          alt=""
-          class="w-full h-auto block"
+          src="/images/pmtoolkit-visual-editor.png"
+          srcset="/images/pmtoolkit-visual-editor.png 1160w, /images/pmtoolkit-visual-editor@2x.png 2320w"
+          sizes="(max-width: 1024px) 100vw, 1080px"
+          alt="PM Toolkit visual markdown editor in Cursor"
           loading="eager"
+          width="1160"
+          height="750"
         />
-      </div>
-
-      <!-- Screenshot centered on top -->
-      <div class="absolute z-20 top-[6%] bottom-[6%] left-5 right-5 sm:left-8 sm:right-8 lg:left-10 lg:right-10 flex items-center justify-center animate-float">
-        <div class="w-full rounded-2xl overflow-hidden">
-          <img
-            src="/images/pmtoolkit-visual-editor.png"
-            srcset="/images/pmtoolkit-visual-editor.png 1160w, /images/pmtoolkit-visual-editor@2x.png 2320w"
-            sizes="(max-width: 1024px) 100vw, 900px"
-            alt="PM Toolkit visual markdown editor in Cursor"
-            loading="eager"
-            class="w-full block"
-          />
-        </div>
       </div>
     </div>
   </div>
 </section>
+
+<script>
+  // Stagger the TypedHeadline words in after DOMContentLoaded
+  function initHero() {
+    const words = document.querySelectorAll('#hero-headline .word');
+    words.forEach((w, i) => {
+      setTimeout(() => w.classList.add('in'), 80 + i * 140);
+    });
+    // Reveal remaining elements
+    ['hero-sub', 'hero-cta', 'hero-version', 'hero-media'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) requestAnimationFrame(() => el.classList.add('in'));
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHero);
+  } else {
+    initHero();
+  }
+</script>
