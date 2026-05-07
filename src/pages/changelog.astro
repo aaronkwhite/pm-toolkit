@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import { readFileSync } from 'node:fs';
+import { getHiddenVersions } from '../lib/version';
 
 let changelogRaw = '';
 try {
@@ -59,6 +60,13 @@ for (const line of lines) {
 }
 if (currentEntry) currentEntry.intro = introLines.join('\n').trim();
 
+// Drop entries for versions that exist on GitHub but haven't shipped to the
+// VS Code Marketplace / Open VSX yet — the source CHANGELOG.md is pulled
+// from origin/main at prebuild time, so it can lead the marketplaces.
+// Hidden set comes from the `site-hidden-versions` PostHog flag payload.
+const hidden = await getHiddenVersions();
+const visibleEntries = entries.filter((e) => !hidden.has(e.version));
+
 function tagClass(name: string): string {
   switch (name.toLowerCase()) {
     case 'added': return 'cl-tag cl-tag-added';
@@ -102,7 +110,7 @@ function formatDate(dateStr: string): string {
     <!-- Entries -->
     <section style="padding-top: 0; padding-bottom: clamp(64px, 8vw, 120px);">
       <div class="changelog-layout">
-        {entries.map((entry, i) => (
+        {visibleEntries.map((entry, i) => (
           <article class="changelog-entry-new">
             <div class="changelog-meta-new">
               <div class="changelog-version-row">
