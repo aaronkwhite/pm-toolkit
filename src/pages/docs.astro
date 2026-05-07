@@ -1,15 +1,12 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
-import FinalCTA from '../components/FinalCTA.astro';
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Read the docs markdown file
 const docsPath = path.resolve('src/content/docs.md');
 const docsRaw = fs.readFileSync(docsPath, 'utf-8');
 
-// Simple markdown-to-HTML conversion for our subset of markdown
 function markdownToHtml(md: string): string {
   const lines = md.split('\n');
   const html: string[] = [];
@@ -36,120 +33,192 @@ function markdownToHtml(md: string): string {
   }
 
   function closeTable() {
-    if (inTable && tableRows.length > 0) {
-      html.push('<div class="table-wrapper"><table>');
-      tableRows.forEach((row, i) => {
-        const tag = i === 0 ? 'th' : 'td';
-        const wrapper = i === 0 ? 'thead' : (i === 1 ? 'tbody' : '');
-        if (wrapper === 'thead') html.push('<thead>');
-        if (wrapper === 'tbody') html.push('<tbody>');
-        html.push('<tr>');
-        row.forEach(cell => html.push(`<${tag}>${inline(cell.trim())}</${tag}>`));
-        html.push('</tr>');
-        if (i === 0) html.push('</thead>');
-      });
-      html.push('</tbody></table></div>');
-      tableRows = [];
-      inTable = false;
-    }
+    if (!inTable || tableRows.length === 0) { inTable = false; return; }
+    html.push('<div class="table-wrap"><table>');
+    tableRows.forEach((row, i) => {
+      const tag = i === 0 ? 'th' : 'td';
+      if (i === 0) html.push('<thead>');
+      else if (i === 1) html.push('<tbody>');
+      html.push('<tr>');
+      row.forEach(cell => html.push(`<${tag}>${inline(cell.trim())}</${tag}>`));
+      html.push('</tr>');
+      if (i === 0) html.push('</thead>');
+    });
+    html.push('</tbody></table></div>');
+    tableRows = [];
+    inTable = false;
   }
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    // Code blocks
+  for (const line of lines) {
     if (line.startsWith('```')) {
       if (inCodeBlock) {
         html.push(`<pre><code class="language-${codeLanguage}">${codeContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`);
-        codeContent = '';
-        codeLanguage = '';
-        inCodeBlock = false;
+        codeContent = ''; codeLanguage = ''; inCodeBlock = false;
       } else {
-        closeList();
-        closeTable();
-        inCodeBlock = true;
-        codeLanguage = line.slice(3).trim();
+        closeList(); closeTable();
+        inCodeBlock = true; codeLanguage = line.slice(3).trim();
       }
       continue;
     }
+    if (inCodeBlock) { codeContent += (codeContent ? '\n' : '') + line; continue; }
 
-    if (inCodeBlock) {
-      codeContent += (codeContent ? '\n' : '') + line;
-      continue;
-    }
-
-    // Table rows
     if (line.includes('|') && line.trim().startsWith('|')) {
       closeList();
       const cells = line.split('|').slice(1, -1);
-      // Skip separator rows (|---|---|)
       if (cells.every(c => /^[\s-:]+$/.test(c))) continue;
-      if (!inTable) inTable = true;
+      inTable = true;
       tableRows.push(cells);
       continue;
-    } else {
-      closeTable();
-    }
+    } else { closeTable(); }
 
-    // Headings
-    const headingMatch = line.match(/^(#{1,3}) (.+)/);
-    if (headingMatch) {
+    const hm = line.match(/^(#{1,3}) (.+)/);
+    if (hm) {
       closeList();
-      const level = headingMatch[1].length;
-      const text = headingMatch[2];
+      const level = hm[1].length;
+      const text = hm[2];
       const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       html.push(`<h${level} id="${id}">${inline(text)}</h${level}>`);
       continue;
     }
 
-    // List items
     if (line.match(/^- /)) {
-      if (!inList || listType !== 'ul') {
-        closeList();
-        html.push('<ul>');
-        inList = true;
-        listType = 'ul';
-      }
+      if (!inList || listType !== 'ul') { closeList(); html.push('<ul>'); inList = true; listType = 'ul'; }
       html.push(`<li>${inline(line.slice(2))}</li>`);
       continue;
     }
-
     if (line.match(/^\d+\. /)) {
-      if (!inList || listType !== 'ol') {
-        closeList();
-        html.push('<ol>');
-        inList = true;
-        listType = 'ol';
-      }
+      if (!inList || listType !== 'ol') { closeList(); html.push('<ol>'); inList = true; listType = 'ol'; }
       html.push(`<li>${inline(line.replace(/^\d+\. /, ''))}</li>`);
       continue;
     }
 
-    // Blank line
-    if (line.trim() === '') {
-      closeList();
-      continue;
-    }
-
-    // Paragraph
+    if (line.trim() === '') { closeList(); continue; }
     closeList();
     html.push(`<p>${inline(line)}</p>`);
   }
 
-  closeList();
-  closeTable();
+  closeList(); closeTable();
   return html.join('\n');
 }
 
 const docsHtml = markdownToHtml(docsRaw);
+
+const sidebarSections = [
+  {
+    label: 'Getting Started',
+    links: [
+      { href: '#getting-started', label: 'Overview' },
+      { href: '#installation', label: 'Installation' },
+      { href: '#opening-the-editor', label: 'Opening the Editor' },
+    ],
+  },
+  {
+    label: 'Editor',
+    links: [
+      { href: '#visual-editor', label: 'Visual Editor' },
+      { href: '#block-handles', label: 'Block Handles' },
+      { href: '#bubble-menu', label: 'Bubble Menu' },
+      { href: '#document-outline', label: 'Document Outline' },
+      { href: '#save-guard', label: 'Save Guard' },
+      { href: '#slash-commands', label: 'Slash Commands' },
+    ],
+  },
+  {
+    label: 'Features',
+    links: [
+      { href: '#tables', label: 'Tables' },
+      { href: '#images', label: 'Images' },
+      { href: '#kanban-boards', label: 'Kanban Boards' },
+      { href: '#mermaid-diagrams', label: 'Mermaid Diagrams' },
+      { href: '#pdf-export', label: 'PDF Export' },
+      { href: '#templates', label: 'Templates' },
+    ],
+  },
+  {
+    label: 'Reference',
+    links: [
+      { href: '#keyboard-shortcuts', label: 'Keyboard Shortcuts' },
+      { href: '#file-viewers', label: 'File Viewers' },
+      { href: '#settings', label: 'Settings' },
+      { href: '#faq', label: 'FAQ' },
+    ],
+  },
+];
 ---
 
-<Layout title="Docs - PM Toolkit" description="Learn how to use PM Toolkit — installation, features, keyboard shortcuts, and configuration.">
+<Layout title="Docs — PM Toolkit" description="PM Toolkit docs: install the visual markdown editor for VS Code and Cursor, then set up kanban boards, Mermaid diagrams, slash commands, and PDF export.">
   <Header />
-  <main class="px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-    <div class="prose max-w-3xl mx-auto">
-      <Fragment set:html={docsHtml} />
+
+  <main>
+    <div class="docs-layout-new">
+      <!-- Sticky sidebar -->
+      <aside class="docs-side-new" id="docs-sidebar">
+        {sidebarSections.map((section) => (
+          <div>
+            <h5>{section.label}</h5>
+            {section.links.map((link) => (
+              <a href={link.href} class="docs-link">{link.label}</a>
+            ))}
+          </div>
+        ))}
+      </aside>
+
+      <!-- Content -->
+      <article class="prose-new" id="docs-content">
+        <Fragment set:html={docsHtml} />
+      </article>
     </div>
   </main>
-  <FinalCTA />
+
+  <footer class="footer-new">
+    <div class="footer-inner-new">
+      <a href="/" style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:0.95rem;color:var(--text);text-decoration:none;">
+        <span class="mark">
+          <img class="logo-mark logo-mark-light" src="/images/logos/pm-toolkit-logo-mark.svg" alt="" width="24" height="24" />
+          <img class="logo-mark logo-mark-dark" src="/images/logos/pm-toolkit-logo-mark-dark.svg" alt="" width="24" height="24" />
+        </span>
+        PM Toolkit
+      </a>
+      <p>Made for people who live in their editor.</p>
+      <div class="footer-links-new">
+        <a href="/docs/">Docs</a>
+        <a href="/changelog/">Changelog</a>
+        <a href="https://github.com/aaronkwhite/pm-toolkit" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </div>
+  </footer>
 </Layout>
+
+<script>
+  // Highlight active sidebar link via IntersectionObserver
+  function initDocsSidebar() {
+    const links = document.querySelectorAll<HTMLAnchorElement>('.docs-link');
+    if (!links.length) return;
+
+    const headings = Array.from(
+      document.querySelectorAll<HTMLElement>('#docs-content h1, #docs-content h2, #docs-content h3')
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            links.forEach((a) => {
+              a.classList.toggle('active', a.getAttribute('href') === `#${id}`);
+            });
+          }
+        }
+      },
+      { rootMargin: '-15% 0px -75% 0px', threshold: 0 }
+    );
+
+    headings.forEach((h) => observer.observe(h));
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDocsSidebar);
+  } else {
+    initDocsSidebar();
+  }
+</script>

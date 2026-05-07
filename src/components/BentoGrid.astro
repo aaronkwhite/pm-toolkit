@@ -27,6 +27,7 @@ interface BentoCell {
   subtitle?: string;
   image?: string;
   image2x?: string;
+  alt?: string;
   gridClass: string;
   enter: string;
   delay: number;
@@ -38,6 +39,7 @@ const bentoCells: BentoCell[] = [
     type: 'image',
     image: '/images/pmtoolkit-editor-slash-commands.png',
     image2x: '/images/pmtoolkit-editor-slash-commands@2x.png',
+    alt: 'PM Toolkit slash command menu open in the markdown editor, showing options for headings, tables, images, and diagrams',
     gridClass: 'lg:col-span-2 lg:row-start-1 lg:col-start-1',
     enter: 'bottom',
     delay: 0,
@@ -55,6 +57,7 @@ const bentoCells: BentoCell[] = [
     type: 'image',
     image: '/images/pmtoolkit-editor-outline.png',
     image2x: '/images/pmtoolkit-editor-outline@2x.png',
+    alt: 'PM Toolkit document outline panel listing collapsible headings for quick navigation',
     gridClass: 'lg:col-span-1 lg:row-start-1 lg:col-start-4',
     enter: 'bottom',
     delay: 120,
@@ -73,6 +76,7 @@ const bentoCells: BentoCell[] = [
     type: 'image',
     image: '/images/pmtoolkit-editor-images-drop-resize-align.png',
     image2x: '/images/pmtoolkit-editor-images-drop-resize-align@2x.png',
+    alt: 'Image dropped into the PM Toolkit editor with drag handles for resizing and alignment controls visible',
     gridClass: 'lg:col-span-2 lg:row-start-2 lg:col-start-2',
     enter: 'bottom',
     delay: 240,
@@ -109,7 +113,7 @@ const moreFeatures: MoreFeature[] = [
 ];
 ---
 
-<section class="section noise-overlay" style="background-color: var(--bg-primary); padding-top: 3rem;">
+<section class="section" style="background-color: var(--bg-primary); padding-top: 3rem;">
   <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Section header -->
     <div class="text-center mb-16 scroll-animate" data-animation="animate-fade-in-up">
@@ -138,7 +142,7 @@ const moreFeatures: MoreFeature[] = [
                 <img
                   src={cell.image}
                   srcset={cell.image2x ? `${cell.image} 1x, ${cell.image2x} 2x` : undefined}
-                  alt=""
+                  alt={cell.alt ?? ''}
                   loading="lazy"
                 />
               </div>
@@ -185,7 +189,7 @@ const moreFeatures: MoreFeature[] = [
           <img
             src="/images/pmtoolkit-table-controls.png"
             srcset="/images/pmtoolkit-table-controls.png 1x, /images/pmtoolkit-table-controls@2x.png 2x"
-            alt=""
+            alt="PM Toolkit table editor with row and column controls — click to add cells, grip handle to select rows"
             loading="lazy"
           />
         </div>
@@ -216,7 +220,7 @@ const moreFeatures: MoreFeature[] = [
         <div class="card card-glow card-image group md:order-2" style="min-height: 260px;">
           <img
             src="/images/pm-toolkit-mermaid-chart.png"
-            alt=""
+            alt="Mermaid flowchart diagram rendered inline inside a PM Toolkit markdown document"
             loading="lazy"
           />
         </div>

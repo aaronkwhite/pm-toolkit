@@ -1,0 +1,8 @@
+version: 2
+
+# PostHog public *project* API keys (the `phc_...` token) are write-only and
+# are documented to ship in client-side JavaScript. Allow-list the single
+# file that holds the token; the rest of the repo is still scanned.
+secret:
+  ignored-paths:
+    - src/lib/posthog.ts

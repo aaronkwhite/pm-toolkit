@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import { getLatestPublicVersion } from '../lib/version';
+import { POSTHOG_TOKEN, POSTHOG_HOST } from '../lib/posthog';
 
 interface Props {
   title?: string;
@@ -7,51 +9,102 @@ interface Props {
 }
 
 const {
-  title = 'PM Toolkit - Visual Markdown Editor for Cursor',
+  title = 'PM Toolkit — Visual Markdown Editor for VS Code & Cursor',
   description = 'Your docs. Your editor. A visual editor for markdown, kanban boards, and diagrams — right where you code. Free forever.',
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-const ogImageURL = new URL('/images/og-image.png', Astro.site);
+const ogImageURL = new URL('/images/pmtoolkit-og-image.png', Astro.site);
+const SITE = 'https://getpmtoolkit.com';
+const isHome = Astro.url.pathname === '/' || Astro.url.pathname === '';
+const isDocs = Astro.url.pathname.startsWith('/docs');
+const isChangelog = Astro.url.pathname.startsWith('/changelog');
 
-// Fetch latest version from GitHub at build time
-let version = '0.5.0';
-try {
-  const releaseRes = await fetch('https://api.github.com/repos/aaronkwhite/pm-toolkit/releases/latest');
-  if (releaseRes.ok) {
-    const release = await releaseRes.json();
-    version = (release.tag_name || 'v0.5.0').replace(/^v/, '');
-  }
-} catch {}
+const { version } = await getLatestPublicVersion();
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'PM Toolkit',
-  applicationCategory: 'DeveloperApplication',
-  operatingSystem: 'Windows, macOS, Linux',
-  offers: {
-    '@type': 'Offer',
-    price: '0',
-    priceCurrency: 'USD',
+const graph: any[] = [
+  {
+    '@type': 'Organization',
+    '@id': `${SITE}/#organization`,
+    name: 'PM Toolkit',
+    url: SITE,
+    logo: `${SITE}/images/logos/pm-toolkit-logo-mark.svg`,
+    sameAs: [
+      'https://github.com/aaronkwhite/pm-toolkit',
+      'https://marketplace.visualstudio.com/items?itemName=aaronkwhite.pm-toolkit',
+      'https://open-vsx.org/extension/aaronkwhite/pm-toolkit',
+    ],
   },
-  description: 'Visual editing tools for Cursor/VS Code - markdown, kanban, diagrams',
-  author: {
+  {
+    '@type': 'WebSite',
+    '@id': `${SITE}/#website`,
+    url: SITE,
+    name: 'PM Toolkit',
+    publisher: { '@id': `${SITE}/#organization` },
+    inLanguage: 'en',
+  },
+  {
     '@type': 'Person',
+    '@id': `${SITE}/#author`,
     name: 'Aaron White',
+    url: 'https://github.com/aaronkwhite',
+    sameAs: ['https://github.com/aaronkwhite'],
   },
-  url: 'https://getpmtoolkit.com/',
-  downloadUrl: [
-    'https://marketplace.visualstudio.com/items?itemName=aaronkwhite.pm-toolkit',
-    'https://open-vsx.org/extension/aaronkwhite/pm-toolkit',
-  ],
-  softwareVersion: version,
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '5',
-    ratingCount: '1',
-  },
-};
+];
+
+if (isHome) {
+  graph.push({
+    '@type': 'SoftwareApplication',
+    '@id': `${SITE}/#software`,
+    name: 'PM Toolkit',
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Windows, macOS, Linux',
+    softwareVersion: version,
+    url: SITE,
+    description: 'Visual editing tools for VS Code and Cursor — markdown, kanban, diagrams.',
+    author: { '@id': `${SITE}/#author` },
+    publisher: { '@id': `${SITE}/#organization` },
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    downloadUrl: [
+      'https://marketplace.visualstudio.com/items?itemName=aaronkwhite.pm-toolkit',
+      'https://open-vsx.org/extension/aaronkwhite/pm-toolkit',
+    ],
+    softwareRequirements: 'Visual Studio Code 1.80+ or Cursor',
+  });
+}
+
+if (isDocs) {
+  graph.push({
+    '@type': 'TechArticle',
+    '@id': `${SITE}/docs/#article`,
+    headline: 'PM Toolkit Documentation',
+    description: 'Installation, features, keyboard shortcuts, and configuration for PM Toolkit.',
+    author: { '@id': `${SITE}/#author` },
+    publisher: { '@id': `${SITE}/#organization` },
+    mainEntityOfPage: `${SITE}/docs/`,
+    inLanguage: 'en',
+    proficiencyLevel: 'Beginner',
+  });
+  graph.push({
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: 'Docs', item: `${SITE}/docs/` },
+    ],
+  });
+}
+
+if (isChangelog) {
+  graph.push({
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: 'Changelog', item: `${SITE}/changelog/` },
+    ],
+  });
+}
+
+const jsonLd = { '@context': 'https://schema.org', '@graph': graph };
 ---
 
 <!doctype html>
@@ -60,6 +113,9 @@ const jsonLd = {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="canonical" href={canonicalURL} />
 
     <!-- Primary Meta Tags -->
@@ -72,7 +128,7 @@ const jsonLd = {
     />
     <meta name="author" content="Aaron White" />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#6366F1" />
+    <meta name="theme-color" content="#00E0B0" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -95,24 +151,55 @@ const jsonLd = {
     <!-- Dark mode script - runs before page renders to prevent flash -->
     <script is:inline>
       (function() {
-        const stored = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        if (stored === 'dark' || (!stored && prefersDark)) {
-          document.documentElement.classList.add('dark');
+        function applyTheme() {
+          try {
+            var t = localStorage.getItem('pmt-theme');
+            if (t !== 'light' && t !== 'dark') {
+              t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-theme', t);
+          } catch(e) {}
         }
+        applyTheme();
+        // Re-apply on bfcache restore so back/forward navigation reflects the latest theme
+        window.addEventListener('pageshow', function(e) { if (e.persisted) applyTheme(); });
       })();
     </script>
 
-    <!-- PostHog Analytics -->
-    <script is:inline>
-      if (localStorage.getItem('ph_optout') !== '1') {
-        !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-        posthog.init('phc_3DIgL4ES4ukoFmH4hgg3jR0e6O52PiQIfzfsVEjJu9u', {
-          api_host: 'https://us.i.posthog.com',
-          person_profiles: 'identified_only',
-        });
-      }
+    <!-- PostHog Analytics — deferred to idle so it doesn't block first paint -->
+    <script is:inline define:vars={{ POSTHOG_TOKEN, POSTHOG_HOST }}>
+      (function() {
+        if (localStorage.getItem('ph_optout') === '1') return;
+        function loadPostHog() {
+          !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+          posthog.init(POSTHOG_TOKEN, {
+            api_host: POSTHOG_HOST,
+            person_profiles: 'identified_only',
+            loaded: function(ph) {
+              ph.onFeatureFlags(function(flags) {
+                var root = document.documentElement;
+                // Clear previously-set flag attributes so deactivated flags drop off.
+                for (var i = root.attributes.length - 1; i >= 0; i--) {
+                  var name = root.attributes[i].name;
+                  if (name.indexOf('data-flag-') === 0) root.removeAttribute(name);
+                }
+                (flags || []).forEach(function(key) {
+                  root.setAttribute('data-flag-' + key, 'on');
+                });
+              });
+            },
+          });
+          // Tiny helper so any inline script can branch on a flag.
+          window.__pmtFlag = function(key) {
+            return !!(window.posthog && typeof window.posthog.isFeatureEnabled === 'function' && window.posthog.isFeatureEnabled(key));
+          };
+        }
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(loadPostHog, { timeout: 2000 });
+        } else {
+          setTimeout(loadPostHog, 1);
+        }
+      })();
     </script>
   </head>
   <body class="min-h-screen flex flex-col" style="background-color: var(--bg-primary);">
@@ -124,16 +211,15 @@ const jsonLd = {
       function initTheme() {
         const toggle = document.getElementById('theme-toggle');
         if (!toggle) return;
-
         toggle.addEventListener('click', () => {
-          const isDark = document.documentElement.classList.toggle('dark');
-          localStorage.setItem('theme', isDark ? 'dark' : 'light');
+          const current = document.documentElement.getAttribute('data-theme');
+          const next = current === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          localStorage.setItem('pmt-theme', next);
         });
-
-        // Listen for system preference changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-          if (!localStorage.getItem('theme')) {
-            document.documentElement.classList.toggle('dark', e.matches);
+          if (!localStorage.getItem('pmt-theme')) {
+            document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
           }
         });
       }
@@ -151,9 +237,9 @@ const jsonLd = {
           const threshold = 200; // pixels before header bg appears
 
           if (scrollY > threshold) {
-            header.classList.add('header-scrolled');
+            header.classList.add('scrolled');
           } else {
-            header.classList.remove('header-scrolled');
+            header.classList.remove('scrolled');
           }
 
           ticking = false;
@@ -220,7 +306,7 @@ const jsonLd = {
       <p style="margin:0 0 0.75rem;font-size:0.8125rem;color:var(--text-secondary);line-height:1.4;">We use PostHog to understand how visitors use this site. No personal data is collected.</p>
       <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
         <button id="privacy-optout" style="padding:0.375rem 0.75rem;font-size:0.8125rem;border-radius:6px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;">Opt out</button>
-        <button id="privacy-accept" style="padding:0.375rem 0.75rem;font-size:0.8125rem;border-radius:6px;border:none;background:#6366F1;color:#fff;cursor:pointer;">Got it</button>
+        <button id="privacy-accept" style="padding:0.375rem 0.75rem;font-size:0.8125rem;border-radius:6px;border:none;background:#00E0B0;color:#13171C;cursor:pointer;">Got it</button>
       </div>
     </div>
     <script is:inline>

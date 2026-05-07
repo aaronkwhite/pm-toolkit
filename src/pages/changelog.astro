@@ -1,10 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
-import FinalCTA from '../components/FinalCTA.astro';
 import { readFileSync } from 'node:fs';
+import { getHiddenVersions } from '../lib/version';
 
-// Read CHANGELOG.md from repo root (committed to docs branch)
 let changelogRaw = '';
 try {
   changelogRaw = readFileSync(new URL('../../CHANGELOG.md', import.meta.url), 'utf-8');
@@ -12,134 +11,173 @@ try {
   changelogRaw = '## No changelog available\n\nCould not read CHANGELOG.md.';
 }
 
-// Parse the changelog into structured data
 interface ChangelogEntry {
   version: string;
   date: string;
+  intro: string;
   categories: { name: string; items: string[] }[];
 }
 
 const entries: ChangelogEntry[] = [];
-
-// Split by version headers: ## [x.y.z] - YYYY-MM-DD
 const versionRegex = /^## \[(.+?)\] - (\d{4}-\d{2}-\d{2})/;
 const categoryRegex = /^### (.+)/;
 
 const lines = changelogRaw.split('\n');
 let currentEntry: ChangelogEntry | null = null;
 let currentCategory: { name: string; items: string[] } | null = null;
+let introLines: string[] = [];
+let inIntro = false;
 
 for (const line of lines) {
   const versionMatch = line.match(versionRegex);
   if (versionMatch) {
-    currentEntry = { version: versionMatch[1], date: versionMatch[2], categories: [] };
+    if (currentEntry) {
+      currentEntry.intro = introLines.join('\n').trim();
+    }
+    introLines = [];
+    inIntro = true;
+    currentEntry = { version: versionMatch[1], date: versionMatch[2], intro: '', categories: [] };
     entries.push(currentEntry);
     currentCategory = null;
     continue;
   }
-
   if (!currentEntry) continue;
-
   const categoryMatch = line.match(categoryRegex);
   if (categoryMatch) {
+    inIntro = false;
     currentCategory = { name: categoryMatch[1], items: [] };
     currentEntry.categories.push(currentCategory);
     continue;
   }
-
-  if (currentCategory && line.startsWith('- ')) {
+  if (inIntro && line.trim() && !line.startsWith('###')) {
+    introLines.push(line);
+  } else if (currentCategory && line.startsWith('- ')) {
     currentCategory.items.push(line.slice(2));
   } else if (currentCategory && line.startsWith('  - ')) {
-    // Sub-item: append to the last item
     const last = currentCategory.items.length - 1;
-    if (last >= 0) {
-      currentCategory.items[last] += '\n' + line;
-    }
+    if (last >= 0) currentCategory.items[last] += '\n' + line;
   }
 }
+if (currentEntry) currentEntry.intro = introLines.join('\n').trim();
 
-// Category badge colors
-function categoryColor(name: string): string {
+// Drop entries for versions that exist on GitHub but haven't shipped to the
+// VS Code Marketplace / Open VSX yet — the source CHANGELOG.md is pulled
+// from origin/main at prebuild time, so it can lead the marketplaces.
+// Hidden set comes from the `site-hidden-versions` PostHog flag payload.
+const hidden = await getHiddenVersions();
+const visibleEntries = entries.filter((e) => !hidden.has(e.version));
+
+function tagClass(name: string): string {
   switch (name.toLowerCase()) {
-    case 'added': return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400';
-    case 'fixed': return 'bg-blue-500/15 text-blue-600 dark:text-blue-400';
-    case 'changed': return 'bg-amber-500/15 text-amber-600 dark:text-amber-400';
-    case 'removed': return 'bg-red-500/15 text-red-600 dark:text-red-400';
-    case 'deprecated': return 'bg-orange-500/15 text-orange-600 dark:text-orange-400';
-    case 'documentation': return 'bg-purple-500/15 text-purple-600 dark:text-purple-400';
-    default: return 'bg-gray-500/15 text-gray-600 dark:text-gray-400';
+    case 'added': return 'cl-tag cl-tag-added';
+    case 'fixed': return 'cl-tag cl-tag-fixed';
+    case 'changed': return 'cl-tag cl-tag-changed';
+    case 'removed': return 'cl-tag cl-tag-removed';
+    case 'documentation': return 'cl-tag cl-tag-docs';
+    default: return 'cl-tag cl-tag-added';
   }
 }
 
-// Format markdown-style bold/code in item text
 function formatItem(text: string): string {
   return text
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/`(.+?)`/g, '<code>$1</code>');
 }
 
-// Format date for display
 function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00');
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  try {
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch { return dateStr; }
 }
 ---
 
-<Layout title="Changelog - PM Toolkit" description="See what's new in PM Toolkit. Release notes, new features, bug fixes, and improvements.">
+<Layout title="Changelog — PM Toolkit" description="PM Toolkit release notes — new features, fixes, and improvements for the visual markdown editor for VS Code and Cursor.">
   <Header />
-  <main class="px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-    <div class="max-w-3xl mx-auto">
-      <!-- Page header -->
-      <div class="mb-16">
-        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4" style="color: var(--text-primary);">
-          Changelog
-        </h1>
-        <p class="text-lg" style="color: var(--text-secondary);">
-          New features, bug fixes, and improvements to PM Toolkit.
+
+  <main>
+    <!-- Hero -->
+    <section style="padding-top: clamp(56px, 8vw, 100px); padding-bottom: clamp(28px, 4vw, 56px); position: relative; overflow: hidden;">
+      <div class="aurora" style="opacity: 0.45;"></div>
+      <div style="position: relative; z-index: 1; max-width: 880px; margin: 0 auto; padding-inline: clamp(20px, 4vw, 48px);">
+        <p class="eyebrow-cl">Changelog</p>
+        <h1 style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 500; letter-spacing: -0.03em; line-height: 1.05; margin: 12px 0 16px; color: var(--text);">What's new in PM Toolkit.</h1>
+        <p style="color: var(--text-muted); font-size: clamp(1rem, 1.5vw, 1.2rem); max-width: 56ch;">
+          New features and fixes shipping regularly. Free forever, no catch.
         </p>
       </div>
+    </section>
 
-      <!-- Version entries -->
-      <div class="space-y-16">
-        {entries.map((entry) => (
-          <article>
-            <div class="flex flex-wrap items-baseline gap-3 mb-6">
-              <h2 class="text-2xl font-bold" style="color: var(--text-primary);">
-                v{entry.version}
-              </h2>
-              <time
-                datetime={entry.date}
-                class="text-sm font-medium"
-                style="color: var(--text-tertiary);"
-              >
-                {formatDate(entry.date)}
-              </time>
+    <!-- Entries -->
+    <section style="padding-top: 0; padding-bottom: clamp(64px, 8vw, 120px);">
+      <div class="changelog-layout">
+        {visibleEntries.map((entry, i) => (
+          <article class="changelog-entry-new">
+            <div class="changelog-meta-new">
+              <div class="changelog-version-row">
+                <div class="changelog-version-new">v{entry.version}</div>
+                {i === 0 && <span class="cl-tag cl-tag-sm cl-tag-latest">latest</span>}
+              </div>
+              <div class="changelog-date-new">{formatDate(entry.date)}</div>
             </div>
-
-            <div class="space-y-6">
+            <div class="prose-new" style="max-width: none;">
+              {entry.intro && <p style="color: var(--text-muted); margin-bottom: 20px;" set:html={entry.intro.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>')} />}
               {entry.categories.map((cat) => (
-                <div>
-                  <span class={`inline-block text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full mb-3 ${categoryColor(cat.name)}`}>
-                    {cat.name}
-                  </span>
-                  <ul class="space-y-1.5 pl-0">
-                    {cat.items.map((item) => (
-                      <li class="flex items-start gap-2 text-[0.9375rem] leading-relaxed" style="color: var(--text-secondary);">
-                        <span class="mt-2 w-1 h-1 rounded-full flex-shrink-0" style="background: var(--text-tertiary);" />
-                        <span set:html={formatItem(item.split('\n')[0])} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                cat.items.length > 0 && (
+                  <div class="cl-section">
+                    <span class={tagClass(cat.name)}>{cat.name}</span>
+                    <ul>
+                      {cat.items.map((item) => (
+                        <li set:html={formatItem(item)} />
+                      ))}
+                    </ul>
+                  </div>
+                )
               ))}
             </div>
-
-            {/* Divider between entries */}
-            <div class="mt-12 border-b" style="border-color: var(--border-color);" />
           </article>
         ))}
       </div>
-    </div>
+    </section>
   </main>
-  <FinalCTA />
+
+  <footer class="footer-new">
+    <div class="footer-inner-new">
+      <a href="/" style="display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.95rem; color: var(--text); text-decoration: none;">
+        <span class="mark">
+          <img class="logo-mark logo-mark-light" src="/images/logos/pm-toolkit-logo-mark.svg" alt="" width="24" height="24" />
+          <img class="logo-mark logo-mark-dark" src="/images/logos/pm-toolkit-logo-mark-dark.svg" alt="" width="24" height="24" />
+        </span>
+        PM Toolkit
+      </a>
+      <p>Made for people who live in their editor.</p>
+      <div class="footer-links-new">
+        <a href="/docs/">Docs</a>
+        <a href="/changelog/">Changelog</a>
+        <a href="https://github.com/aaronkwhite/pm-toolkit" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </div>
+  </footer>
 </Layout>
+
+<style>
+  .eyebrow-cl {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+  }
+  [data-theme="dark"] .eyebrow-cl { color: var(--accent); }
+
+  .cl-section { margin-bottom: 24px; }
+  .cl-section > .cl-tag { display: inline-flex; margin-bottom: 12px; }
+  .cl-section > ul { margin-top: 0; }
+
+  .changelog-version-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+</style>
