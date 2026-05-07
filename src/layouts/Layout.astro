@@ -183,9 +183,21 @@ const jsonLd = { '@context': 'https://schema.org', '@graph': graph };
                   var name = root.attributes[i].name;
                   if (name.indexOf('data-flag-') === 0) root.removeAttribute(name);
                 }
-                (flags || []).forEach(function(key) {
+                var active = flags || [];
+                active.forEach(function(key) {
                   root.setAttribute('data-flag-' + key, 'on');
                 });
+                // Hero version chip swap — the data-* attributes carry both
+                // the default and the flag-revealed text so this script does
+                // not need to know the format.
+                var heroVersion = document.getElementById('hero-version');
+                if (heroVersion) {
+                  var enabled = active.indexOf('site-show-v0-8') >= 0;
+                  var text = enabled
+                    ? heroVersion.getAttribute('data-version-text-flag')
+                    : heroVersion.getAttribute('data-version-text-default');
+                  if (text) heroVersion.textContent = text;
+                }
               });
             },
           });

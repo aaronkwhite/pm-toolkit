@@ -60,12 +60,16 @@ for (const line of lines) {
 }
 if (currentEntry) currentEntry.intro = introLines.join('\n').trim();
 
-// Drop entries for versions that exist on GitHub but haven't shipped to the
-// VS Code Marketplace / Open VSX yet — the source CHANGELOG.md is pulled
-// from origin/main at prebuild time, so it can lead the marketplaces.
-// Hidden set comes from the `site-hidden-versions` PostHog flag payload.
+// Render ALL entries, but mark versions in the `site-hidden-versions` PostHog
+// flag payload with `cl-entry-hidden` so they're hidden by default via CSS.
+// The `site-show-v0-8` runtime flag flips them on without a rebuild — used
+// for live demos before v0.8.0 ships to the marketplaces.
 const hidden = await getHiddenVersions();
-const visibleEntries = entries.filter((e) => !hidden.has(e.version));
+// Find the index of the first entry that is NOT hidden — that's the one that
+// gets the "latest" pill in the default state. When the demo flag is enabled,
+// the first build-time-hidden entry effectively becomes "latest" via CSS.
+const firstVisibleIndex = entries.findIndex((e) => !hidden.has(e.version));
+const firstHiddenIndex = entries.findIndex((e) => hidden.has(e.version));
 
 function tagClass(name: string): string {
   switch (name.toLowerCase()) {
@@ -110,12 +114,18 @@ function formatDate(dateStr: string): string {
     <!-- Entries -->
     <section style="padding-top: 0; padding-bottom: clamp(64px, 8vw, 120px);">
       <div class="changelog-layout">
-        {visibleEntries.map((entry, i) => (
-          <article class="changelog-entry-new">
+        {entries.map((entry, i) => {
+          const isHidden = hidden.has(entry.version);
+          const isLatestDefault = i === firstVisibleIndex;
+          const isLatestWhenRevealed = i === firstHiddenIndex;
+          const articleClass = `changelog-entry-new${isHidden ? ' cl-entry-hidden' : ''}`;
+          return (
+          <article class={articleClass} data-changelog-version={entry.version}>
             <div class="changelog-meta-new">
               <div class="changelog-version-row">
                 <div class="changelog-version-new">v{entry.version}</div>
-                {i === 0 && <span class="cl-tag cl-tag-sm cl-tag-latest">latest</span>}
+                {isLatestDefault && <span class="cl-tag cl-tag-sm cl-tag-latest cl-latest-default">latest</span>}
+                {isLatestWhenRevealed && <span class="cl-tag cl-tag-sm cl-tag-latest cl-latest-flag">latest</span>}
               </div>
               <div class="changelog-date-new">{formatDate(entry.date)}</div>
             </div>
@@ -135,7 +145,8 @@ function formatDate(dateStr: string): string {
               ))}
             </div>
           </article>
-        ))}
+          );
+        })}
       </div>
     </section>
   </main>
