@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { getLatestPublicVersion } from '../lib/version';
 
 interface Props {
   title?: string;
@@ -18,15 +19,7 @@ const isHome = Astro.url.pathname === '/' || Astro.url.pathname === '';
 const isDocs = Astro.url.pathname.startsWith('/docs');
 const isChangelog = Astro.url.pathname.startsWith('/changelog');
 
-// Fetch latest version from GitHub at build time
-let version = '0.5.0';
-try {
-  const releaseRes = await fetch('https://api.github.com/repos/aaronkwhite/pm-toolkit/releases/latest');
-  if (releaseRes.ok) {
-    const release = await releaseRes.json();
-    version = (release.tag_name || 'v0.5.0').replace(/^v/, '');
-  }
-} catch {}
+const { version } = await getLatestPublicVersion();
 
 const graph: any[] = [
   {
@@ -181,7 +174,24 @@ const jsonLd = { '@context': 'https://schema.org', '@graph': graph };
           posthog.init('phc_3DIgL4ES4ukoFmH4hgg3jR0e6O52PiQIfzfsVEjJu9u', {
             api_host: 'https://us.i.posthog.com',
             person_profiles: 'identified_only',
+            loaded: function(ph) {
+              ph.onFeatureFlags(function(flags) {
+                var root = document.documentElement;
+                // Clear previously-set flag attributes so deactivated flags drop off.
+                for (var i = root.attributes.length - 1; i >= 0; i--) {
+                  var name = root.attributes[i].name;
+                  if (name.indexOf('data-flag-') === 0) root.removeAttribute(name);
+                }
+                (flags || []).forEach(function(key) {
+                  root.setAttribute('data-flag-' + key, 'on');
+                });
+              });
+            },
           });
+          // Tiny helper so any inline script can branch on a flag.
+          window.__pmtFlag = function(key) {
+            return !!(window.posthog && typeof window.posthog.isFeatureEnabled === 'function' && window.posthog.isFeatureEnabled(key));
+          };
         }
         if ('requestIdleCallback' in window) {
           requestIdleCallback(loadPostHog, { timeout: 2000 });

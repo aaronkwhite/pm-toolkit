@@ -1,12 +1,7 @@
 ---
-let version = 'v0.9.0';
-try {
-  const releaseRes = await fetch('https://api.github.com/repos/aaronkwhite/pm-toolkit/releases/latest');
-  if (releaseRes.ok) {
-    const release = await releaseRes.json();
-    version = release.tag_name || version;
-  }
-} catch {}
+import { getLatestPublicVersion } from '../lib/version';
+
+const { tag: version } = await getLatestPublicVersion();
 ---
 
 <!-- Page-level grid: aurora wash + animated grid lines + mint pulses -->
