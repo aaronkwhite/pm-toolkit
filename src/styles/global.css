@@ -70,11 +70,11 @@
 /* CSS Custom Properties for theming */
 :root, [data-theme="light"] {
   /* Design system tokens */
-  --bg: oklch(0.965 0.004 250);
-  --bg-elev: oklch(0.99 0.003 250);
-  --bg-muted: oklch(0.945 0.006 250);
+  --bg: oklch(1 0 0);
+  --bg-elev: oklch(1 0 0);
+  --bg-muted: oklch(0.97 0.004 250);
   --surface: oklch(1 0 0);
-  --surface-2: oklch(0.955 0.005 250);
+  --surface-2: oklch(0.96 0.005 250);
   --border: oklch(0.9 0.008 250);
   --border-strong: oklch(0.82 0.012 250);
   --text: oklch(0.205 0.012 250);
@@ -973,6 +973,11 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
   filter: brightness(0) invert(1);
 }
 
+/* Brand mark — swap light/dark variants based on theme */
+.logo-mark-dark { display: none; }
+[data-theme="dark"] .logo-mark-light { display: none; }
+[data-theme="dark"] .logo-mark-dark { display: inline-block; }
+
 /* ===== Prose styles for content pages ===== */
 .prose {
   max-width: 48rem;
@@ -1218,18 +1223,23 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
 .hero-eyebrow-new {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 8px;
+  padding: 6px 14px;
   border-radius: 999px;
-  background: var(--accent-softer);
-  border: 1px solid oklch(from var(--accent) l c h / 0.25);
+  /* Light mode: deeper mint bg so it stands out on the white/mint-tinted page */
+  background: oklch(0.86 0.12 170);
+  border: 1px solid oklch(from var(--accent) l c h / 0.5);
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   letter-spacing: 0.04em;
   color: var(--accent-deep);
   margin-bottom: 28px;
 }
-[data-theme="dark"] .hero-eyebrow-new { color: var(--accent); }
+[data-theme="dark"] .hero-eyebrow-new {
+  background: var(--accent-soft);
+  border-color: oklch(from var(--accent) l c h / 0.4);
+  color: var(--accent);
+}
 .chip-dot {
   width: 6px; height: 6px; border-radius: 999px;
   background: var(--accent);
@@ -1263,11 +1273,11 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
 [data-theme="dark"] .type-headline .word-accent { color: var(--accent); }
 
 .hero-sub-new {
-  max-width: 640px;
+  max-width: 760px;
   margin: 0 auto 36px;
   font-size: clamp(1.1rem, 2vw, 1.35rem);
   color: var(--text-muted);
-  text-wrap: balance;
+  text-wrap: pretty;
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.4s,
@@ -1333,6 +1343,7 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
   border-color: var(--border-strong);
 }
 .btn-ghost-new:hover { background: var(--surface-2); border-color: var(--text-muted); }
+[data-theme="dark"] .btn-ghost-new:hover { border-color: oklch(0.54 0.02 250); }
 
 /* Hero screenshot frame */
 .hero-media-new {
@@ -1349,7 +1360,20 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
 }
 .hero-media-new.in { opacity: 1; transform: translateY(0); }
 
-/* Sweeping light-trail ring — thin animated border only, not the background */
+/* Sweeping light-trail ring — electric neon-mint sweep, no purple.
+   Theme-aware stops so the ring stays visible on both white and dark pages. */
+.hero-media-new {
+  /* Dark-mode stops (default) — bright mints on dark page */
+  --ring-edge: var(--color-primary);     /* #00E0B0 */
+  --ring-mid:  var(--color-secondary);   /* #00B8C4 */
+  --ring-hot:  #5FFFAE;                  /* neon mint peak */
+}
+[data-theme="light"] .hero-media-new {
+  /* Light-mode stops — deeper mints/teals for contrast against white */
+  --ring-edge: #00B894;   /* color-primary-dark */
+  --ring-mid:  #0099A8;   /* color-secondary-dark */
+  --ring-hot:  #00E0B0;   /* color-primary as the bright peak */
+}
 .hero-media-new::before,
 .hero-media-new::after {
   content: '';
@@ -1360,9 +1384,10 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
     from var(--gradient-angle),
     transparent 0%,
     transparent 55%,
-    var(--color-primary) 72%,
-    var(--color-secondary) 82%,
-    var(--color-violet-500) 90%,
+    var(--ring-edge) 70%,
+    var(--ring-mid) 78%,
+    var(--ring-hot) 86%,
+    var(--ring-edge) 92%,
     transparent 96%,
     transparent 100%
   );
@@ -1371,10 +1396,12 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
 }
 .hero-media-new::before { z-index: 0; }
 .hero-media-new::after {
+  /* Soft outer halo — share inset with ::before so the glow wraps the sharp
+     ring instead of sitting beside it (which read as a doubled border). */
   z-index: -1;
-  inset: -3px;
-  filter: blur(10px);
-  opacity: 0.7;
+  inset: -1px;
+  filter: blur(16px);
+  opacity: 0.55;
 }
 
 /* Static gradient background — z-index: 1 covers the ring inside the container;
@@ -1384,19 +1411,16 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
   inset: 0;
   border-radius: inherit;
   background:
-    radial-gradient(ellipse at 25% 35%, oklch(0.60 0.25 172) 0%, transparent 55%),
-    radial-gradient(ellipse at 75% 60%, oklch(0.45 0.22 280) 0%, transparent 55%),
-    radial-gradient(ellipse at 55% 10%, oklch(0.55 0.22 325) 0%, transparent 45%),
-    oklch(0.20 0.04 250);
+    radial-gradient(ellipse at 20% 30%, oklch(0.62 0.24 172 / 0.85) 0%, transparent 55%),
+    oklch(0.13 0.01 250);
   pointer-events: none;
   z-index: 1;
 }
 [data-theme="light"] .hero-media-bg {
   background:
-    radial-gradient(ellipse at 25% 35%, oklch(0.72 0.20 172) 0%, transparent 55%),
-    radial-gradient(ellipse at 75% 60%, oklch(0.65 0.18 280) 0%, transparent 55%),
-    radial-gradient(ellipse at 55% 10%, oklch(0.70 0.18 325) 0%, transparent 45%),
-    oklch(0.88 0.04 250);
+    radial-gradient(ellipse at 30% 40%, oklch(0.82 0.18 172) 0%, transparent 60%),
+    radial-gradient(ellipse at 75% 65%, oklch(0.70 0.14 172) 0%, transparent 55%),
+    oklch(0.94 0.07 172);
 }
 
 /* Screenshot floats above the gradient bg */
@@ -1458,11 +1482,7 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
   color: var(--text);
   text-decoration: none;
 }
-.nav-logo-new .mark img { width: 28px; height: 28px; border-radius: 8px; }
-.mark-light-img { display: block; }
-.mark-dark-img { display: none; }
-[data-theme="dark"] .mark-light-img { display: none; }
-[data-theme="dark"] .mark-dark-img { display: block; }
+.nav-logo-new .mark img { width: 28px; height: 28px; }
 
 .nav-links-new {
   display: flex;
@@ -1575,14 +1595,17 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
 .cl-tag-changed  { background: oklch(0.75 0.15 65 / 0.12); color: oklch(0.5 0.12 65); border: 1px solid oklch(0.75 0.15 65 / 0.25); }
 .cl-tag-removed  { background: oklch(0.65 0.2 25 / 0.12); color: oklch(0.45 0.18 25); border: 1px solid oklch(0.65 0.2 25 / 0.25); }
 .cl-tag-docs     { background: oklch(0.6 0.18 280 / 0.12); color: oklch(0.47 0.18 280); border: 1px solid oklch(0.6 0.18 280 / 0.25); }
-.cl-tag-latest   { background: var(--accent-softer); color: var(--accent-deep); border: 1px solid oklch(from var(--accent) l c h / 0.25); }
+.cl-tag-latest   { background: oklch(from var(--color-violet-500) l c h / 0.12); color: var(--color-violet-600); border: 1px solid oklch(from var(--color-violet-500) l c h / 0.28); }
+.cl-tag-sm { padding: 1px 7px; font-size: 0.6rem; letter-spacing: 0.06em; gap: 4px; }
+.cl-tag-sm::before { width: 4px; height: 4px; }
+.cl-tag-latest::before { display: none; }
 
 [data-theme="dark"] .cl-tag-added    { background: oklch(0.9 0.18 170 / 0.12); color: oklch(0.85 0.2 170); border-color: oklch(0.9 0.18 170 / 0.25); }
 [data-theme="dark"] .cl-tag-fixed    { background: oklch(0.7 0.18 240 / 0.12); color: oklch(0.75 0.18 240); border-color: oklch(0.7 0.18 240 / 0.25); }
 [data-theme="dark"] .cl-tag-changed  { background: oklch(0.85 0.17 75 / 0.12); color: oklch(0.85 0.17 75); border-color: oklch(0.85 0.17 75 / 0.25); }
 [data-theme="dark"] .cl-tag-removed  { background: oklch(0.75 0.22 25 / 0.12); color: oklch(0.75 0.22 25); border-color: oklch(0.75 0.22 25 / 0.25); }
 [data-theme="dark"] .cl-tag-docs     { background: oklch(0.7 0.2 280 / 0.12); color: oklch(0.75 0.2 280); border-color: oklch(0.7 0.2 280 / 0.25); }
-[data-theme="dark"] .cl-tag-latest   { background: var(--accent-softer); color: var(--accent); border-color: oklch(from var(--accent) l c h / 0.25); }
+[data-theme="dark"] .cl-tag-latest   { background: oklch(from var(--color-violet-500) l c h / 0.18); color: oklch(0.85 0.13 280); border-color: oklch(from var(--color-violet-500) l c h / 0.4); }
 
 @media (max-width: 760px) {
   .changelog-entry-new { grid-template-columns: 1fr; gap: 12px; }
@@ -1602,9 +1625,25 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
 }
 .docs-side-new {
   position: sticky;
-  top: 80px;
+  top: 96px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   font-size: 0.9rem;
+  padding-bottom: 64px;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s;
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 48px), transparent);
+  mask-image: linear-gradient(to bottom, black calc(100% - 48px), transparent);
 }
+.docs-side-new:hover { scrollbar-color: var(--border) transparent; }
+.docs-side-new::-webkit-scrollbar { width: 6px; }
+.docs-side-new::-webkit-scrollbar-track { background: transparent; }
+.docs-side-new::-webkit-scrollbar-thumb { background: transparent; border-radius: 3px; transition: background 0.2s; }
+.docs-side-new:hover::-webkit-scrollbar-thumb { background: var(--border); }
+.docs-side-new::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
 .docs-side-new h5 {
   font-family: var(--font-mono);
   font-size: 0.7rem;
@@ -1619,7 +1658,7 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
   display: block;
   padding: 6px 10px;
   border-radius: 10px;
-  color: var(--text-muted);
+  color: var(--text);
   font-size: 0.88rem;
   text-decoration: none;
   transition: background 0.2s, color 0.2s;
@@ -1639,13 +1678,13 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
   line-height: 1.7;
   color: var(--text);
 }
-.prose-new h1 { font-size: clamp(1.75rem, 3vw, 2.5rem); margin-bottom: 8px; font-weight: 500; letter-spacing: -0.025em; }
-.prose-new h2 { font-size: clamp(1.25rem, 2vw, 1.75rem); margin: 48px 0 14px; font-weight: 500; letter-spacing: -0.02em; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
-.prose-new h3 { font-size: clamp(1rem, 1.5vw, 1.25rem); margin: 32px 0 10px; font-weight: 500; }
-.prose-new p { margin: 14px 0; color: var(--text); }
+.prose-new h1 { font-size: clamp(1.75rem, 3vw, 2.5rem); margin-bottom: 8px; font-weight: 500; letter-spacing: -0.025em; scroll-margin-top: 96px; }
+.prose-new h2 { font-size: clamp(1.25rem, 2vw, 1.75rem); margin: 48px 0 14px; font-weight: 500; letter-spacing: -0.02em; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); scroll-margin-top: 96px; }
+.prose-new h3 { font-size: clamp(1rem, 1.5vw, 1.25rem); margin: 32px 0 10px; font-weight: 500; scroll-margin-top: 96px; }
+.prose-new p { margin: 14px 0; color: var(--text-muted); }
 .prose-new p.lead { font-size: 1.1rem; color: var(--text-muted); margin-top: 12px; margin-bottom: 28px; }
 .prose-new ul, .prose-new ol { padding-left: 1.4em; margin: 14px 0; }
-.prose-new li { margin: 6px 0; color: var(--text); line-height: 1.7; }
+.prose-new li { margin: 6px 0; color: var(--text-muted); line-height: 1.7; }
 .prose-new strong { color: var(--text); font-weight: 600; }
 .prose-new code {
   font-family: var(--font-mono);
@@ -1686,8 +1725,12 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
 
 /* ===== Footer new ===== */
 .footer-new {
-  background: var(--bg);
-  border-top: 1px solid var(--border);
+  /* Footer is nested inside .cta-dark-section, so its background is supplied
+     by the CTA section + grid + glow — keep it transparent here so the texture
+     reads through and there's no visible seam above the footer. */
+  position: relative;
+  z-index: 1;
+  background: transparent;
   padding: 32px 0;
   font-family: var(--font-sans);
 }
@@ -1716,8 +1759,7 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
 /* ===== Support section ===== */
 .support-section {
   background: var(--bg);
-  border-top: 1px solid var(--border);
-  padding: clamp(56px, 7vw, 96px) 0;
+  padding: clamp(28px, 4vw, 56px) 0;
 }
 .support-inner {
   max-width: 600px;
@@ -1771,16 +1813,45 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
   transition: background 0.2s, border-color 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .support-btn:hover { background: var(--surface-2); border-color: var(--text-muted); transform: translateY(-1px); }
+[data-theme="dark"] .support-btn:hover { border-color: oklch(0.54 0.02 250); }
 .support-coffee-icon { color: #E6A817; }
 
-/* ===== Dark CTA section ===== */
+/* ===== Final CTA section — theme-aware spotlight =====
+   Light mode: soft mint-tinted light surface, dark text, accent glow.
+   Dark mode: dark spotlight surface, light text, accent glow.
+   The class is still .cta-dark-section for backwards compat with the markup. */
 .cta-dark-section {
   position: relative;
   overflow: hidden;
-  background: oklch(0.12 0.008 250);
+  background: var(--cta-bg);
   padding-top: clamp(80px, 10vw, 140px);
+  /* Light-mode tokens */
+  --cta-bg: var(--bg);
+  --cta-text: var(--text);
+  --cta-text-muted: var(--text-muted);
+  --cta-eyebrow: var(--accent-deep);
+  --cta-accent: var(--accent-deep);
+  --cta-glow: oklch(0.78 0.15 170 / 0.18);
+  --cta-grid: oklch(0.5 0.115 170 / 0.08);
+  --cta-ghost-border: var(--border-strong);
+  --cta-ghost-text: var(--text);
+  --cta-ghost-hover-bg: var(--surface-2);
+  --cta-ghost-hover-border: var(--text-muted);
 }
-/* Soft blend from page background into the dark section */
+[data-theme="dark"] .cta-dark-section {
+  --cta-bg: var(--bg);
+  --cta-text: oklch(0.97 0.004 250);
+  --cta-text-muted: oklch(0.6 0.008 250);
+  --cta-eyebrow: oklch(0.78 0.15 170);
+  --cta-accent: oklch(0.85 0.18 170);
+  --cta-glow: oklch(0.78 0.15 170 / 0.2);
+  --cta-grid: oklch(0.9 0.15 170 / 0.06);
+  --cta-ghost-border: oklch(0.32 0.016 250);
+  --cta-ghost-text: oklch(0.75 0.008 250);
+  --cta-ghost-hover-bg: oklch(0.18 0.01 250);
+  --cta-ghost-hover-border: oklch(0.45 0.02 250);
+}
+/* Soft blend from page background into the section so the seam disappears */
 .cta-dark-section::before {
   content: "";
   position: absolute;
@@ -1798,7 +1869,7 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
   width: 900px;
   height: 560px;
   border-radius: 50%;
-  background: radial-gradient(circle, oklch(0.78 0.15 170 / 0.2) 0%, transparent 60%);
+  background: radial-gradient(circle, var(--cta-glow) 0%, transparent 60%);
   filter: blur(70px);
   pointer-events: none;
 }
@@ -1807,8 +1878,8 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(oklch(0.9 0.15 170 / 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0.9 0.15 170 / 0.06) 1px, transparent 1px);
+    linear-gradient(var(--cta-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--cta-grid) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: radial-gradient(ellipse 65% 55% at 50% 38%, #000 20%, transparent 80%);
   -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 38%, #000 20%, transparent 80%);
@@ -1828,7 +1899,7 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: oklch(0.78 0.15 170);
+  color: var(--cta-eyebrow);
   margin-bottom: 20px;
 }
 .cta-headline {
@@ -1837,15 +1908,15 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
   font-weight: 500;
   letter-spacing: -0.03em;
   line-height: 1.0;
-  color: oklch(0.97 0.004 250);
+  color: var(--cta-text);
   margin-bottom: 20px;
 }
 .cta-headline-accent {
-  color: oklch(0.85 0.18 170);
+  color: var(--cta-accent);
 }
 .cta-subhead {
   font-size: clamp(1rem, 1.5vw, 1.2rem);
-  color: oklch(0.6 0.008 250);
+  color: var(--cta-text-muted);
   margin-bottom: 44px;
 }
 .cta-actions {
@@ -1870,17 +1941,17 @@ a:not([class*="bg-"]):not([class*="btn"]):hover {
 }
 .cta-btn:hover { transform: translateY(-1px); }
 .cta-btn-primary {
-  background: oklch(0.78 0.15 170);
-  color: oklch(0.12 0.008 250);
+  background: var(--accent);
+  color: var(--accent-fg);
   box-shadow: 0 0 0 1px oklch(0 0 0 / 0.06), 0 8px 32px oklch(0.78 0.15 170 / 0.35);
 }
 .cta-btn-primary:hover { box-shadow: 0 0 0 1px oklch(0 0 0 / 0.06), 0 12px 40px oklch(0.78 0.15 170 / 0.5); }
 .cta-btn-ghost {
   background: transparent;
-  color: oklch(0.75 0.008 250);
-  border-color: oklch(0.32 0.016 250);
+  color: var(--cta-ghost-text);
+  border-color: var(--cta-ghost-border);
 }
-.cta-btn-ghost:hover { background: oklch(0.18 0.01 250); color: oklch(0.92 0.005 250); border-color: oklch(0.45 0.02 250); }
+.cta-btn-ghost:hover { background: var(--cta-ghost-hover-bg); color: var(--cta-text); border-color: var(--cta-ghost-hover-border); }
 
 /* CTA footer bar */
 .cta-footer {

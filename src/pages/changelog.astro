@@ -105,21 +105,18 @@ function formatDate(dateStr: string): string {
         {entries.map((entry, i) => (
           <article class="changelog-entry-new">
             <div class="changelog-meta-new">
-              <div class="changelog-version-new">v{entry.version}</div>
-              <div class="changelog-date-new">{formatDate(entry.date)}</div>
-              <div class="changelog-tags">
-                {i === 0 && <span class="cl-tag cl-tag-latest">latest</span>}
-                {entry.categories.map((cat) => (
-                  <span class={tagClass(cat.name)}>{cat.name}</span>
-                ))}
+              <div class="changelog-version-row">
+                <div class="changelog-version-new">v{entry.version}</div>
+                {i === 0 && <span class="cl-tag cl-tag-sm cl-tag-latest">latest</span>}
               </div>
+              <div class="changelog-date-new">{formatDate(entry.date)}</div>
             </div>
             <div class="prose-new" style="max-width: none;">
               {entry.intro && <p style="color: var(--text-muted); margin-bottom: 20px;" set:html={entry.intro.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>')} />}
               {entry.categories.map((cat) => (
                 cat.items.length > 0 && (
-                  <div style="margin-bottom: 20px;">
-                    <p style="font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; font-weight: 500;">{cat.name}</p>
+                  <div class="cl-section">
+                    <span class={tagClass(cat.name)}>{cat.name}</span>
                     <ul>
                       {cat.items.map((item) => (
                         <li set:html={formatItem(item)} />
@@ -139,8 +136,8 @@ function formatDate(dateStr: string): string {
     <div class="footer-inner-new">
       <a href="/" style="display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.95rem; color: var(--text); text-decoration: none;">
         <span class="mark">
-          <img class="mark-light-img" src="/images/logo-mark.svg" alt="" width="24" height="24" style="border-radius: 6px;" />
-          <img class="mark-dark-img" src="/images/logo-mark-dark.svg" alt="" width="24" height="24" style="border-radius: 6px;" />
+          <img class="logo-mark logo-mark-light" src="/images/logos/pm-toolkit-logo-mark.svg" alt="" width="24" height="24" />
+          <img class="logo-mark logo-mark-dark" src="/images/logos/pm-toolkit-logo-mark-dark.svg" alt="" width="24" height="24" />
         </span>
         PM Toolkit
       </a>
@@ -164,4 +161,15 @@ function formatDate(dateStr: string): string {
     color: var(--accent-deep);
   }
   [data-theme="dark"] .eyebrow-cl { color: var(--accent); }
+
+  .cl-section { margin-bottom: 24px; }
+  .cl-section > .cl-tag { display: inline-flex; margin-bottom: 12px; }
+  .cl-section > ul { margin-top: 0; }
+
+  .changelog-version-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
 </style>
