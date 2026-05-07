@@ -1,7 +1,11 @@
 ---
-import { getLatestPublicVersion } from '../lib/version';
+import { getLatestPublicVersion, getExpectedNextVersion } from '../lib/version';
 
 const { tag: version } = await getLatestPublicVersion();
+const { tag: nextVersion } = getExpectedNextVersion();
+const versionSuffix = ' · MIT licensed · open source';
+const defaultVersionText = `${version}${versionSuffix}`;
+const flagVersionText = `${nextVersion}${versionSuffix}`;
 ---
 
 <!-- Page-level grid: aurora wash + animated grid lines + mint pulses -->
@@ -52,8 +56,13 @@ const { tag: version } = await getLatestPublicVersion();
         </a>
       </div>
 
-      <!-- Version -->
-      <p class="hero-version-new" id="hero-version">{version} · MIT licensed · open source</p>
+      <!-- Version (text swapped at runtime by the PostHog feature-flag callback) -->
+      <p
+        class="hero-version-new"
+        id="hero-version"
+        data-version-text-default={defaultVersionText}
+        data-version-text-flag={flagVersionText}
+      >{defaultVersionText}</p>
 
       <!-- Hero screenshot -->
       <div class="hero-media-new" id="hero-media">

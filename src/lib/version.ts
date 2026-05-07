@@ -14,6 +14,13 @@ const FAILSAFE_HIDDEN: readonly string[] = ['0.8.0'];
 
 const FALLBACK_VERSION = '0.7.3';
 
+// The next version that has shipped to GitHub-but-not-marketplaces, used to
+// pre-render an "alternate" hero version chip and changelog entry that the
+// `site-show-v0-8` PostHog flag can reveal at runtime without a rebuild.
+// Hardcoded because the GitHub releases API can't return a tag that doesn't
+// exist yet. Drop this constant when v0.8.0 ships to the marketplaces.
+const EXPECTED_NEXT_VERSION = '0.8.0';
+
 function strip(tag: string): string {
   return (tag || '').replace(/^v/, '');
 }
@@ -90,4 +97,13 @@ export async function getLatestPublicVersion(): Promise<VersionResult> {
     }
   } catch {}
   return { version: FALLBACK_VERSION, tag: `v${FALLBACK_VERSION}` };
+}
+
+/**
+ * The runtime-flag-revealed "next" version. Paired with `getLatestPublicVersion`
+ * so pages can render both the safe default and the flag-revealed value, then
+ * swap between them based on the `site-show-v0-8` PostHog flag.
+ */
+export function getExpectedNextVersion(): VersionResult {
+  return { version: EXPECTED_NEXT_VERSION, tag: `v${EXPECTED_NEXT_VERSION}` };
 }
