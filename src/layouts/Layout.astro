@@ -7,12 +7,16 @@ interface Props {
 }
 
 const {
-  title = 'PM Toolkit - Visual Markdown Editor for Cursor',
+  title = 'PM Toolkit — Visual Markdown Editor for VS Code & Cursor',
   description = 'Your docs. Your editor. A visual editor for markdown, kanban boards, and diagrams — right where you code. Free forever.',
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const ogImageURL = new URL('/images/og-image.png', Astro.site);
+const SITE = 'https://getpmtoolkit.com';
+const isHome = Astro.url.pathname === '/' || Astro.url.pathname === '';
+const isDocs = Astro.url.pathname.startsWith('/docs');
+const isChangelog = Astro.url.pathname.startsWith('/changelog');
 
 // Fetch latest version from GitHub at build time
 let version = '0.5.0';
@@ -24,34 +28,89 @@ try {
   }
 } catch {}
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'PM Toolkit',
-  applicationCategory: 'DeveloperApplication',
-  operatingSystem: 'Windows, macOS, Linux',
-  offers: {
-    '@type': 'Offer',
-    price: '0',
-    priceCurrency: 'USD',
+const graph: any[] = [
+  {
+    '@type': 'Organization',
+    '@id': `${SITE}/#organization`,
+    name: 'PM Toolkit',
+    url: SITE,
+    logo: `${SITE}/images/logos/pm-toolkit-logo-mark.svg`,
+    sameAs: [
+      'https://github.com/aaronkwhite/pm-toolkit',
+      'https://marketplace.visualstudio.com/items?itemName=aaronkwhite.pm-toolkit',
+      'https://open-vsx.org/extension/aaronkwhite/pm-toolkit',
+    ],
   },
-  description: 'Visual editing tools for Cursor/VS Code - markdown, kanban, diagrams',
-  author: {
+  {
+    '@type': 'WebSite',
+    '@id': `${SITE}/#website`,
+    url: SITE,
+    name: 'PM Toolkit',
+    publisher: { '@id': `${SITE}/#organization` },
+    inLanguage: 'en',
+  },
+  {
     '@type': 'Person',
+    '@id': `${SITE}/#author`,
     name: 'Aaron White',
+    url: 'https://github.com/aaronkwhite',
+    sameAs: ['https://github.com/aaronkwhite'],
   },
-  url: 'https://getpmtoolkit.com/',
-  downloadUrl: [
-    'https://marketplace.visualstudio.com/items?itemName=aaronkwhite.pm-toolkit',
-    'https://open-vsx.org/extension/aaronkwhite/pm-toolkit',
-  ],
-  softwareVersion: version,
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '5',
-    ratingCount: '1',
-  },
-};
+];
+
+if (isHome) {
+  graph.push({
+    '@type': 'SoftwareApplication',
+    '@id': `${SITE}/#software`,
+    name: 'PM Toolkit',
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Windows, macOS, Linux',
+    softwareVersion: version,
+    url: SITE,
+    description: 'Visual editing tools for VS Code and Cursor — markdown, kanban, diagrams.',
+    author: { '@id': `${SITE}/#author` },
+    publisher: { '@id': `${SITE}/#organization` },
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    downloadUrl: [
+      'https://marketplace.visualstudio.com/items?itemName=aaronkwhite.pm-toolkit',
+      'https://open-vsx.org/extension/aaronkwhite/pm-toolkit',
+    ],
+    softwareRequirements: 'Visual Studio Code 1.80+ or Cursor',
+  });
+}
+
+if (isDocs) {
+  graph.push({
+    '@type': 'TechArticle',
+    '@id': `${SITE}/docs/#article`,
+    headline: 'PM Toolkit Documentation',
+    description: 'Installation, features, keyboard shortcuts, and configuration for PM Toolkit.',
+    author: { '@id': `${SITE}/#author` },
+    publisher: { '@id': `${SITE}/#organization` },
+    mainEntityOfPage: `${SITE}/docs/`,
+    inLanguage: 'en',
+    proficiencyLevel: 'Beginner',
+  });
+  graph.push({
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: 'Docs', item: `${SITE}/docs/` },
+    ],
+  });
+}
+
+if (isChangelog) {
+  graph.push({
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: 'Changelog', item: `${SITE}/changelog/` },
+    ],
+  });
+}
+
+const jsonLd = { '@context': 'https://schema.org', '@graph': graph };
 ---
 
 <!doctype html>
@@ -98,13 +157,18 @@ const jsonLd = {
     <!-- Dark mode script - runs before page renders to prevent flash -->
     <script is:inline>
       (function() {
-        try {
-          var t = localStorage.getItem('pmt-theme');
-          if (t !== 'light' && t !== 'dark') {
-            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          }
-          document.documentElement.setAttribute('data-theme', t);
-        } catch(e) {}
+        function applyTheme() {
+          try {
+            var t = localStorage.getItem('pmt-theme');
+            if (t !== 'light' && t !== 'dark') {
+              t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-theme', t);
+          } catch(e) {}
+        }
+        applyTheme();
+        // Re-apply on bfcache restore so back/forward navigation reflects the latest theme
+        window.addEventListener('pageshow', function(e) { if (e.persisted) applyTheme(); });
       })();
     </script>
 
