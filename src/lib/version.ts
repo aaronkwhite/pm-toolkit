@@ -7,8 +7,8 @@
 // fails we fail closed (use FAILSAFE_HIDDEN) so an outage cannot leak an
 // unreleased version into the rendered HTML or JSON-LD.
 
-const POSTHOG_HOST = 'https://us.i.posthog.com';
-const POSTHOG_TOKEN = 'phc_3DIgL4ES4ukoFmH4hgg3jR0e6O52PiQIfzfsVEjJu9u';
+import { POSTHOG_HOST, POSTHOG_TOKEN } from './posthog';
+
 const FLAG_KEY = 'site-hidden-versions';
 const FAILSAFE_HIDDEN: readonly string[] = ['0.8.0'];
 
