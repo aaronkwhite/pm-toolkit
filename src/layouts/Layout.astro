@@ -12,7 +12,7 @@ const {
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-const ogImageURL = new URL('/images/og-image.png', Astro.site);
+const ogImageURL = new URL('/images/pmtoolkit-og-image.png', Astro.site);
 const SITE = 'https://getpmtoolkit.com';
 const isHome = Astro.url.pathname === '/' || Astro.url.pathname === '';
 const isDocs = Astro.url.pathname.startsWith('/docs');
