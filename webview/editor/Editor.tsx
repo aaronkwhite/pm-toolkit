@@ -33,7 +33,6 @@ import { FindReplace } from './extensions/FindReplace'
 import { AiDiff } from './extensions/AiDiff'
 import {
   CommentMark,
-  preprocessCommentsToHtml,
   parseCommentsFromMarkdown,
   type ParsedComment,
 } from './extensions/CommentMark'
@@ -88,7 +87,9 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
   const isUpdatingFromExtension = useRef(false)
   const updateTimeout = useRef<number | null>(null)
   const lastKnownContent = useRef(initialContent)
-  const [comments, setComments] = useState<ParsedComment[]>([])
+  const [comments, setComments] = useState<ParsedComment[]>(() =>
+    parseCommentsFromMarkdown(initialContent ?? '')
+  )
 
   console.log('[PM Toolkit] About to call useEditor')
   const editor = useEditor({
@@ -188,11 +189,11 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
             // Update comments panel from the incoming markdown
             setComments(parseCommentsFromMarkdown(content))
 
-            // Preprocess comment syntax → HTML so Tiptap's HTML parser picks it up
-            const commentProcessed = preprocessCommentsToHtml(content)
-
-            // Preprocess mermaid blocks to protect them from double-parsing
-            const processedContent = preprocessMermaidBlocks(commentProcessed)
+            // Preprocess mermaid blocks to protect them from double-parsing.
+            // Comment syntax (==text==^[comment]) is handled by the markdown-it
+            // core rule registered in CommentMark.addStorage().markdown.parse.setup,
+            // so no HTML preprocessing is needed here.
+            const processedContent = preprocessMermaidBlocks(content)
 
             // Set content without adding to undo history.
             // Pass markdown directly to setContent — tiptap-markdown's override
@@ -315,6 +316,46 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
     }
   }, [editor])
 
+  // Comment popover state — shows comment text when user clicks a highlighted span
+  const [commentPopover, setCommentPopover] = useState<{
+    text: string
+    x: number
+    y: number
+  } | null>(null)
+
+  // Click handler for comment marks — reads data-comment from DOM
+  useEffect(() => {
+    if (!editor) return
+    const editorDom = editor.view.dom
+
+    const handleClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('mark[data-comment]') as HTMLElement | null
+      if (target) {
+        const commentText = target.getAttribute('data-comment') ?? ''
+        const rect = target.getBoundingClientRect()
+        setCommentPopover({
+          text: commentText,
+          x: rect.left + rect.width / 2,
+          y: rect.bottom + window.scrollY + 6,
+        })
+        e.stopPropagation()
+      } else {
+        setCommentPopover(null)
+      }
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setCommentPopover(null)
+    }
+
+    editorDom.addEventListener('click', handleClick)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      editorDom.removeEventListener('click', handleClick)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [editor])
+
   console.log('[PM Toolkit] editor instance:', editor ? 'created' : 'null')
 
   if (!editor) {
@@ -355,8 +396,8 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
-      const commentProcessed = preprocessCommentsToHtml(updated)
-      const processedContent = preprocessMermaidBlocks(commentProcessed)
+      // Pass raw markdown — the CommentMark markdown-it rule handles comment syntax
+      const processedContent = preprocessMermaidBlocks(updated)
       editor
         .chain()
         .command(({ tr }) => {
@@ -394,8 +435,8 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
-      const commentProcessed = preprocessCommentsToHtml(updated)
-      const processedContent = preprocessMermaidBlocks(commentProcessed)
+      // Pass raw markdown — the CommentMark markdown-it rule handles comment syntax
+      const processedContent = preprocessMermaidBlocks(updated)
       editor
         .chain()
         .command(({ tr }) => {
@@ -412,7 +453,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
   )
 
   return (
-    <div id="editor-wrapper">
+    <div id="editor-wrapper" onClick={() => setCommentPopover(null)}>
       <DiffToolbar editor={editor} onAccept={handleAcceptAllDiff} onReject={handleRejectAllDiff} />
       <FindReplaceBar editor={editor} />
       <BlockHandle editor={editor} />
@@ -424,6 +465,33 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
         onDelete={handleDeleteComment}
         onEdit={handleEditComment}
       />
+      {commentPopover && (
+        <div
+          className="pm-comment-popover"
+          style={{
+            position: 'fixed',
+            left: commentPopover.x,
+            top: commentPopover.y,
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            background: 'var(--vscode-editorWidget-background, #252526)',
+            color: 'var(--vscode-editorWidget-foreground, #cccccc)',
+            border: '1px solid var(--vscode-editorWidget-border, #454545)',
+            borderRadius: '4px',
+            padding: '6px 10px',
+            maxWidth: '300px',
+            fontSize: '13px',
+            lineHeight: '1.4',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            pointerEvents: 'none',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {commentPopover.text}
+        </div>
+      )}
     </div>
   )
 }

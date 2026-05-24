@@ -7,7 +7,7 @@
       "request": "launch",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "${env:HOME}/Sites/personal/pm-toolkit-examples"
+        "${env:HOME}/Documents/Projects/pm-toolkit-examples"
       ],
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "preLaunchTask": "npm: watch"
@@ -18,7 +18,7 @@
       "request": "launch",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "${env:HOME}/Sites/personal/pm-toolkit-examples"
+        "${env:HOME}/Documents/Projects/pm-toolkit-examples"
       ],
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "preLaunchTask": "npm: compile"

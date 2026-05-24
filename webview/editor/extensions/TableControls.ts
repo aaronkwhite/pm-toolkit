@@ -645,8 +645,9 @@ export const TableControls = Extension.create({
 
       const tableRect = currentTable.getBoundingClientRect();
 
-      // Row grip: show for all rows including the header
-      if (rowIdx >= 0 && rowIdx !== activeRowIndex) {
+      // Row grip: skip header rows (rows containing <th> cells)
+      const isHeaderRow = row.querySelector('th') !== null;
+      if (!isHeaderRow && rowIdx >= 0 && rowIdx !== activeRowIndex) {
         activeRowIndex = rowIdx;
         if (!rowGrip) {
           rowGrip = createGripEl('table-row-grip', GRIP_V_SVG);
