@@ -489,6 +489,50 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
             break;
           }
 
+          case 'openWikiLink': {
+            // Webview clicked a [[Page]] link — find and open the file
+            try {
+              const page = message.page;
+              if (!page) break;
+
+              // Search workspace for a file matching the page name
+              const files = await vscode.workspace.findFiles(
+                `**/${page}.md`,
+                '**/node_modules/**',
+                5
+              );
+
+              if (files.length > 0) {
+                // Open the first match with PM Toolkit editor
+                await vscode.commands.executeCommand(
+                  'vscode.openWith',
+                  files[0],
+                  MarkdownEditorProvider.viewType
+                );
+              } else {
+                // No matching file — offer to create it
+                const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+                const create = 'Create File';
+                const choice = await vscode.window.showInformationMessage(
+                  `No file found for "[[${page}]]". Create it?`,
+                  create
+                );
+                if (choice === create && workspaceRoot) {
+                  const newUri = vscode.Uri.joinPath(workspaceRoot, `${page}.md`);
+                  await vscode.workspace.fs.writeFile(newUri, new Uint8Array());
+                  await vscode.commands.executeCommand(
+                    'vscode.openWith',
+                    newUri,
+                    MarkdownEditorProvider.viewType
+                  );
+                }
+              }
+            } catch (err) {
+              console.error('Failed to open wiki link:', err);
+            }
+            break;
+          }
+
           case 'requestFiles':
             // Webview is requesting list of workspace files for link picker
             try {

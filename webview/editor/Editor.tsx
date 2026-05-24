@@ -37,6 +37,7 @@ import {
   parseCommentsFromMarkdown,
   type ParsedComment,
 } from './extensions/CommentMark'
+import { WikiLink, preprocessWikiLinksToHtml } from './extensions/WikiLink'
 
 // VS Code API type
 declare global {
@@ -139,6 +140,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       FindReplace,
       AiDiff,
       CommentMark,
+      WikiLink,
     ],
     content: initialContent,
     onUpdate: ({ editor }) => {
@@ -191,8 +193,11 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
             // Preprocess comment syntax → HTML so Tiptap's HTML parser picks it up
             const commentProcessed = preprocessCommentsToHtml(content)
 
+            // Preprocess wiki link syntax → HTML so Tiptap's HTML parser picks it up
+            const wikiLinkProcessed = preprocessWikiLinksToHtml(commentProcessed)
+
             // Preprocess mermaid blocks to protect them from double-parsing
-            const processedContent = preprocessMermaidBlocks(commentProcessed)
+            const processedContent = preprocessMermaidBlocks(wikiLinkProcessed)
 
             // Set content without adding to undo history.
             // Pass markdown directly to setContent — tiptap-markdown's override
@@ -356,7 +361,8 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
       const commentProcessed = preprocessCommentsToHtml(updated)
-      const processedContent = preprocessMermaidBlocks(commentProcessed)
+      const wikiLinkProcessed = preprocessWikiLinksToHtml(commentProcessed)
+      const processedContent = preprocessMermaidBlocks(wikiLinkProcessed)
       editor
         .chain()
         .command(({ tr }) => {
@@ -395,7 +401,8 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
       const commentProcessed = preprocessCommentsToHtml(updated)
-      const processedContent = preprocessMermaidBlocks(commentProcessed)
+      const wikiLinkProcessed = preprocessWikiLinksToHtml(commentProcessed)
+      const processedContent = preprocessMermaidBlocks(wikiLinkProcessed)
       editor
         .chain()
         .command(({ tr }) => {
