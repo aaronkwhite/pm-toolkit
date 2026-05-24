@@ -18,11 +18,9 @@ html, body {
 
 #board {
   display: flex;
-  gap: 16px;
-  padding: 16px;
+  flex-direction: column;
   min-height: 100vh;
-  overflow-x: auto;
-  align-items: flex-start;
+  padding: 12px 16px 16px;
 }
 
 /* ===== Loading State ===== */
@@ -32,6 +30,77 @@ html, body {
   text-align: center;
   color: var(--vscode-descriptionForeground);
   width: 100%;
+}
+
+/* ===== Filter Bar ===== */
+
+.kanban-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.filter-bar-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.filter-bar-input {
+  flex: 1;
+  max-width: 320px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.filter-bar-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.filter-bar-input:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.filter-bar-clear {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.filter-bar-clear:hover {
+  background: var(--vscode-list-hoverBackground);
+  color: var(--vscode-foreground);
+}
+
+/* ===== Columns wrapper (horizontal scroll area) ===== */
+
+.kanban-columns {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  overflow-x: auto;
+  align-items: flex-start;
 }
 
 /* ===== Column Styles ===== */
@@ -44,7 +113,7 @@ html, body {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 32px);
+  max-height: calc(100vh - 80px); /* 80px accounts for filter bar + top padding */
 }
 
 .column-header {
@@ -371,20 +440,20 @@ html, body {
   background: var(--vscode-scrollbarSlider-hoverBackground);
 }
 
-#board::-webkit-scrollbar {
+.kanban-columns::-webkit-scrollbar {
   height: 8px;
 }
 
-#board::-webkit-scrollbar-track {
+.kanban-columns::-webkit-scrollbar-track {
   background: transparent;
 }
 
-#board::-webkit-scrollbar-thumb {
+.kanban-columns::-webkit-scrollbar-thumb {
   background: var(--vscode-scrollbarSlider-background);
   border-radius: 4px;
 }
 
-#board::-webkit-scrollbar-thumb:hover {
+.kanban-columns::-webkit-scrollbar-thumb:hover {
   background: var(--vscode-scrollbarSlider-hoverBackground);
 }
 
@@ -793,4 +862,62 @@ html, body {
   max-height: 120px;
   object-fit: cover;
   display: block;
+}
+
+/* ===== Inline Chips (@date, #tag) ===== */
+
+.chip {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.6;
+  vertical-align: middle;
+  white-space: nowrap;
+  margin: 0 2px;
+}
+
+/* @date chip — future or no status */
+.chip-date {
+  background: color-mix(in srgb, var(--vscode-textLink-foreground) 15%, transparent);
+  color: var(--vscode-textLink-foreground);
+  border: 1px solid color-mix(in srgb, var(--vscode-textLink-foreground) 30%, transparent);
+}
+
+/* @date chip — overdue (past date) */
+.chip-date-overdue {
+  background: color-mix(in srgb, var(--vscode-errorForeground, #f44336) 15%, transparent);
+  color: var(--vscode-errorForeground, #f44336);
+  border: 1px solid color-mix(in srgb, var(--vscode-errorForeground, #f44336) 30%, transparent);
+}
+
+/* @date chip — today */
+.chip-date-today {
+  background: color-mix(in srgb, var(--vscode-notificationsWarningIcon-foreground, #cca700) 18%, transparent);
+  color: var(--vscode-notificationsWarningIcon-foreground, #cca700);
+  border: 1px solid color-mix(in srgb, var(--vscode-notificationsWarningIcon-foreground, #cca700) 35%, transparent);
+}
+
+/* #tag chip */
+.chip-tag {
+  background: var(--vscode-badge-background, rgba(127, 127, 127, 0.2));
+  color: var(--vscode-badge-foreground, var(--vscode-foreground));
+  border: 1px solid transparent;
+}
+
+/* ===== Filter card states ===== */
+
+/* Cards that don't match the active filter are dimmed and non-interactive */
+.kanban-card.filter-dimmed {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Highlighted match text within card titles */
+mark.filter-highlight {
+  background: color-mix(in srgb, var(--vscode-editor-findMatchHighlightBackground, #ea5c0066) 80%, transparent);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
 }

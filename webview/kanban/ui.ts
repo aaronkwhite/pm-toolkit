@@ -8,7 +8,9 @@ import type { KanbanBoard, KanbanColumn, KanbanCard, ColumnSettings, BoardSettin
 
 interface RenderOptions {
   boardSettings?: BoardSettings;
+  filterQuery?: string;
 }
+
 import { MoreVertical } from './icons';
 import { showColumnMenu } from './menu';
 import { openCardModal } from './modal';
@@ -88,6 +90,116 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
+// ─── Date helpers ────────────────────────────────────────────────────────────
+
+function todayDateStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function tomorrowDateStr(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function formatDateChipLabel(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  // Use local noon to avoid DST edge-case date shifts
+  const d = new Date(year, month - 1, day, 12, 0, 0);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// ─── Chip renderer ───────────────────────────────────────────────────────────
+
+/**
+ * Populate `container` with text nodes, date chips, and tag chips parsed from
+ * `text`. If `highlightQuery` is non-empty, matching plain-text segments are
+ * wrapped in <mark class="filter-highlight"> spans.
+ */
+function renderChips(container: HTMLElement, text: string, highlightQuery?: string): void {
+  // Matches @{YYYY-MM-DD}, @today, @tomorrow, or #tag
+  const pattern = /(@\{(\d{4}-\d{2}-\d{2})\}|@today|@tomorrow|#([a-zA-Z0-9][a-zA-Z0-9-]*))/g;
+
+  const todayDate = todayDateStr();
+  const tomorrowDate = tomorrowDateStr();
+
+  const appendText = (raw: string) => {
+    if (!raw) return;
+    const q = highlightQuery ?? '';
+    if (q.length === 0) {
+      container.appendChild(document.createTextNode(raw));
+      return;
+    }
+    // Highlight matching segments (case-insensitive)
+    const lower = raw.toLowerCase();
+    const lq = q.toLowerCase();
+    let pos = 0;
+    while (pos < raw.length) {
+      const found = lower.indexOf(lq, pos);
+      if (found === -1) {
+        container.appendChild(document.createTextNode(raw.slice(pos)));
+        break;
+      }
+      if (found > pos) {
+        container.appendChild(document.createTextNode(raw.slice(pos, found)));
+      }
+      const mark = document.createElement('mark');
+      mark.className = 'filter-highlight';
+      mark.textContent = raw.slice(found, found + q.length);
+      container.appendChild(mark);
+      pos = found + q.length;
+    }
+  };
+
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    appendText(text.slice(lastIndex, match.index));
+    lastIndex = match.index + match[0].length;
+
+    const full = match[1];
+
+    if (full.startsWith('@')) {
+      // Date chip
+      let dateValue: string;
+      let label: string;
+
+      if (full === '@today') {
+        dateValue = todayDate;
+        label = 'Today';
+      } else if (full === '@tomorrow') {
+        dateValue = tomorrowDate;
+        label = 'Tomorrow';
+      } else {
+        dateValue = match[2]; // YYYY-MM-DD from @{YYYY-MM-DD}
+        label = formatDateChipLabel(dateValue);
+      }
+
+      const chip = document.createElement('span');
+      chip.className = 'chip chip-date';
+
+      if (dateValue < todayDate) {
+        chip.classList.add('chip-date-overdue');
+      } else if (dateValue === todayDate) {
+        chip.classList.add('chip-date-today');
+      }
+
+      chip.textContent = '\u{1F4C5} ' + label; // 📅 label
+      container.appendChild(chip);
+    } else {
+      // Tag chip  #word
+      const chip = document.createElement('span');
+      chip.className = 'chip chip-tag';
+      chip.textContent = '#' + match[3];
+      container.appendChild(chip);
+    }
+  }
+
+  appendText(text.slice(lastIndex));
+}
+
 /**
  * Render a single card
  */
@@ -97,8 +209,17 @@ export function renderCard(
   callbacks: UICallbacks,
   options?: RenderOptions
 ): HTMLElement {
+  const filterQuery = options?.filterQuery ?? '';
+
+  // Determine whether this card matches the active filter
+  const cardMatchesFilter =
+    filterQuery.length === 0 ||
+    card.text.toLowerCase().includes(filterQuery.toLowerCase()) ||
+    card.description.toLowerCase().includes(filterQuery.toLowerCase());
+
   const cardEl = document.createElement('div');
-  cardEl.className = `kanban-card${card.completed ? ' completed' : ''}`;
+  cardEl.className =
+    `kanban-card${card.completed ? ' completed' : ''}${!cardMatchesFilter ? ' filter-dimmed' : ''}`;
   cardEl.dataset.cardId = card.id;
   cardEl.dataset.columnId = columnId;
   cardEl.draggable = true;
@@ -114,9 +235,10 @@ export function renderCard(
   const contentEl = document.createElement('div');
   contentEl.className = 'card-content';
 
+  // Title — rendered with inline chips + optional match highlighting
   const titleEl = document.createElement('span');
   titleEl.className = 'card-title';
-  titleEl.textContent = card.text;
+  renderChips(titleEl, card.text, filterQuery || undefined);
   contentEl.appendChild(titleEl);
 
   // Show thumbnail if enabled (default true) and description has an image
@@ -221,7 +343,19 @@ export function renderColumn(column: KanbanColumn, callbacks: UICallbacks, optio
 
   const countEl = document.createElement('span');
   countEl.className = 'column-count';
-  countEl.textContent = String(column.cards.length);
+
+  // Show match/total count when a filter is active
+  const filterQuery = options?.filterQuery ?? '';
+  if (filterQuery.length > 0) {
+    const matchCount = column.cards.filter(
+      (c) =>
+        c.text.toLowerCase().includes(filterQuery.toLowerCase()) ||
+        c.description.toLowerCase().includes(filterQuery.toLowerCase())
+    ).length;
+    countEl.textContent = `${matchCount}/${column.cards.length}`;
+  } else {
+    countEl.textContent = String(column.cards.length);
+  }
 
   const menuBtn = document.createElement('button');
   menuBtn.className = 'column-menu-btn';
@@ -278,7 +412,7 @@ export function renderColumn(column: KanbanColumn, callbacks: UICallbacks, optio
 }
 
 /**
- * Render the entire board
+ * Render the entire board, with a find/filter bar above the columns.
  */
 export function renderBoard(
   container: HTMLElement,
@@ -287,12 +421,93 @@ export function renderBoard(
 ): void {
   container.innerHTML = '';
 
-  const options: RenderOptions = {
-    boardSettings: board.settings,
+  // ── Filter bar ──────────────────────────────────────────────────────────
+  const filterBar = document.createElement('div');
+  filterBar.className = 'kanban-filter-bar';
+  filterBar.id = 'kanban-filter-bar';
+
+  const filterIcon = document.createElement('span');
+  filterIcon.className = 'filter-bar-icon';
+  filterIcon.textContent = '\u{1F50D}'; // 🔍
+
+  const filterInput = document.createElement('input');
+  filterInput.type = 'text';
+  filterInput.className = 'filter-bar-input';
+  filterInput.placeholder = 'Filter cards…'; // Filter cards…
+  filterInput.id = 'kanban-filter-input';
+  // Preserve filter query across re-renders
+  filterInput.value = (window as any).__kanbanFilterQuery ?? '';
+
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'filter-bar-clear';
+  clearBtn.type = 'button';
+  clearBtn.textContent = '×'; // ×
+  clearBtn.title = 'Clear filter (Escape)';
+  clearBtn.style.display = filterInput.value ? '' : 'none';
+
+  filterBar.appendChild(filterIcon);
+  filterBar.appendChild(filterInput);
+  filterBar.appendChild(clearBtn);
+
+  // ── Columns wrapper (horizontal scroll area) ─────────────────────────────
+  const columnsWrapper = document.createElement('div');
+  columnsWrapper.className = 'kanban-columns';
+
+  container.appendChild(filterBar);
+  container.appendChild(columnsWrapper);
+
+  // ── Column rendering helper ─────────────────────────────────────────────
+  const buildColumns = (query: string) => {
+    columnsWrapper.innerHTML = '';
+    const opts: RenderOptions = {
+      boardSettings: board.settings,
+      filterQuery: query,
+    };
+    for (const column of board.columns) {
+      columnsWrapper.appendChild(renderColumn(column, callbacks, opts));
+    }
   };
 
-  for (const column of board.columns) {
-    container.appendChild(renderColumn(column, callbacks, options));
+  buildColumns(filterInput.value);
+
+  // ── Filter bar events ───────────────────────────────────────────────────
+  filterInput.addEventListener('input', () => {
+    const q = filterInput.value;
+    (window as any).__kanbanFilterQuery = q;
+    clearBtn.style.display = q ? '' : 'none';
+    buildColumns(q);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    filterInput.value = '';
+    (window as any).__kanbanFilterQuery = '';
+    clearBtn.style.display = 'none';
+    buildColumns('');
+    filterInput.focus();
+  });
+
+  filterInput.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      filterInput.value = '';
+      (window as any).__kanbanFilterQuery = '';
+      clearBtn.style.display = 'none';
+      buildColumns('');
+    }
+  });
+
+  // ── Cmd+F / Ctrl+F shortcut — attach once per page lifetime ─────────────
+  if (!(window as any).__kanbanFilterShortcutAttached) {
+    (window as any).__kanbanFilterShortcutAttached = true;
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        const inp = document.getElementById('kanban-filter-input') as HTMLInputElement | null;
+        if (inp) {
+          e.preventDefault();
+          inp.focus();
+          inp.select();
+        }
+      }
+    });
   }
 }
 
@@ -304,6 +519,7 @@ export function showAddCardInput(
   onSubmit: (text: string) => void,
   onCancel: () => void
 ): void {
+  // Columns now live inside .kanban-columns but data-column-id is still unique
   const columnEl = document.querySelector(`[data-column-id="${columnId}"]`);
   if (!columnEl) return;
 
