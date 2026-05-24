@@ -1251,6 +1251,15 @@ html, body {
   word-break: break-word;
 }
 
+/* Fullscreen modal SVG sizing */
+.mermaid-fullscreen-svg svg {
+  display: block;
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+}
+
 /* Edit mode container */
 .mermaid-edit {
   display: none;

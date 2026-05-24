@@ -16,8 +16,9 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import type { NodeViewProps } from '@tiptap/react'
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import mermaid from 'mermaid'
-import { Text, Minimize2, Maximize2 } from 'lucide'
+import { Text, Minimize2, Maximize2, Expand } from 'lucide'
 import { LucideIcon } from '../components/LucideIcon'
 
 // VS Code API type
@@ -125,9 +126,13 @@ export function MermaidNodeView({
   const [renderedSvg, setRenderedSvg] = useState<string>('')
   const [renderError, setRenderError] = useState<string | null>(null)
   const [isDark, setIsDark] = useState(() => document.body.classList.contains('vscode-dark'))
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [fsScale, setFsScale] = useState(1)
+  const [fsTranslate, setFsTranslate] = useState({ x: 0, y: 0 })
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const diagramContainerRef = useRef<HTMLDivElement>(null)
+  const fsDragRef = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null)
 
   // Undo/redo stack refs
   const undoStackRef = useRef<string[]>([])
@@ -484,6 +489,83 @@ export function MermaidNodeView({
   }, [saveUndoState])
 
   /**
+   * Open fullscreen modal
+   */
+  const openFullscreen = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setFsScale(1)
+    setFsTranslate({ x: 0, y: 0 })
+    setIsFullscreen(true)
+  }, [])
+
+  /**
+   * Close fullscreen modal
+   */
+  const closeFullscreen = useCallback(() => {
+    setIsFullscreen(false)
+  }, [])
+
+  /**
+   * Escape key closes fullscreen
+   */
+  useEffect(() => {
+    if (!isFullscreen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeFullscreen()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isFullscreen, closeFullscreen])
+
+  /**
+   * Wheel handler for zoom in fullscreen
+   */
+  const handleFsWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault()
+    setFsScale((s) => Math.max(0.25, Math.min(4, s * (e.deltaY > 0 ? 0.9 : 1.1))))
+  }, [])
+
+  /**
+   * Drag handlers for pan in fullscreen
+   */
+  const handleFsMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return
+    e.preventDefault()
+    fsDragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      originX: fsTranslate.x,
+      originY: fsTranslate.y,
+    }
+  }, [fsTranslate])
+
+  const handleFsMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!fsDragRef.current) return
+    const dx = e.clientX - fsDragRef.current.startX
+    const dy = e.clientY - fsDragRef.current.startY
+    setFsTranslate({
+      x: fsDragRef.current.originX + dx,
+      y: fsDragRef.current.originY + dy,
+    })
+  }, [])
+
+  const handleFsMouseUp = useCallback(() => {
+    fsDragRef.current = null
+  }, [])
+
+  /**
+   * Double-click resets zoom/pan in fullscreen
+   */
+  const handleFsDoubleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setFsScale(1)
+    setFsTranslate({ x: 0, y: 0 })
+  }, [])
+
+  /**
    * Toggle view mode
    */
   const toggleViewMode = useCallback((e: React.MouseEvent) => {
@@ -580,8 +662,99 @@ export function MermaidNodeView({
           >
             {viewMode === 'scroll' ? <LucideIcon icon={Minimize2} size={16} /> : <LucideIcon icon={Maximize2} size={16} />}
           </button>
+          <button
+            className="mermaid-view-toggle"
+            type="button"
+            title="Fullscreen"
+            onClick={openFullscreen}
+            style={{
+              border: 'none',
+              background: 'none',
+              outline: 'none',
+              color: iconColor,
+            }}
+          >
+            <LucideIcon icon={Expand} size={16} />
+          </button>
         </div>
       </div>
+
+      {/* Fullscreen modal portal */}
+      {isFullscreen && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            backgroundColor: 'color-mix(in srgb, var(--vscode-editor-background) 95%, transparent)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}
+          onClick={closeFullscreen}
+        >
+          {/* Close button */}
+          <button
+            type="button"
+            title="Close fullscreen (Esc)"
+            onClick={closeFullscreen}
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              width: '36px',
+              height: '36px',
+              border: 'none',
+              background: 'none',
+              color: 'var(--vscode-editor-foreground)',
+              cursor: 'pointer',
+              fontSize: '22px',
+              lineHeight: 1,
+              opacity: 0.7,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '6px',
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.7' }}
+          >
+            ×
+          </button>
+
+          {/* Diagram pan/zoom area */}
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: fsDragRef.current ? 'grabbing' : 'grab',
+              userSelect: 'none',
+            }}
+            onWheel={handleFsWheel}
+            onMouseDown={handleFsMouseDown}
+            onMouseMove={handleFsMouseMove}
+            onMouseUp={handleFsMouseUp}
+            onMouseLeave={handleFsMouseUp}
+            onDoubleClick={handleFsDoubleClick}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                transform: `translate(${fsTranslate.x}px, ${fsTranslate.y}px) scale(${fsScale})`,
+                transformOrigin: 'center center',
+                maxWidth: '90vw',
+                maxHeight: '90vh',
+              }}
+              dangerouslySetInnerHTML={{ __html: renderedSvg }}
+            />
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Edit container */}
       <div className="mermaid-edit">
