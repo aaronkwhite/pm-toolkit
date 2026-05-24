@@ -31,6 +31,7 @@ import { TableControls } from './extensions/TableControls'
 import { MarkdownPaste } from './extensions/MarkdownPaste'
 import { FindReplace } from './extensions/FindReplace'
 import { AiDiff } from './extensions/AiDiff'
+import { Callout } from './extensions/Callout'
 import {
   CommentMark,
   preprocessCommentsToHtml,
@@ -138,6 +139,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       KeyboardNavigation,
       FindReplace,
       AiDiff,
+      Callout,
       CommentMark,
     ],
     content: initialContent,
