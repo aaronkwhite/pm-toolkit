@@ -89,6 +89,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
   const updateTimeout = useRef<number | null>(null)
   const lastKnownContent = useRef(initialContent)
   const [comments, setComments] = useState<ParsedComment[]>([])
+  const [wordCount, setWordCount] = useState(0)
 
   console.log('[PM Toolkit] About to call useEditor')
   const editor = useEditor({
@@ -143,6 +144,10 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
     content: initialContent,
     onUpdate: ({ editor }) => {
       if (isUpdatingFromExtension.current) return
+
+      // Update word count immediately (cheap operation)
+      const text = editor.state.doc.textContent
+      setWordCount(text.trim().split(/\s+/).filter(Boolean).length)
 
       // Debounce updates
       if (updateTimeout.current) {
@@ -412,7 +417,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
   )
 
   return (
-    <div id="editor-wrapper">
+    <div id="editor-wrapper" style={{ position: 'relative' }}>
       <DiffToolbar editor={editor} onAccept={handleAcceptAllDiff} onReject={handleRejectAllDiff} />
       <FindReplaceBar editor={editor} />
       <BlockHandle editor={editor} />
@@ -424,6 +429,22 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
         onDelete={handleDeleteComment}
         onEdit={handleEditComment}
       />
+      {wordCount > 0 && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 8,
+            right: 12,
+            fontSize: 11,
+            color: 'var(--vscode-descriptionForeground)',
+            pointerEvents: 'none',
+            userSelect: 'none',
+            zIndex: 10,
+          }}
+        >
+          {wordCount} {wordCount === 1 ? 'word' : 'words'}
+        </div>
+      )}
     </div>
   )
 }
