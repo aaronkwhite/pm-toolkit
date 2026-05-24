@@ -14,6 +14,7 @@ import {
   Text, Heading1, Heading2, Heading3, Heading4,
   List, ListOrdered, ListTodo, Quote, Code, Minus,
   Table, Image, LayoutTemplate, Network, ArrowRightLeft, Link, FileText,
+  Info, Lightbulb, CircleAlert, TriangleAlert, OctagonX,
 } from 'lucide';
 import { LucideIcon } from '../components/LucideIcon';
 import { SlashCommandMenu, SlashCommandMenuRef } from '../components/SlashCommandMenu';
@@ -138,6 +139,11 @@ const ICON = {
   flowchart:    slashIcon(Network),
   sequence:     slashIcon(ArrowRightLeft),
   link:         slashIcon(Link),
+  note:         slashIcon(Info),
+  tip:          slashIcon(Lightbulb),
+  important:    slashIcon(CircleAlert),
+  warning:      slashIcon(TriangleAlert),
+  caution:      slashIcon(OctagonX),
 };
 
 /**
@@ -445,6 +451,56 @@ export const defaultCommands: SlashCommandItem[] = [
       };
 
       root.render(createElement(LinkPicker, { rect, onSelect, onCancel }));
+    },
+  },
+  {
+    title: 'Note',
+    description: 'Note callout block',
+    icon: ICON.note,
+    category: 'blocks',
+    searchTerms: ['note', 'callout', 'info', 'information'],
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertCallout('NOTE').run();
+    },
+  },
+  {
+    title: 'Tip',
+    description: 'Tip callout block',
+    icon: ICON.tip,
+    category: 'blocks',
+    searchTerms: ['tip', 'callout', 'hint', 'suggestion'],
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertCallout('TIP').run();
+    },
+  },
+  {
+    title: 'Important',
+    description: 'Important callout block',
+    icon: ICON.important,
+    category: 'blocks',
+    searchTerms: ['important', 'callout', 'critical'],
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertCallout('IMPORTANT').run();
+    },
+  },
+  {
+    title: 'Warning',
+    description: 'Warning callout block',
+    icon: ICON.warning,
+    category: 'blocks',
+    searchTerms: ['warning', 'callout', 'caution', 'alert'],
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertCallout('WARNING').run();
+    },
+  },
+  {
+    title: 'Caution',
+    description: 'Caution callout block',
+    icon: ICON.caution,
+    category: 'blocks',
+    searchTerms: ['caution', 'callout', 'danger', 'stop', 'warning'],
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertCallout('CAUTION').run();
     },
   },
 ];

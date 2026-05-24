@@ -1251,6 +1251,15 @@ html, body {
   word-break: break-word;
 }
 
+/* Fullscreen modal SVG sizing */
+.mermaid-fullscreen-svg svg {
+  display: block;
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+}
+
 /* Edit mode container */
 .mermaid-edit {
   display: none;
@@ -1926,6 +1935,47 @@ html, body {
   padding: 4px;
 }
 
+/* ===== Callout Blocks ===== */
+
+.pm-callout {
+  border-left: 4px solid;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 8px 0;
+}
+
+.pm-callout-label {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pm-callout-icon {
+  font-style: normal;
+}
+
+.pm-callout-content > *:last-child {
+  margin-bottom: 0;
+}
+
+.pm-callout--note { border-color: #58a6ff; background: #58a6ff1a; }
+.pm-callout--note .pm-callout-label { color: #58a6ff; }
+
+.pm-callout--tip { border-color: #3fb950; background: #3fb9501a; }
+.pm-callout--tip .pm-callout-label { color: #3fb950; }
+
+.pm-callout--important { border-color: #a371f7; background: #a371f71a; }
+.pm-callout--important .pm-callout-label { color: #a371f7; }
+
+.pm-callout--warning { border-color: #d29922; background: #d299221a; }
+.pm-callout--warning .pm-callout-label { color: #d29922; }
+
+.pm-callout--caution { border-color: #f85149; background: #f851491a; }
+.pm-callout--caution .pm-callout-label { color: #f85149; }
+
 /* ── AI Diff decorations ─────────────────────────────────────────────────── */
 
 .pm-diff-added { background: rgba(40, 167, 69, 0.2); border-bottom: 2px solid rgba(40, 167, 69, 0.5); }
@@ -1951,4 +2001,21 @@ html, body {
   border: 1px solid var(--vscode-button-border, #666);
   color: var(--vscode-foreground, #ccc);
   padding: 3px 10px; border-radius: 3px; cursor: pointer;
+}
+
+/* ── Wiki links ──────────────────────────────────────────────────────────── */
+
+.pm-wiki-link {
+  color: var(--vscode-textLink-foreground);
+  background: color-mix(in srgb, var(--vscode-textLink-foreground) 10%, transparent);
+  border-radius: 3px;
+  padding: 0 3px;
+  cursor: pointer;
+  font-size: 0.95em;
+  user-select: none;
+}
+
+.pm-wiki-link:hover {
+  background: color-mix(in srgb, var(--vscode-textLink-foreground) 20%, transparent);
+  text-decoration: underline;
 }
