@@ -447,8 +447,10 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
+      // Strip frontmatter before passing body to Tiptap
+      const bodyForDelete = stripFrontmatter(updated)
       // Pass raw markdown — the CommentMark markdown-it rule handles comment syntax
-      const processedContent = preprocessMermaidBlocks(updated)
+      const processedContent = preprocessMermaidBlocks(bodyForDelete)
       editor
         .chain()
         .command(({ tr }) => {
@@ -486,8 +488,10 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
+      // Strip frontmatter before passing body to Tiptap
+      const bodyForEdit = stripFrontmatter(updated)
       // Pass raw markdown — the CommentMark markdown-it rule handles comment syntax
-      const processedContent = preprocessMermaidBlocks(updated)
+      const processedContent = preprocessMermaidBlocks(bodyForEdit)
       editor
         .chain()
         .command(({ tr }) => {
@@ -503,10 +507,24 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
     [editor]
   )
 
+  // Handler: frontmatter panel changes — update state, sync editor save, and post to extension
+  const handleFrontmatterChange = useCallback(
+    (newMarkdown: string) => {
+      const newFmBlock = extractFrontmatterBlock(newMarkdown)
+      setFrontmatterBlock(newFmBlock)
+      frontmatterBlockRef.current = newFmBlock
+      lastKnownContent.current = newMarkdown
+      getVSCode().postMessage({ type: 'update', payload: { content: newMarkdown } })
+      getVSCode().setState({ content: newMarkdown })
+    },
+    []
+  )
+
   return (
     <div id="editor-wrapper" style={{ position: 'relative' }} onClick={() => setCommentPopover(null)}>
       <DiffToolbar editor={editor} onAccept={handleAcceptAllDiff} onReject={handleRejectAllDiff} />
       <FindReplaceBar editor={editor} />
+      <FrontmatterPanel content={lastKnownContent.current} onChange={handleFrontmatterChange} />
       <BlockHandle editor={editor} />
       <EditorContent editor={editor} />
       <BubbleMenuToolbar editor={editor} />
