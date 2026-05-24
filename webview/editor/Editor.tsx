@@ -38,6 +38,7 @@ import {
   type ParsedComment,
 } from './extensions/CommentMark'
 import { WikiLink, preprocessWikiLinksToHtml } from './extensions/WikiLink'
+import { FrontmatterPanel } from './components/FrontmatterPanel'
 
 // VS Code API type
 declare global {
@@ -75,6 +76,28 @@ function preprocessMermaidBlocks(markdown: string): string {
   return processed
 }
 
+/**
+ * Strip YAML frontmatter (---...---) from the top of a markdown string,
+ * returning only the body content.
+ */
+function stripFrontmatter(markdown: string): string {
+  if (!markdown.startsWith('---')) return markdown
+  const end = markdown.indexOf('\n---', 3)
+  if (end === -1) return markdown
+  return markdown.slice(end + 4).replace(/^\n/, '')
+}
+
+/**
+ * Extract the raw frontmatter block (including delimiters) from a markdown string,
+ * or return an empty string if none is present.
+ */
+function extractFrontmatterBlock(markdown: string): string {
+  if (!markdown.startsWith('---')) return ''
+  const end = markdown.indexOf('\n---', 3)
+  if (end === -1) return ''
+  return markdown.slice(0, end + 4)
+}
+
 // Get vscode API - it should be set by index.tsx before this component mounts
 const getVSCode = () => window.vscode
 
@@ -93,6 +116,8 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
     parseCommentsFromMarkdown(initialContent ?? '')
   )
   const [wordCount, setWordCount] = useState(0)
+  const [frontmatterBlock, setFrontmatterBlock] = useState(() => extractFrontmatterBlock(initialContent))
+  const frontmatterBlockRef = useRef(extractFrontmatterBlock(initialContent))
 
   console.log('[PM Toolkit] About to call useEditor')
   const editor = useEditor({
@@ -198,8 +223,16 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
             // Update comments panel from the incoming markdown
             setComments(parseCommentsFromMarkdown(content))
 
+            // Sync frontmatter panel state when content arrives from extension
+            const newFmBlock = extractFrontmatterBlock(content)
+            setFrontmatterBlock(newFmBlock)
+            frontmatterBlockRef.current = newFmBlock
+
+            // Strip frontmatter before passing body to Tiptap
+            const body = stripFrontmatter(content)
+
             // Preprocess wiki link syntax → HTML so Tiptap's HTML parser picks it up
-            const wikiLinkProcessed = preprocessWikiLinksToHtml(content)
+            const wikiLinkProcessed = preprocessWikiLinksToHtml(body)
 
             // Preprocess mermaid blocks to protect them from double-parsing.
             // Comment syntax (==text==^[comment]) is handled by the markdown-it
@@ -454,8 +487,12 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
-      const wikiLinkProcessed = preprocessWikiLinksToHtml(updated)
-      const processedContent = preprocessMermaidBlocks(wikiLinkProcessed)
+      // Strip frontmatter before passing body to Tiptap
+      const bodyForDelete = stripFrontmatter(updated)
+      // Preprocess wiki link syntax → HTML so Tiptap's HTML parser picks it up
+      const wikiLinkProcessedDelete = preprocessWikiLinksToHtml(bodyForDelete)
+      // Pass raw markdown — the CommentMark markdown-it rule handles comment syntax
+      const processedContent = preprocessMermaidBlocks(wikiLinkProcessedDelete)
       editor
         .chain()
         .command(({ tr }) => {
@@ -493,7 +530,8 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
-      const wikiLinkProcessed = preprocessWikiLinksToHtml(updated)
+      const bodyForEdit = stripFrontmatter(updated)
+      const wikiLinkProcessed = preprocessWikiLinksToHtml(bodyForEdit)
       const processedContent = preprocessMermaidBlocks(wikiLinkProcessed)
       editor
         .chain()
@@ -510,10 +548,24 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
     [editor]
   )
 
+  // Handler: frontmatter panel changes — update state, sync editor save, and post to extension
+  const handleFrontmatterChange = useCallback(
+    (newMarkdown: string) => {
+      const newFmBlock = extractFrontmatterBlock(newMarkdown)
+      setFrontmatterBlock(newFmBlock)
+      frontmatterBlockRef.current = newFmBlock
+      lastKnownContent.current = newMarkdown
+      getVSCode().postMessage({ type: 'update', payload: { content: newMarkdown } })
+      getVSCode().setState({ content: newMarkdown })
+    },
+    []
+  )
+
   return (
     <div id="editor-wrapper" style={{ position: 'relative' }} onClick={() => setCommentPopover(null)}>
       <DiffToolbar editor={editor} onAccept={handleAcceptAllDiff} onReject={handleRejectAllDiff} />
       <FindReplaceBar editor={editor} />
+      <FrontmatterPanel content={lastKnownContent.current} onChange={handleFrontmatterChange} />
       <BlockHandle editor={editor} />
       <EditorContent editor={editor} />
       <BubbleMenuToolbar editor={editor} />
