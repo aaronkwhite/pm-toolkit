@@ -215,6 +215,10 @@ export async function exportToHtml(document: vscode.TextDocument, bodyHtml: stri
   const baseName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
   const defaultUri = vscode.Uri.file(path.join(documentDir, `${baseName}.html`));
 
+  // Strip comment marks: <mark data-comment="...">text</mark> → text
+  // Matches both single-line and multi-line content inside the mark
+  bodyHtml = bodyHtml.replace(/<mark[^>]*data-comment[^>]*>([\s\S]*?)<\/mark>/g, '$1');
+
   const saveUri = await vscode.window.showSaveDialog({
     defaultUri,
     filters: { 'HTML Files': ['html', 'htm'] },
