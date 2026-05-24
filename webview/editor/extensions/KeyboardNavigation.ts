@@ -8,7 +8,7 @@
  */
 
 import { Extension, findParentNodeClosestToPos } from '@tiptap/core';
-import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
+import { Plugin, PluginKey, TextSelection, NodeSelection } from '@tiptap/pm/state';
 import { CellSelection } from '@tiptap/pm/tables';
 
 /**
@@ -129,6 +129,16 @@ function isInCodeBlock(editor: any): { inCodeBlock: boolean; depth: number } {
   const { selection } = state;
   const { $from } = selection;
 
+  // Handle NodeSelection where the whole code block is selected
+  // (e.g. after clicking on it). In this case $from.depth === 0 and
+  // selection.node is the selected block-level node.
+  // We use duck-typing ("node" property) rather than instanceof to avoid
+  // issues with minified/mangled class names in the bundle.
+  const isNodeSel = (selection as any).node !== undefined;
+  if (isNodeSel && (selection as any).node.type.name === 'codeBlock') {
+    return { inCodeBlock: true, depth: 1 };
+  }
+
   for (let depth = $from.depth; depth > 0; depth--) {
     if ($from.node(depth).type.name === 'codeBlock') {
       return { inCodeBlock: true, depth };
@@ -230,14 +240,30 @@ function exitCodeBlockBelow(editor: any): boolean {
   const { inCodeBlock, depth } = isInCodeBlock(editor);
   if (!inCodeBlock) return false;
 
-  // Get position after the code block
-  const codeBlockAfter = $from.after(depth);
+  // Compute the position immediately after the code block node.
+  // When selection is a NodeSelection targeting the code block, $from.depth === 0
+  // (pointing at doc level), so $from.after(depth) would be unreliable.
+  // Instead, use selection.from + node.nodeSize for NodeSelection,
+  // or $from.after(depth) for a normal cursor inside the block.
+  let codeBlockAfter: number;
+  const isNodeSel = (selection as any).node !== undefined;
+  if (isNodeSel && (selection as any).node.type.name === 'codeBlock') {
+    codeBlockAfter = selection.from + (selection as any).node.nodeSize;
+  } else {
+    codeBlockAfter = $from.after(depth);
+  }
 
-  // Always insert a paragraph right after the code block
-  editor.chain()
-    .insertContentAt(codeBlockAfter, { type: 'paragraph' })
-    .setTextSelection(codeBlockAfter + 1)
-    .run();
+  // Use a direct ProseMirror transaction to insert the paragraph.
+  // Tiptap's chain insertContentAt routes through tiptap-markdown's override
+  // which can cause surrounding nodes (e.g. a horizontalRule immediately after
+  // the code block) to be dropped when inserting at certain boundary positions.
+  // Using tr.insert() directly avoids that issue entirely.
+  const { view } = editor;
+  const { schema } = state;
+  const paragraph = schema.nodes.paragraph.create();
+  const tr = state.tr.insert(codeBlockAfter, paragraph);
+  tr.setSelection(TextSelection.create(tr.doc, codeBlockAfter + 1));
+  view.dispatch(tr);
 
   return true;
 }
@@ -351,6 +377,50 @@ function exitTableInsertBelow(editor: any): boolean {
     .insertContentAt(tableEnd, { type: 'paragraph' })
     .setTextSelection(tableEnd + 1)
     .run();
+
+  return true;
+}
+
+/**
+ * Check if the cursor is positioned immediately after a code block.
+ * This handles the case where a NodeSelection lands on a node right after a code block
+ * (e.g. clicking near the boundary between a code block and an HR).
+ */
+function isCursorAfterCodeBlock(editor: any): boolean {
+  const { state } = editor;
+  const { selection } = state;
+  const { from } = selection;
+
+  // Only apply when at or near the document top level (depth 0-1)
+  const $from = state.doc.resolve(from);
+  if ($from.depth > 1) return false;
+
+  // The node immediately before `from` position
+  const nodeBefore = state.doc.nodeAt(from - 1);
+  if (!nodeBefore) {
+    // Try the node at from - nodeSize if this is a block boundary
+    const $pos = state.doc.resolve(from);
+    const nb = $pos.nodeBefore;
+    return nb?.type.name === 'codeBlock';
+  }
+  return nodeBefore.type.name === 'codeBlock';
+}
+
+/**
+ * Insert a paragraph at the current selection position (before the selected node)
+ * and move cursor into it. Used when cursor is positioned after a code block.
+ */
+function insertParagraphBeforeSelection(editor: any): boolean {
+  const { state } = editor;
+  const { selection } = state;
+  const { from } = selection;
+
+  const { view } = editor;
+  const { schema } = state;
+  const paragraph = schema.nodes.paragraph.create();
+  const tr = state.tr.insert(from, paragraph);
+  tr.setSelection(TextSelection.create(tr.doc, from + 1));
+  view.dispatch(tr);
 
   return true;
 }
@@ -517,6 +587,13 @@ export const KeyboardNavigation = Extension.create({
       'Mod-Enter': ({ editor }) => {
         if (isInCodeBlock(editor).inCodeBlock) {
           return exitCodeBlockBelow(editor);
+        }
+        // Also handle the case where the cursor is just after a code block
+        // (e.g. a NodeSelection on the node immediately following a code block).
+        // This can happen when clicking near the boundary between a code block
+        // and the next block node (like an HR).
+        if (isCursorAfterCodeBlock(editor)) {
+          return insertParagraphBeforeSelection(editor);
         }
         if (isInTable(editor)) {
           return exitTableInsertBelow(editor);

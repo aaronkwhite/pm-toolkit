@@ -19,7 +19,6 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { BubbleMenu as TiptapBubbleMenu } from '@tiptap/react'
-import { NodeSelection } from '@tiptap/pm/state'
 import type { Editor } from '@tiptap/core'
 import { createElement } from 'react'
 import { createRoot, Root } from 'react-dom/client'
@@ -174,6 +173,31 @@ export function BubbleMenuToolbar({ editor }: BubbleMenuToolbarProps) {
       cleanupLinkPicker()
     }
   }, [])
+
+  // Fast-path: immediately hide bubble menu when a NodeSelection is active
+  // (e.g., image click). The default Tiptap BubbleMenu debounces shouldShow
+  // by 250ms, which is too slow for the image-click case. By calling tippy.hide()
+  // directly on the selectionUpdate event, we bypass the debounce entirely.
+  // Fast-path: immediately hide bubble menu when a NodeSelection is active
+  // (e.g., image click). The default Tiptap BubbleMenu debounces shouldShow
+  // by 250ms, which is too slow for the image-click case. By calling tippy.hide()
+  // directly on the selectionUpdate event, we bypass the debounce entirely.
+  // We use duck-typing ('node' in selection) rather than instanceof NodeSelection
+  // to avoid issues with mangled class names in the minified bundle.
+  useEffect(() => {
+    const handleSelectionUpdate = () => {
+      const { selection } = editor.state
+      const isNodeSelection = (selection as any).node !== undefined
+      if (isNodeSelection) {
+        const editorEl = editor.options.element as any
+        editorEl?._tippy?.hide()
+      }
+    }
+    editor.on('selectionUpdate', handleSelectionUpdate)
+    return () => {
+      editor.off('selectionUpdate', handleSelectionUpdate)
+    }
+  }, [editor])
 
   const cleanupLinkPicker = useCallback(() => {
     if (linkPickerRootRef.current) {
