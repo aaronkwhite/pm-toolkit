@@ -321,6 +321,9 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
     text: string
     x: number
     y: number
+    element: HTMLElement
+    editMode: boolean
+    editValue: string
   } | null>(null)
 
   // Click handler for comment marks — reads data-comment from DOM
@@ -337,6 +340,9 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
           text: commentText,
           x: rect.left + rect.width / 2,
           y: rect.bottom + window.scrollY + 6,
+          element: target,
+          editMode: false,
+          editValue: commentText,
         })
         e.stopPropagation()
       } else {
@@ -348,13 +354,53 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       if (e.key === 'Escape') setCommentPopover(null)
     }
 
+    const handleScroll = () => {
+      setCommentPopover(null)
+    }
+
     editorDom.addEventListener('click', handleClick)
     document.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('scroll', handleScroll, { capture: true, passive: true })
     return () => {
       editorDom.removeEventListener('click', handleClick)
       document.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('scroll', handleScroll, { capture: true })
     }
   }, [editor])
+
+  // Position cursor inside the comment mark using the stored DOM element,
+  // then use extendMarkRange to select the full mark span for chain operations.
+  const focusAtCommentMark = useCallback(
+    (element: HTMLElement) => {
+      try {
+        const pos = editor.view.posAtDOM(element, 0)
+        editor.chain().focus().setTextSelection(pos).extendMarkRange('comment').run()
+      } catch {
+        editor.commands.focus()
+      }
+    },
+    [editor]
+  )
+
+  const handlePopoverDelete = useCallback(() => {
+    if (!commentPopover) return
+    focusAtCommentMark(commentPopover.element)
+    editor.chain().extendMarkRange('comment').unsetMark('comment').run()
+    setCommentPopover(null)
+  }, [commentPopover, editor, focusAtCommentMark])
+
+  const handlePopoverEditSave = useCallback(() => {
+    if (!commentPopover) return
+    const newText = commentPopover.editValue.trim()
+    if (!newText) return
+    focusAtCommentMark(commentPopover.element)
+    editor
+      .chain()
+      .extendMarkRange('comment')
+      .setMark('comment', { commentText: newText })
+      .run()
+    setCommentPopover(null)
+  }, [commentPopover, editor, focusAtCommentMark])
 
   console.log('[PM Toolkit] editor instance:', editor ? 'created' : 'null')
 
@@ -478,18 +524,145 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
             color: 'var(--vscode-editorWidget-foreground, #cccccc)',
             border: '1px solid var(--vscode-editorWidget-border, #454545)',
             borderRadius: '4px',
-            padding: '6px 10px',
-            maxWidth: '300px',
+            padding: '8px 10px',
+            maxWidth: '320px',
+            minWidth: '160px',
             fontSize: '13px',
             lineHeight: '1.4',
             boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            pointerEvents: 'none',
+            pointerEvents: 'auto',
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {commentPopover.text}
+          {commentPopover.editMode ? (
+            <>
+              <textarea
+                className="pm-comment-popover-textarea"
+                autoFocus
+                value={commentPopover.editValue}
+                onChange={(e) =>
+                  setCommentPopover((prev) => prev ? { ...prev, editValue: e.target.value } : prev)
+                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handlePopoverEditSave()
+                  } else if (e.key === 'Escape') {
+                    setCommentPopover((prev) => prev ? { ...prev, editMode: false, editValue: prev.text } : prev)
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  minHeight: '60px',
+                  background: 'var(--vscode-input-background, #3c3c3c)',
+                  color: 'var(--vscode-input-foreground, #cccccc)',
+                  border: '1px solid var(--vscode-input-border, #555)',
+                  borderRadius: '3px',
+                  padding: '4px 6px',
+                  fontSize: '13px',
+                  lineHeight: '1.4',
+                  resize: 'vertical',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <div style={{ display: 'flex', gap: '6px', marginTop: '6px', justifyContent: 'flex-end' }}>
+                <button
+                  className="pm-comment-popover-btn"
+                  onClick={() =>
+                    setCommentPopover((prev) => prev ? { ...prev, editMode: false, editValue: prev.text } : prev)
+                  }
+                  style={{
+                    background: 'transparent',
+                    color: 'var(--vscode-editorWidget-foreground, #cccccc)',
+                    border: '1px solid var(--vscode-editorWidget-border, #454545)',
+                    borderRadius: '3px',
+                    padding: '2px 8px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="pm-comment-popover-btn pm-comment-popover-save"
+                  onClick={handlePopoverEditSave}
+                  style={{
+                    background: 'var(--vscode-button-background, #0e639c)',
+                    color: 'var(--vscode-button-foreground, #ffffff)',
+                    border: 'none',
+                    borderRadius: '3px',
+                    padding: '2px 8px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  marginBottom: '6px',
+                }}
+              >
+                {commentPopover.text}
+              </div>
+              <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                <button
+                  className="pm-comment-popover-btn pm-comment-popover-edit"
+                  title="Edit comment"
+                  onClick={() =>
+                    setCommentPopover((prev) => prev ? { ...prev, editMode: true } : prev)
+                  }
+                  style={{
+                    background: 'transparent',
+                    color: 'var(--vscode-editorWidget-foreground, #cccccc)',
+                    border: '1px solid var(--vscode-editorWidget-border, #454545)',
+                    borderRadius: '3px',
+                    padding: '2px 8px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                    <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61Z" fill="currentColor"/>
+                  </svg>
+                  Edit
+                </button>
+                <button
+                  className="pm-comment-popover-btn pm-comment-popover-delete"
+                  title="Delete comment"
+                  onClick={handlePopoverDelete}
+                  style={{
+                    background: 'transparent',
+                    color: 'var(--vscode-errorForeground, #f48771)',
+                    border: '1px solid var(--vscode-editorWidget-border, #454545)',
+                    borderRadius: '3px',
+                    padding: '2px 8px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                    <path fillRule="evenodd" clipRule="evenodd" d="M6.5 1.75a.25.25 0 0 1 .25-.25h2.5a.25.25 0 0 1 .25.25V3h-3V1.75Zm4.5 0V3h2.25a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1 0-1.5H5V1.75C5 .784 5.784 0 6.75 0h2.5C10.216 0 11 .784 11 1.75ZM4.496 6.675l.66 6.6a.25.25 0 0 0 .249.225h5.19a.25.25 0 0 0 .249-.225l.66-6.6a.75.75 0 0 1 1.492.149l-.66 6.6A1.748 1.748 0 0 1 10.595 15H5.405a1.748 1.748 0 0 1-1.741-1.576l-.66-6.6a.75.75 0 1 1 1.492-.149Z" fill="currentColor"/>
+                  </svg>
+                  Delete
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
