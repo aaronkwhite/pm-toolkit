@@ -121,7 +121,7 @@ export function MermaidNodeView({
   getPos,
 }: MermaidNodeViewProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [viewMode, setViewMode] = useState<ViewMode>('fit')
+  const [viewMode, setViewMode] = useState<ViewMode>('scroll')
   const [renderedSvg, setRenderedSvg] = useState<string>('')
   const [renderError, setRenderError] = useState<string | null>(null)
   const [isDark, setIsDark] = useState(() => document.body.classList.contains('vscode-dark'))

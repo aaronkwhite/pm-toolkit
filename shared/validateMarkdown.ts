@@ -20,9 +20,11 @@ export function validateMarkdown(content: string): ValidationResult {
     return { valid: false, reason: 'Content contains internal data attributes' }
   }
 
-  // Threshold check: if most of the content is HTML tags, serialization likely failed
-  const tagBytes = (content.match(/<[^>]+>/g) || []).reduce((s, t) => s + t.length, 0)
-  const totalBytes = content.replace(/\s/g, '').length
+  // Threshold check: if most of the content is HTML tags, serialization likely failed.
+  // Strip HTML comments first (e.g. <!-- colwidths: ... -->) so they don't count as tags.
+  const withoutComments = content.replace(/<!--[\s\S]*?-->/g, '')
+  const tagBytes = (withoutComments.match(/<[^>]+>/g) || []).reduce((s, t) => s + t.length, 0)
+  const totalBytes = withoutComments.replace(/\s/g, '').length
   if (totalBytes > 0 && tagBytes / totalBytes > 0.4) {
     return {
       valid: false,

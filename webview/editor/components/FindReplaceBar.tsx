@@ -97,6 +97,9 @@ export function FindReplaceBar({ editor }: FindReplaceBarProps) {
     (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
         handleClose();
+      } else if (e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        editor.commands.findPrev();
       } else if (e.key === 'Enter') {
         e.preventDefault();
         editor.commands.findNext();
