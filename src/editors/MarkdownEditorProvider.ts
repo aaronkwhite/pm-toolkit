@@ -67,72 +67,6 @@ function convertImagePathsToWebview(
 // Image paths are now preserved via the data-original-src attribute and
 // the ImageNode's originalSrc property, which is used during markdown serialization.
 
-/** Set to true after the first external file change is detected this session */
-let hasSeenExternalChange = false;
-
-/**
- * Show the AI Diff Mode first-run wizard.
- * Only shown when `diff.aiDiffMode` has never been explicitly set (globalValue is undefined).
- */
-async function maybeShowAiDiffWizard(): Promise<void> {
-  const config = vscode.workspace.getConfiguration('pmtoolkit');
-  const inspected = config.inspect<string>('diff.aiDiffMode');
-
-  // Already configured — don't show
-  if (inspected?.globalValue !== undefined) {
-    return;
-  }
-
-  const enableChoice = await vscode.window.showQuickPick(
-    [
-      { label: 'Enable', description: 'Show highlighted changes when AI edits your files' },
-      { label: 'No thanks', description: 'Skip — you can always enable it in Settings' },
-    ],
-    {
-      title: 'PM Toolkit: AI Diff Mode',
-      placeHolder: 'Want PM Toolkit to highlight AI-made changes?',
-      ignoreFocusOut: true,
-    }
-  );
-
-  if (!enableChoice || enableChoice.label !== 'Enable') {
-    // User declined or dismissed — set to 'off' so we don't ask again
-    await config.update('diff.aiDiffMode', 'off', vscode.ConfigurationTarget.Global);
-    return;
-  }
-
-  const modeChoice = await vscode.window.showQuickPick(
-    [
-      {
-        label: 'It has its own review UI (Cursor, Copilot)',
-        description: 'Sets "cursor" mode — shows diffs inline',
-        mode: 'cursor',
-      },
-      {
-        label: 'It writes directly to the file (Claude Code, Aider)',
-        description: 'Sets "claude-code" mode — highlights added/removed lines',
-        mode: 'claude-code',
-      },
-    ],
-    {
-      title: 'PM Toolkit: AI Diff Mode',
-      placeHolder: 'How does your AI tool apply edits?',
-      ignoreFocusOut: true,
-    }
-  );
-
-  if (!modeChoice) {
-    // Dismissed — set to 'off' so we don't ask again
-    await config.update('diff.aiDiffMode', 'off', vscode.ConfigurationTarget.Global);
-    return;
-  }
-
-  await config.update('diff.aiDiffMode', modeChoice.mode, vscode.ConfigurationTarget.Global);
-  vscode.window.showInformationMessage(
-    `AI Diff Mode set to "${modeChoice.mode}". You can change this anytime in Settings under PM Toolkit.`
-  );
-}
-
 export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = 'pmtoolkit.markdownEditor';
 
@@ -555,6 +489,50 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
             break;
           }
 
+          case 'openWikiLink': {
+            // Webview clicked a [[Page]] link — find and open the file
+            try {
+              const page = message.page;
+              if (!page) break;
+
+              // Search workspace for a file matching the page name
+              const files = await vscode.workspace.findFiles(
+                `**/${page}.md`,
+                '**/node_modules/**',
+                5
+              );
+
+              if (files.length > 0) {
+                // Open the first match with PM Toolkit editor
+                await vscode.commands.executeCommand(
+                  'vscode.openWith',
+                  files[0],
+                  MarkdownEditorProvider.viewType
+                );
+              } else {
+                // No matching file — offer to create it
+                const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+                const create = 'Create File';
+                const choice = await vscode.window.showInformationMessage(
+                  `No file found for "[[${page}]]". Create it?`,
+                  create
+                );
+                if (choice === create && workspaceRoot) {
+                  const newUri = vscode.Uri.joinPath(workspaceRoot, `${page}.md`);
+                  await vscode.workspace.fs.writeFile(newUri, new Uint8Array());
+                  await vscode.commands.executeCommand(
+                    'vscode.openWith',
+                    newUri,
+                    MarkdownEditorProvider.viewType
+                  );
+                }
+              }
+            } catch (err) {
+              console.error('Failed to open wiki link:', err);
+            }
+            break;
+          }
+
           case 'requestFiles':
             // Webview is requesting list of workspace files for link picker
             try {
@@ -628,13 +606,6 @@ export class MarkdownEditorProvider implements vscode.CustomTextEditorProvider {
         if (e.document.uri.toString() === document.uri.toString()) {
           // Only notify webview if this wasn't from the webview itself
           if (!pendingWebviewUpdate && e.contentChanges.length > 0) {
-            // First-run wizard: show once per session, only if setting has never been configured
-            if (!hasSeenExternalChange) {
-              hasSeenExternalChange = true;
-              // Fire and forget — don't block the update flow
-              maybeShowAiDiffWizard().catch(() => {});
-            }
-
             const aiDiffMode = vscode.workspace.getConfiguration('pmtoolkit').get<string>('diff.aiDiffMode', 'off');
             if (
               aiDiffMode !== 'off' &&

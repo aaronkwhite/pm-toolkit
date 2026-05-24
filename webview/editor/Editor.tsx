@@ -36,6 +36,7 @@ import {
   parseCommentsFromMarkdown,
   type ParsedComment,
 } from './extensions/CommentMark'
+import { WikiLink, preprocessWikiLinksToHtml } from './extensions/WikiLink'
 
 // VS Code API type
 declare global {
@@ -141,6 +142,7 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       FindReplace,
       AiDiff,
       CommentMark,
+      WikiLink,
     ],
     content: initialContent,
     onUpdate: ({ editor }) => {
@@ -194,11 +196,14 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
             // Update comments panel from the incoming markdown
             setComments(parseCommentsFromMarkdown(content))
 
+            // Preprocess wiki link syntax → HTML so Tiptap's HTML parser picks it up
+            const wikiLinkProcessed = preprocessWikiLinksToHtml(content)
+
             // Preprocess mermaid blocks to protect them from double-parsing.
             // Comment syntax (==text==^[comment]) is handled by the markdown-it
             // core rule registered in CommentMark.addStorage().markdown.parse.setup,
             // so no HTML preprocessing is needed here.
-            const processedContent = preprocessMermaidBlocks(content)
+            const processedContent = preprocessMermaidBlocks(wikiLinkProcessed)
 
             // Set content without adding to undo history.
             // Pass markdown directly to setContent — tiptap-markdown's override
@@ -447,8 +452,8 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
-      // Pass raw markdown — the CommentMark markdown-it rule handles comment syntax
-      const processedContent = preprocessMermaidBlocks(updated)
+      const wikiLinkProcessed = preprocessWikiLinksToHtml(updated)
+      const processedContent = preprocessMermaidBlocks(wikiLinkProcessed)
       editor
         .chain()
         .command(({ tr }) => {
@@ -486,8 +491,8 @@ export function Editor({ initialContent = '', filename = 'untitled.md' }: Editor
       lastKnownContent.current = updated
       setComments(parseCommentsFromMarkdown(updated))
       isUpdatingFromExtension.current = true
-      // Pass raw markdown — the CommentMark markdown-it rule handles comment syntax
-      const processedContent = preprocessMermaidBlocks(updated)
+      const wikiLinkProcessed = preprocessWikiLinksToHtml(updated)
+      const processedContent = preprocessMermaidBlocks(wikiLinkProcessed)
       editor
         .chain()
         .command(({ tr }) => {

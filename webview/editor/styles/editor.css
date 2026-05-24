@@ -1952,3 +1952,20 @@ html, body {
   color: var(--vscode-foreground, #ccc);
   padding: 3px 10px; border-radius: 3px; cursor: pointer;
 }
+
+/* ── Wiki links ──────────────────────────────────────────────────────────── */
+
+.pm-wiki-link {
+  color: var(--vscode-textLink-foreground);
+  background: color-mix(in srgb, var(--vscode-textLink-foreground) 10%, transparent);
+  border-radius: 3px;
+  padding: 0 3px;
+  cursor: pointer;
+  font-size: 0.95em;
+  user-select: none;
+}
+
+.pm-wiki-link:hover {
+  background: color-mix(in srgb, var(--vscode-textLink-foreground) 20%, transparent);
+  text-decoration: underline;
+}
