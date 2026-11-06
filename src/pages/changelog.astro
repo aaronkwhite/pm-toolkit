@@ -2,11 +2,12 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { getHiddenVersions } from '../lib/version';
 
 let changelogRaw = '';
 try {
-  changelogRaw = readFileSync(new URL('../../CHANGELOG.md', import.meta.url), 'utf-8');
+  changelogRaw = readFileSync(resolve('CHANGELOG.md'), 'utf-8');
 } catch {
   changelogRaw = '## No changelog available\n\nCould not read CHANGELOG.md.';
 }
